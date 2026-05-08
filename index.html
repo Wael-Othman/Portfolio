@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #1a1d27;
+    --bg3: #22263a;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8eaf0;
+    --text2: #8b90a7;
+    --text3: #555a72;
+    --green: #3ecf8e;
+    --red: #f05c5c;
+    --blue: #5b8dee;
+    --amber: #f9a825;
+    --purple: #9b72f8;
+    --teal: #22d3c8;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  a { color: inherit; text-decoration: none; }
+
+  /* HEADER */
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 20px 28px; border-bottom: 1px solid var(--border); background: var(--bg2); position: sticky; top: 0; z-index: 100; }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 32px; height: 32px; background: linear-gradient(135deg, var(--blue), var(--purple)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .header h1 { font-size: 17px; font-weight: 600; color: var(--text); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .last-update { font-size: 12px; color: var(--text3); }
+  .refresh-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius-sm); background: var(--bg3); border: 1px solid var(--border2); color: var(--text2); font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .refresh-btn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .refresh-btn.loading { opacity: 0.6; pointer-events: none; }
+  .spin { animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* LAYOUT */
+  .main { padding: 24px 28px; max-width: 1400px; margin: 0 auto; }
+
+  /* METRICS */
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .metric { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; transition: border-color 0.2s; }
+  .metric:hover { border-color: var(--border2); }
+  .metric-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .metric-value { font-size: 22px; font-weight: 600; line-height: 1.1; }
+  .metric-sub { font-size: 12px; color: var(--text2); margin-top: 3px; }
+  .pos { color: var(--green); }
+  .neg { color: var(--red); }
+  .neu { color: var(--text2); }
+
+  /* STATUS BAR */
+  .status-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; padding: 10px 16px; background: var(--bg2); border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 12px; color: var(--text2); }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .status-dot.loading { background: var(--amber); animation: none; }
+  .status-dot.error { background: var(--red); animation: none; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--bg2); border-radius: var(--radius-sm); padding: 4px; border: 1px solid var(--border); width: fit-content; }
+  .tab { padding: 7px 18px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); background: transparent; border: none; transition: all 0.18s; }
+  .tab:hover { color: var(--text); }
+  .tab.active { background: var(--bg3); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+
+  /* HOLDINGS TABLE */
+  .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .search { flex: 1; min-width: 200px; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--bg2); color: var(--text); font-size: 13px; outline: none; }
+  .search:focus { border-color: var(--blue); }
+  .search::placeholder { color: var(--text3); }
+  .filter-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-btn { padding: 6px 13px; border-radius: 20px; border: 1px solid var(--border2); background: transparent; color: var(--text2); font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .filter-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .filter-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { background: var(--bg3); position: sticky; top: 0; }
+  th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; cursor: pointer; user-select: none; border-bottom: 1px solid var(--border); }
+  th:hover { color: var(--text2); }
+  th.sorted { color: var(--blue); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text); white-space: nowrap; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .live-price { font-weight: 600; }
+  .live-price.updated { animation: flash 0.8s ease; }
+  @keyframes flash { 0%{background:rgba(94,189,148,0.25)} 100%{background:transparent} }
+  .change-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 5px; font-size: 11px; font-weight: 600; }
+  .change-badge.pos { background: rgba(62,207,142,0.12); color: var(--green); }
+  .change-badge.neg { background: rgba(240,92,92,0.12); color: var(--red); }
+  .change-badge.neu { background: rgba(255,255,255,0.06); color: var(--text2); }
+  .badge { font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 600; display: inline-block; }
+  .badge-Stock { background: rgba(91,141,238,0.15); color: var(--blue); }
+  .badge-ETF { background: rgba(62,207,142,0.13); color: var(--green); }
+  .badge-Crypto { background: rgba(249,168,37,0.13); color: var(--amber); }
+  .badge-Cash { background: rgba(255,255,255,0.07); color: var(--text2); }
+  .badge-People { background: rgba(155,114,248,0.13); color: var(--purple); }
+  .portfolio-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+
+  /* CHARTS */
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .chart-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .chart-card h3 { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .chart-card.full { grid-column: 1 / -1; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* PERFORMANCE BARS */
+  .perf-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }
+  .perf-ticker { width: 65px; color: var(--text2); font-weight: 500; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; }
+  .perf-bar-outer { flex: 1; background: var(--bg3); border-radius: 3px; height: 6px; overflow: hidden; }
+  .perf-bar-inner { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+  .perf-val { width: 72px; text-align: right; font-weight: 600; flex-shrink: 0; font-size: 12px; }
+
+  /* ANALYSIS */
+  .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .analysis-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .analysis-card h3 { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label { color: var(--text2); }
+  .stat-val { font-weight: 600; color: var(--text); }
+
+  /* SECTION HIDDEN */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* LOADING OVERLAY */
+  .price-loading { font-size: 12px; color: var(--text3); padding: 4px 8px; background: var(--bg3); border-radius: 4px; }
+
+  @media (max-width: 768px) {
+    .main { padding: 16px; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .analysis-grid { grid-template-columns: 1fr; }
+    .header { padding: 14px 16px; }
+    .metric-value { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">📈</div>
+    <h1>Portfolio Dashboard</h1>
+  </div>
+  <div class="header-right">
+    <span class="last-update" id="lastUpdate">—</span>
+    <button class="refresh-btn" id="refreshBtn" onclick="fetchLivePrices()">
+      <span id="refreshIcon">↻</span> Refresh
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="status-bar">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Loading live prices...</span>
+  </div>
+
+  <div class="metrics" id="metricsGrid"></div>
+
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('holdings',this)">Holdings</button>
+      <button class="tab" onclick="switchTab('allocation',this)">Allocation</button>
+      <button class="tab" onclick="switchTab('performance',this)">Performance</button>
+      <button class="tab" onclick="switchTab('analysis',this)">Analysis</button>
+    </div>
+  </div>
+
+  <!-- HOLDINGS -->
+  <div class="section active" id="sec-holdings">
+    <div class="toolbar">
+      <input class="search" type="text" placeholder="Search ticker or company…" id="searchInput" oninput="renderTable()">
+      <div class="filter-btns" id="filterBtns"></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('ticker')">Ticker</th>
+            <th onclick="sortBy('company')">Company</th>
+            <th onclick="sortBy('type')">Type</th>
+            <th onclick="sortBy('portfolio')">Portfolio</th>
+            <th onclick="sortBy('investment')" style="text-align:right">Invested</th>
+            <th onclick="sortBy('currentPrice')" style="text-align:right">Live Price</th>
+            <th onclick="sortBy('currentValue')" style="text-align:right">Value</th>
+            <th onclick="sortBy('gainLoss')" style="text-align:right">Gain/Loss $</th>
+            <th onclick="sortBy('gainLossPct')" style="text-align:right">Return %</th>
+            <th onclick="sortBy('allocation')" style="text-align:right">Alloc %</th>
+          </tr>
+        </thead>
+        <tbody id="holdingsTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ALLOCATION -->
+  <div class="section" id="sec-allocation">
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>By Sector</h3>
+        <div id="sectorLegend" class="legend"></div>
+        <div style="position:relative;height:240px"><canvas id="sectorChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>By Asset Type</h3>
+        <div id="typeLegend" class="legend"></div>
+        <div style="position:relative;height:240px"><canvas id="typeChart"></canvas></div>
+      </div>
+      <div class="chart-card full">
+        <h3>Top 15 Holdings by Value</h3>
+        <div style="position:relative;" id="topWrap"><canvas id="topChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERFORMANCE -->
+  <div class="section" id="sec-performance">
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Top Gainers (%)</h3>
+        <div id="gainersWrap"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Top Losers (%)</h3>
+        <div id="losersWrap"></div>
+      </div>
+      <div class="chart-card full">
+        <h3>Gain / Loss by Position ($)</h3>
+        <div style="position:relative;" id="glWrap"><canvas id="glChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYSIS -->
+  <div class="section" id="sec-analysis">
+    <div class="analysis-grid">
+      <div class="analysis-card"><h3>Portfolio Summary</h3><div id="summaryStats"></div></div>
+      <div class="analysis-card"><h3>Risk Overview</h3><div id="riskStats"></div></div>
+      <div class="analysis-card"><h3>Currency Exposure</h3><div id="currencyStats"></div></div>
+      <div class="analysis-card"><h3>Portfolio Health</h3><div id="healthStats"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── PORTFOLIO DATA ───────────────────────────────────────────────────────────
+const PORTFOLIO = [
+  {ticker:'NVDA',company:'NVIDIA Corp',type:'Stock',sector:'Information Technology',portfolio:'Growth',investment:300,shares:20.92,costBasis:14.34,currency:'USD'},
+  {ticker:'META',company:'Meta Platforms',type:'Stock',sector:'Information Technology',portfolio:'Growth',investment:525,shares:2.51,costBasis:208.99,currency:'USD'},
+  {ticker:'MU',company:'Micron Technology',type:'Stock',sector:'Information Technology',portfolio:'Growth',investment:505.89,shares:8.11,costBasis:62.34,currency:'USD'},
+  {ticker:'MELI',company:'MercadoLibre',type:'Stock',sector:'Consumer Discretionary',portfolio:'Growth',investment:1800,shares:1.23,costBasis:1467.16,currency:'USD'},
+  {ticker:'TSM',company:'TSMC',type:'Stock',sector:'Information Technology',portfolio:'Growth',investment:400,shares:4.62,costBasis:86.61,currency:'USD'},
+  {ticker:'MSFT',company:'Microsoft Corp',type:'Stock',sector:'Information Technology',portfolio:'Growth',investment:1700,shares:5.44,costBasis:312.62,currency:'USD'},
+  {ticker:'GOOG',company:'Alphabet Inc',type:'Stock',sector:'Information Technology',portfolio:'Growth',investment:1400,shares:11.25,costBasis:124.48,currency:'USD'},
+  {ticker:'AMZN',company:'Amazon Inc',type:'Stock',sector:'Consumer Discretionary',portfolio:'Growth',investment:1400,shares:9.10,costBasis:153.87,currency:'USD'},
+  {ticker:'CRM',company:'Salesforce Inc',type:'Stock',sector:'Information Technology',portfolio:'Growth',investment:1500,shares:7.05,costBasis:212.68,currency:'USD'},
+  {ticker:'HPQ',company:'HP Inc',type:'Stock',sector:'Information Technology',portfolio:'Growth',investment:1000,shares:53.36,costBasis:18.74,currency:'USD'},
+  {ticker:'DUOL',company:'Duolingo Inc',type:'Stock',sector:'Consumer Discretionary',portfolio:'Growth',investment:1300,shares:10.24,costBasis:126.96,currency:'USD'},
+  {ticker:'BRK-B',company:'Berkshire Hathaway',type:'Stock',sector:'Financials',portfolio:'Growth',investment:700,shares:2.40,costBasis:291.25,currency:'USD'},
+  {ticker:'AAPL',company:'Apple Inc',type:'Stock',sector:'Information Technology',portfolio:'Growth',investment:600,shares:4.16,costBasis:144.19,currency:'USD'},
+  {ticker:'C',company:'Citigroup Inc',type:'Stock',sector:'Financials',portfolio:'Growth',investment:800,shares:15.85,costBasis:50.48,currency:'USD'},
+  {ticker:'TGT',company:'Target Corp',type:'Stock',sector:'Consumer Discretionary',portfolio:'Growth',investment:1000,shares:9.27,costBasis:107.88,currency:'USD'},
+  {ticker:'FMC',company:'FMC Corp',type:'Stock',sector:'Industrials',portfolio:'Growth',investment:1800,shares:44.12,costBasis:40.80,currency:'USD'},
+  {ticker:'ADM',company:'Archer-Daniels-Midland',type:'Stock',sector:'Industrials',portfolio:'Growth',investment:2200,shares:45.19,costBasis:48.68,currency:'USD'},
+  {ticker:'UNH',company:'UnitedHealth Group',type:'Stock',sector:'Healthcare',portfolio:'Growth',investment:1800,shares:4.69,costBasis:383.50,currency:'USD'},
+  {ticker:'O',company:'Realty Income',type:'Stock',sector:'REIT',portfolio:'Growth',investment:2000,shares:37.63,costBasis:53.15,currency:'USD'},
+  {ticker:'JNJ',company:'Johnson & Johnson',type:'Stock',sector:'Healthcare',portfolio:'Growth',investment:1000,shares:6.60,costBasis:151.62,currency:'USD'},
+  {ticker:'TSLA',company:'Tesla Inc',type:'Stock',sector:'Consumer Discretionary',portfolio:'Growth',investment:400,shares:2.82,costBasis:141.95,currency:'USD'},
+  {ticker:'BABA',company:'Alibaba Group',type:'Stock',sector:'Consumer Discretionary',portfolio:'Growth',investment:900,shares:9.25,costBasis:97.29,currency:'USD'},
+  {ticker:'NKE',company:'Nike Inc',type:'Stock',sector:'Consumer Discretionary',portfolio:'Growth',investment:1400,shares:18.67,costBasis:74.98,currency:'USD'},
+  {ticker:'CVS',company:'CVS Health Corp',type:'Stock',sector:'Healthcare',portfolio:'Growth',investment:1000,shares:13.96,costBasis:71.64,currency:'USD'},
+  {ticker:'CRSR',company:'Corsair Gaming',type:'Stock',sector:'Information Technology',portfolio:'Growth',investment:200,shares:10.01,costBasis:19.98,currency:'USD'},
+  {ticker:'UPWK',company:'Upwork Inc',type:'Stock',sector:'Industrials',portfolio:'Growth',investment:200,shares:7.33,costBasis:27.28,currency:'USD'},
+  {ticker:'NIO',company:'Nio Inc',type:'Stock',sector:'Consumer Discretionary',portfolio:'Growth',investment:900,shares:60.66,costBasis:14.84,currency:'USD'},
+  {ticker:'BILI',company:'Bilibili Inc',type:'Stock',sector:'Information Technology',portfolio:'Growth',investment:100,shares:1.56,costBasis:64.27,currency:'USD'},
+  {ticker:'APPS',company:'Digital Turbine',type:'Stock',sector:'Information Technology',portfolio:'Growth',investment:425,shares:11.40,costBasis:37.27,currency:'USD'},
+  {ticker:'VOO',company:'Vanguard S&P 500 ETF',type:'ETF',sector:'ETF',portfolio:'Growth',investment:2500,shares:6.54,costBasis:382.43,currency:'USD'},
+  {ticker:'XLU',company:'Utilities Sector ETF',type:'ETF',sector:'Utilities',portfolio:'Growth',investment:1500,shares:47.39,costBasis:31.65,currency:'USD'},
+  {ticker:'INDA',company:'MSCI India ETF',type:'ETF',sector:'India',portfolio:'Growth',investment:3300,shares:67.02,costBasis:49.24,currency:'USD'},
+  {ticker:'SCHD',company:'Schwab Dividend ETF',type:'ETF',sector:'Dividend',portfolio:'Growth',investment:3100,shares:123.02,costBasis:25.20,currency:'USD'},
+  {ticker:'SPXS',company:'S&P 500 Short ETF',type:'ETF',sector:'Hedging',portfolio:'Growth',investment:2500,shares:63.91,costBasis:39.12,currency:'USD'},
+  {ticker:'UVXY',company:'VIX ETF',type:'ETF',sector:'Hedging',portfolio:'Growth',investment:300,shares:3.99,costBasis:75.11,currency:'USD'},
+  {ticker:'PFE',company:'Pfizer Inc',type:'Stock',sector:'Healthcare',portfolio:'Value',investment:779,shares:30,costBasis:25.96,currency:'USD'},
+  {ticker:'IBIT',company:'iShares Bitcoin ETF',type:'ETF',sector:'Crypto',portfolio:'Value',investment:371,shares:10,costBasis:37.08,currency:'USD'},
+  // Crypto
+  {ticker:'BTC',company:'Bitcoin',type:'Crypto',sector:'Crypto',portfolio:'Growth',investment:1170,shares:0.048505,costBasis:24128.84,currency:'USD'},
+  {ticker:'ETH',company:'Ethereum',type:'Crypto',sector:'Crypto',portfolio:'Growth',investment:1500,shares:0.7886,costBasis:1902.22,currency:'USD'},
+  {ticker:'XRP',company:'XRP',type:'Crypto',sector:'Crypto',portfolio:'Growth',investment:100,shares:314.47,costBasis:0.318,currency:'USD'},
+  {ticker:'SOL',company:'Solana',type:'Crypto',sector:'Crypto',portfolio:'Growth',investment:3280,shares:25.13,costBasis:130.54,currency:'USD'},
+  {ticker:'ADA',company:'Cardano',type:'Crypto',sector:'Crypto',portfolio:'Growth',investment:1167,shares:1309.03,costBasis:0.892,currency:'USD'},
+  {ticker:'XTZ',company:'Tezos',type:'Crypto',sector:'Crypto',portfolio:'Growth',investment:500,shares:242.26,costBasis:2.064,currency:'USD'},
+  {ticker:'MANA',company:'Decentraland',type:'Crypto',sector:'Crypto',portfolio:'Growth',investment:644,shares:417.61,costBasis:1.542,currency:'USD'},
+  // Non-price items
+  {ticker:'Hugo',company:'Hugo (Personal)',type:'People',sector:'People',portfolio:'Growth',investment:800,shares:1,costBasis:800,currency:'USD',manualPrice:1115},
+  {ticker:'CASH-G',company:'Cash (Growth)',type:'Cash',sector:'Cash',portfolio:'Growth',investment:6675,shares:1,costBasis:6675,currency:'USD',manualPrice:6675},
+  {ticker:'CASH-V',company:'Cash (Value)',type:'Cash',sector:'Cash',portfolio:'Value',investment:728,shares:1,costBasis:728,currency:'USD',manualPrice:728},
+  // EUR stocks (using USD-listed or ADR)
+  {ticker:'DTE.DE',company:'Deutsche Telekom',type:'Stock',sector:'Communication Services',portfolio:'Growth',investment:500,shares:23.72,costBasis:19.36,currency:'EUR'},
+  {ticker:'VOW3.DE',company:'Volkswagen Group',type:'Stock',sector:'Consumer Discretionary',portfolio:'Growth',investment:2500,shares:23.85,costBasis:97.16,currency:'EUR'},
+  {ticker:'RUI.PA',company:'Rubis SCA',type:'Stock',sector:'Energy',portfolio:'Growth',investment:700,shares:29.10,costBasis:23.00,currency:'EUR'},
+  {ticker:'ACOMO.AS',company:'Acomo NV',type:'Stock',sector:'Consumer Staples',portfolio:'Value',investment:1716,shares:60,costBasis:24.00,currency:'EUR'},
+  {ticker:'EQNR',company:'Equinor ASA',type:'Stock',sector:'Energy',portfolio:'Value',investment:743,shares:30,costBasis:24.99,currency:'USD'},
+  {ticker:'AKRBP.OL',company:'Aker BP',type:'Stock',sector:'Energy',portfolio:'Value',investment:1031,shares:40,costBasis:251.92,currency:'NOK'},
+];
+
+// CoinGecko IDs for crypto
+const CRYPTO_MAP = { BTC:'bitcoin', ETH:'ethereum', XRP:'ripple', SOL:'solana', ADA:'cardano', XTZ:'tezos', MANA:'decentraland' };
+
+// Fallback prices (your data snapshot) in case APIs fail
+const FALLBACK = {
+  NVDA:211.50,META:616.81,MU:646.47,MELI:1870.01,TSM:414.15,MSFT:420.92,GOOG:395.30,AMZN:271.17,
+  CRM:186.34,HPQ:20.99,DUOL:113.61,'BRK-B':475.08,AAPL:287.44,C:129.09,TGT:125.88,FMC:13.68,
+  ADM:77.53,UNH:369.74,O:61.79,JNJ:222.51,TSLA:411.81,BABA:141.00,NKE:44.41,CVS:87.36,
+  CRSR:7.09,UPWK:10.61,NIO:5.87,BILI:21.98,APPS:3.99,VOO:672.54,XLU:45.12,INDA:49.82,
+  SCHD:31.54,SPXS:28.49,UVXY:35.84,PFE:26.48,IBIT:45.40,EQNR:30.50,
+  'DTE.DE':27.52,'VOW3.DE':87.94,'RUI.PA':34.96,'ACOMO.AS':26.05,'AKRBP.OL':328.13,
+};
+
+let liveData = PORTFOLIO.map(p => ({...p, currentPrice: p.manualPrice || FALLBACK[p.ticker] || p.costBasis, priceLoaded: false}));
+let sortKey = 'currentValue', sortDir = -1, activeFilter = 'All';
+let chartsInited = {};
+let usdEur = 1.17, usdNok = 0.108;
+
+function computeDerived(p) {
+  let price = p.currentPrice;
+  let value = price * p.shares;
+  // EUR conversion
+  if(p.currency === 'EUR') value = value * usdEur;
+  if(p.currency === 'NOK') value = value * usdNok;
+  const gl = value - p.investment;
+  const glPct = p.investment > 0 ? (gl / p.investment) * 100 : 0;
+  return { ...p, currentValue: value, gainLoss: gl, gainLossPct: glPct };
+}
+
+function getData() { return liveData.map(computeDerived); }
+
+// ─── FORMATTING ───────────────────────────────────────────────────────────────
+const fmtUSD = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:0,maximumFractionDigits:0}).format(n);
+const fmtUSD2 = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+const fmtPct = n => (n>0?'+':'')+n.toFixed(2)+'%';
+const pc = n => n>0?'pos':n<0?'neg':'neu';
+
+// ─── LIVE PRICE FETCHING ──────────────────────────────────────────────────────
+async function fetchLivePrices() {
+  setStatus('loading','Fetching live prices…');
+  const btn = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  btn.classList.add('loading');
+  icon.innerHTML = '<span class="spin">↻</span>';
+
+  try {
+    // Fetch FX rates
+    try {
+      const fxRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      if(fxRes.ok) {
+        const fx = await fxRes.json();
+        usdEur = fx.rates.EUR ? 1/fx.rates.EUR : usdEur;
+        usdNok = fx.rates.NOK ? 1/fx.rates.NOK : usdNok;
+      }
+    } catch(e) {}
+
+    // Stock tickers for Yahoo Finance (USD-listed only)
+    const stockTickers = liveData
+      .filter(p => (p.type==='Stock'||p.type==='ETF') && !p.manualPrice)
+      .map(p => p.ticker);
+
+    // Fetch stocks via Yahoo Finance (via allorigins proxy to avoid CORS)
+    if(stockTickers.length > 0) {
+      const chunks = chunkArray(stockTickers, 10);
+      for(const chunk of chunks) {
+        const symbols = chunk.join(',');
+        try {
+          const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}&fields=regularMarketPrice`;
+          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+          const res = await fetch(proxyUrl);
+          if(res.ok) {
+            const json = await res.json();
+            const parsed = JSON.parse(json.contents);
+            const quotes = parsed?.quoteResponse?.result || [];
+            quotes.forEach(q => {
+              const idx = liveData.findIndex(p => p.ticker === q.symbol);
+              if(idx >= 0 && q.regularMarketPrice) {
+                liveData[idx].currentPrice = q.regularMarketPrice;
+                liveData[idx].priceLoaded = true;
+              }
+            });
+          }
+        } catch(e) {}
+      }
+    }
+
+    // Fetch crypto via CoinGecko
+    const cryptoIds = Object.values(CRYPTO_MAP).join(',');
+    try {
+      const cgRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoIds}&vs_currencies=usd`);
+      if(cgRes.ok) {
+        const cgData = await cgRes.json();
+        Object.entries(CRYPTO_MAP).forEach(([ticker, id]) => {
+          const idx = liveData.findIndex(p => p.ticker === ticker);
+          if(idx >= 0 && cgData[id]?.usd) {
+            liveData[idx].currentPrice = cgData[id].usd;
+            liveData[idx].priceLoaded = true;
+          }
+        });
+      }
+    } catch(e) {}
+
+    const now = new Date();
+    document.getElementById('lastUpdate').textContent = 'Updated ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + ' · ' + now.toLocaleDateString([], {day:'numeric',month:'short'});
+    setStatus('ok','Live prices loaded');
+  } catch(e) {
+    setStatus('error','Using snapshot prices (API unavailable)');
+  }
+
+  btn.classList.remove('loading');
+  icon.innerHTML = '↻';
+  renderAll();
+}
+
+function chunkArray(arr, size) {
+  const chunks = [];
+  for(let i=0; i<arr.length; i+=size) chunks.push(arr.slice(i,i+size));
+  return chunks;
+}
+
+function setStatus(type, msg) {
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot' + (type==='loading'?' loading':type==='error'?' error':'');
+  document.getElementById('statusText').textContent = msg;
+}
+
+// ─── RENDER ALL ───────────────────────────────────────────────────────────────
+function renderAll() {
+  renderMetrics();
+  renderTable();
+  if(chartsInited.allocation) redrawAllocation();
+  if(chartsInited.performance) redrawPerformance();
+  if(chartsInited.analysis) redrawAnalysis();
+}
+
+// ─── METRICS ──────────────────────────────────────────────────────────────────
+function renderMetrics() {
+  const d = getData();
+  const totalInvested = d.reduce((a,b)=>a+b.investment,0);
+  const totalValue = d.reduce((a,b)=>a+b.currentValue,0);
+  const totalGL = totalValue - totalInvested;
+  const totalGLPct = (totalGL/totalInvested)*100;
+  const winners = d.filter(x=>x.gainLoss>0);
+  const losers = d.filter(x=>x.gainLoss<0);
+  const best = [...d].sort((a,b)=>b.gainLossPct-a.gainLossPct)[0];
+  const worst = [...d].filter(x=>x.type!=='Cash').sort((a,b)=>a.gainLossPct-b.gainLossPct)[0];
+  const cashVal = d.filter(x=>x.type==='Cash').reduce((a,b)=>a+b.currentValue,0);
+  document.getElementById('metricsGrid').innerHTML = `
+    <div class="metric"><div class="metric-label">Total Value</div><div class="metric-value">${fmtUSD(totalValue)}</div><div class="metric-sub neu">Cost: ${fmtUSD(totalInvested)}</div></div>
+    <div class="metric"><div class="metric-label">Total Return</div><div class="metric-value ${pc(totalGL)}">${fmtUSD(totalGL)}</div><div class="metric-sub ${pc(totalGLPct)}">${fmtPct(totalGLPct)}</div></div>
+    <div class="metric"><div class="metric-label">Positions</div><div class="metric-value">${d.length}</div><div class="metric-sub neu"><span class="pos">▲ ${winners.length}</span> &nbsp;<span class="neg">▼ ${losers.length}</span></div></div>
+    <div class="metric"><div class="metric-label">Best Position</div><div class="metric-value pos" style="font-size:18px">${best.ticker}</div><div class="metric-sub pos">${fmtPct(best.gainLossPct)}</div></div>
+    <div class="metric"><div class="metric-label">Worst Position</div><div class="metric-value neg" style="font-size:18px">${worst.ticker}</div><div class="metric-sub neg">${fmtPct(worst.gainLossPct)}</div></div>
+    <div class="metric"><div class="metric-label">Cash</div><div class="metric-value">${fmtUSD(cashVal)}</div><div class="metric-sub neu">${(cashVal/totalValue*100).toFixed(1)}% of portfolio</div></div>
+  `;
+}
+
+// ─── TABLE ────────────────────────────────────────────────────────────────────
+function renderFilters() {
+  const types = ['All','Stock','ETF','Crypto','Cash','People'];
+  document.getElementById('filterBtns').innerHTML = types.map(t=>`<button class="filter-btn${activeFilter===t?' active':''}" onclick="setFilter('${t}')">${t}</button>`).join('');
+}
+function setFilter(f) { activeFilter=f; renderFilters(); renderTable(); }
+function sortBy(key) { if(sortKey===key) sortDir*=-1; else {sortKey=key;sortDir=-1;} renderTable(); }
+
+function renderTable() {
+  const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
+  let rows = getData().filter(d => {
+    if(activeFilter!=='All' && d.type!==activeFilter) return false;
+    if(q && !d.ticker.toLowerCase().includes(q) && !d.company.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  rows.sort((a,b) => {
+    let av=a[sortKey], bv=b[sortKey];
+    if(typeof av==='string') return sortDir*av.localeCompare(bv);
+    return sortDir*(av-bv);
+  });
+  const glBadge = (v,p) => `<span class="change-badge ${pc(v)}">${v>=0?'▲':'▼'} ${Math.abs(p).toFixed(1)}%</span>`;
+  const portDot = p => `<span class="portfolio-dot" style="background:${p==='Growth'?'#5b8dee':'#3ecf8e'}"></span>${p}`;
+  document.getElementById('holdingsTbody').innerHTML = rows.map(d=>`
+    <tr>
+      <td style="font-weight:700;letter-spacing:0.02em">${d.ticker}</td>
+      <td style="color:var(--text2);max-width:150px;overflow:hidden;text-overflow:ellipsis">${d.company}</td>
+      <td><span class="badge badge-${d.type}">${d.type}</span></td>
+      <td style="font-size:12px">${portDot(d.portfolio)}</td>
+      <td style="text-align:right;color:var(--text2)">${fmtUSD(d.investment)}</td>
+      <td style="text-align:right" class="live-price${d.priceLoaded?' updated':''}">${d.type==='Cash'?'—':fmtUSD2(d.currentPrice)}</td>
+      <td style="text-align:right;font-weight:600">${fmtUSD(d.currentValue)}</td>
+      <td style="text-align:right" class="${pc(d.gainLoss)}">${d.gainLoss>=0?'+':''}${fmtUSD(d.gainLoss)}</td>
+      <td style="text-align:right">${glBadge(d.gainLoss, d.gainLossPct)}</td>
+      <td style="text-align:right;color:var(--text2)">${d.allocation?d.allocation.toFixed(1):(d.currentValue/getData().reduce((a,b)=>a+b.currentValue,0)*100).toFixed(1)}%</td>
+    </tr>
+  `).join('');
+}
+
+// ─── SECTOR COLORS ────────────────────────────────────────────────────────────
+const SC = {'Information Technology':'#5b8dee','Consumer Discretionary':'#f9a825','Financials':'#3ecf8e','Industrials':'#9b72f8','Healthcare':'#f06292','Energy':'#f05c5c','Communication Services':'#22d3c8','Consumer Staples':'#84cc16','REIT':'#fb923c','ETF':'#a78bfa','Crypto':'#facc15','Hedging':'#64748b','Cash':'#475569','People':'#d946ef','Utilities':'#4ade80','India':'#fb923c','Dividend':'#c084fc','Insurance':'#2dd4bf'};
+
+// ─── ALLOCATION CHARTS ────────────────────────────────────────────────────────
+let sectorChart, typeChart, topChart;
+function redrawAllocation() {
+  const d = getData();
+  const total = d.reduce((a,b)=>a+b.currentValue,0);
+
+  const sectorTot = {};
+  d.forEach(p=>{ sectorTot[p.sector]=(sectorTot[p.sector]||0)+p.currentValue; });
+  const sE = Object.entries(sectorTot).sort((a,b)=>b[1]-a[1]);
+
+  if(sectorChart) sectorChart.destroy();
+  document.getElementById('sectorLegend').innerHTML = sE.slice(0,8).map(([s,v])=>`<span class="legend-item"><span class="legend-dot" style="background:${SC[s]||'#888'}"></span>${s} ${(v/total*100).toFixed(1)}%</span>`).join('');
+  sectorChart = new Chart(document.getElementById('sectorChart'),{type:'doughnut',data:{labels:sE.map(e=>e[0]),datasets:[{data:sE.map(e=>e[1]),backgroundColor:sE.map(e=>SC[e[0]]||'#888'),borderWidth:2,borderColor:'#1a1d27'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtUSD(c.raw)} (${(c.raw/total*100).toFixed(1)}%)`}}}}});
+
+  const typeTot = {};
+  d.forEach(p=>{ typeTot[p.type]=(typeTot[p.type]||0)+p.currentValue; });
+  const tE = Object.entries(typeTot).sort((a,b)=>b[1]-a[1]);
+  const TC = {Stock:'#5b8dee',ETF:'#3ecf8e',Crypto:'#f9a825',Cash:'#64748b',People:'#d946ef'};
+  if(typeChart) typeChart.destroy();
+  document.getElementById('typeLegend').innerHTML = tE.map(([t,v])=>`<span class="legend-item"><span class="legend-dot" style="background:${TC[t]||'#888'}"></span>${t} ${(v/total*100).toFixed(1)}%</span>`).join('');
+  typeChart = new Chart(document.getElementById('typeChart'),{type:'doughnut',data:{labels:tE.map(e=>e[0]),datasets:[{data:tE.map(e=>e[1]),backgroundColor:tE.map(([t])=>TC[t]||'#888'),borderWidth:2,borderColor:'#1a1d27'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtUSD(c.raw)}`}}}}});
+
+  const top15 = [...d].filter(p=>p.type!=='Cash').sort((a,b)=>b.currentValue-a.currentValue).slice(0,15);
+  const topH = Math.max(320, top15.length*32+60);
+  document.getElementById('topWrap').style.height = topH+'px';
+  if(topChart) topChart.destroy();
+  topChart = new Chart(document.getElementById('topChart'),{type:'bar',data:{labels:top15.map(p=>p.ticker),datasets:[{label:'Value',data:top15.map(p=>p.currentValue),backgroundColor:top15.map(p=>SC[p.sector]||'#5b8dee'),borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtUSD(c.raw)}}},scales:{x:{ticks:{color:'#8b90a7',callback:v=>fmtUSD(v)},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#8b90a7',autoSkip:false},grid:{display:false}}}}});
+}
+
+// ─── PERFORMANCE ──────────────────────────────────────────────────────────────
+let glChart;
+function redrawPerformance() {
+  const d = getData().filter(p=>p.type!=='Cash');
+  const sorted = [...d].sort((a,b)=>b.gainLossPct-a.gainLossPct);
+  const gainers = sorted.slice(0,8);
+  const losers = sorted.slice(-8).reverse();
+  const maxG = gainers[0]?.gainLossPct||1;
+  const maxL = Math.abs(losers[0]?.gainLossPct||1);
+
+  document.getElementById('gainersWrap').innerHTML = gainers.map(p=>`
+    <div class="perf-row">
+      <div class="perf-ticker">${p.ticker}</div>
+      <div class="perf-bar-outer"><div class="perf-bar-inner" style="width:${(p.gainLossPct/maxG*100).toFixed(1)}%;background:var(--green)"></div></div>
+      <div class="perf-val pos">${fmtPct(p.gainLossPct)}</div>
+    </div>`).join('');
+
+  document.getElementById('losersWrap').innerHTML = losers.map(p=>`
+    <div class="perf-row">
+      <div class="perf-ticker">${p.ticker}</div>
+      <div class="perf-bar-outer"><div class="perf-bar-inner" style="width:${(Math.abs(p.gainLossPct)/maxL*100).toFixed(1)}%;background:var(--red)"></div></div>
+      <div class="perf-val neg">${fmtPct(p.gainLossPct)}</div>
+    </div>`).join('');
+
+  const glData = [...d].filter(p=>Math.abs(p.gainLoss)>30).sort((a,b)=>b.gainLoss-a.gainLoss).slice(0,22);
+  const glH = Math.max(340, glData.length*30+60);
+  document.getElementById('glWrap').style.height = glH+'px';
+  if(glChart) glChart.destroy();
+  glChart = new Chart(document.getElementById('glChart'),{type:'bar',data:{labels:glData.map(p=>p.ticker),datasets:[{label:'Gain/Loss',data:glData.map(p=>p.gainLoss),backgroundColor:glData.map(p=>p.gainLoss>=0?'rgba(62,207,142,0.75)':'rgba(240,92,92,0.75)'),borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(c.raw>=0?'+':'')+fmtUSD(c.raw)}}},scales:{x:{ticks:{color:'#8b90a7',callback:v=>(v<0?'-':'')+fmtUSD(Math.abs(v))},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#8b90a7',autoSkip:false},grid:{display:false}}}}});
+}
+
+// ─── ANALYSIS ─────────────────────────────────────────────────────────────────
+function redrawAnalysis() {
+  const d = getData();
+  const totalInvested = d.reduce((a,b)=>a+b.investment,0);
+  const totalValue = d.reduce((a,b)=>a+b.currentValue,0);
+  const totalGL = totalValue - totalInvested;
+  const winners = d.filter(x=>x.gainLoss>0);
+  const losers = d.filter(x=>x.gainLoss<0);
+  const winRate = (winners.length/(winners.length+losers.length)*100).toFixed(0);
+  const avgWin = winners.length ? winners.reduce((a,b)=>a+b.gainLossPct,0)/winners.length : 0;
+  const avgLoss = losers.length ? losers.reduce((a,b)=>a+b.gainLossPct,0)/losers.length : 0;
+
+  const sRow = (l,v,cls='') => `<div class="stat-row"><span class="stat-label">${l}</span><span class="stat-val ${cls}">${v}</span></div>`;
+  document.getElementById('summaryStats').innerHTML =
+    sRow('Total invested', fmtUSD(totalInvested)) +
+    sRow('Total value', fmtUSD(totalValue)) +
+    sRow('Total gain/loss', fmtUSD(totalGL), pc(totalGL)) +
+    sRow('Overall return', fmtPct((totalGL/totalInvested)*100), pc(totalGL)) +
+    sRow('Win rate', winRate+'%') +
+    sRow('Avg winning position', fmtPct(avgWin), 'pos') +
+    sRow('Avg losing position', fmtPct(avgLoss), 'neg');
+
+  const bigW = [...d].sort((a,b)=>b.gainLoss-a.gainLoss)[0];
+  const bigL = [...d].filter(x=>x.type!=='Cash').sort((a,b)=>a.gainLoss-b.gainLoss)[0];
+  const bigPct = [...d].sort((a,b)=>b.gainLossPct-a.gainLossPct)[0];
+  const wrstPct = [...d].filter(x=>x.type!=='Cash').sort((a,b)=>a.gainLossPct-b.gainLossPct)[0];
+  document.getElementById('riskStats').innerHTML =
+    sRow('Biggest $ gain', `${bigW.ticker} ${fmtUSD(bigW.gainLoss)}`, 'pos') +
+    sRow('Biggest $ loss', `${bigL.ticker} ${fmtUSD(bigL.gainLoss)}`, 'neg') +
+    sRow('Best % return', `${bigPct.ticker} ${fmtPct(bigPct.gainLossPct)}`, 'pos') +
+    sRow('Worst % return', `${wrstPct.ticker} ${fmtPct(wrstPct.gainLossPct)}`, 'neg') +
+    sRow('Positions in loss', losers.length) +
+    sRow('Total unrealized loss', fmtUSD(losers.reduce((a,b)=>a+b.gainLoss,0)), 'neg');
+
+  const currTot = {};
+  d.forEach(p=>{ const c=p.currency==='EUR'?'EUR (converted)':p.currency==='NOK'?'NOK (converted)':'USD'; currTot[c]=(currTot[c]||0)+p.currentValue; });
+  document.getElementById('currencyStats').innerHTML = Object.entries(currTot).sort((a,b)=>b[1]-a[1]).map(([c,v])=>sRow(c, `${fmtUSD(v)} (${(v/totalValue*100).toFixed(1)}%)`)).join('');
+
+  const typeTot = {};
+  d.forEach(p=>{ typeTot[p.type]=(typeTot[p.type]||0)+p.currentValue; });
+  const cryptoPct = (typeTot['Crypto']||0)/totalValue*100;
+  const cashPct = (typeTot['Cash']||0)/totalValue*100;
+  const hedgePct = d.filter(p=>p.sector==='Hedging').reduce((a,b)=>a+b.currentValue,0)/totalValue*100;
+  const sectors = new Set(d.map(p=>p.sector)).size;
+  document.getElementById('healthStats').innerHTML =
+    sRow('Cash buffer', fmtPct(cashPct)) +
+    sRow('Crypto exposure', fmtPct(cryptoPct)) +
+    sRow('Hedge positions', fmtPct(hedgePct)) +
+    sRow('Asset classes', Object.keys(typeTot).length) +
+    sRow('Sectors covered', sectors) +
+    sRow('Currencies', Object.keys(currTot).length);
+}
+
+// ─── TAB SWITCHING ────────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('sec-'+name).classList.add('active');
+  if(name==='allocation' && !chartsInited.allocation) { chartsInited.allocation=true; setTimeout(redrawAllocation,50); }
+  else if(name==='allocation') redrawAllocation();
+  if(name==='performance' && !chartsInited.performance) { chartsInited.performance=true; setTimeout(redrawPerformance,50); }
+  else if(name==='performance') redrawPerformance();
+  if(name==='analysis' && !chartsInited.analysis) { chartsInited.analysis=true; setTimeout(redrawAnalysis,50); }
+  else if(name==='analysis') redrawAnalysis();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+renderFilters();
+renderMetrics();
+renderTable();
+// Auto-fetch on load
+fetchLivePrices();
+// Auto-refresh every 5 minutes
+setInterval(fetchLivePrices, 5 * 60 * 1000);
+</script>
+</body>
+</html>
