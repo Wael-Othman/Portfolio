@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg:#f4f6f9;--bg2:#fff;--bg3:#eef0f5;
+    --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.15);
+    --text:#1a1d2e;--text2:#5a6278;--text3:#9aa0b4;
+    --green:#1a9e6a;--red:#d93030;--blue:#2563eb;
+    --amber:#d97706;--purple:#7c3aed;
+    --radius:12px;--radius-sm:8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  .header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:100;gap:12px;flex-wrap:wrap;}
+  .header-left{display:flex;align-items:center;gap:12px;}
+  .logo{width:32px;height:32px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+  .header h1{font-size:17px;font-weight:600;}
+  .header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .last-update{font-size:12px;color:var(--text3);}
+  .auto-badge{font-size:10px;padding:2px 7px;border-radius:10px;background:rgba(26,158,106,.1);color:var(--green);font-weight:600;}
+  .refresh-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-sm);background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:13px;cursor:pointer;transition:all .2s;}
+  .refresh-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
+  .refresh-btn.loading{opacity:.6;pointer-events:none;}
+  .spin{animation:spin 1s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .main{padding:22px 28px;max-width:1440px;margin:0 auto;}
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px;}
+  .metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:15px 17px;transition:border-color .2s;}
+  .metric:hover{border-color:var(--border2);}
+  .metric-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;}
+  .metric-value{font-size:21px;font-weight:600;line-height:1.1;}
+  .metric-sub{font-size:12px;color:var(--text2);margin-top:3px;}
+  .pos{color:var(--green);}.neg{color:var(--red);}.neu{color:var(--text2);}
+  .status-bar{display:flex;align-items:center;gap:8px;margin-bottom:18px;padding:9px 14px;background:var(--bg2);border-radius:var(--radius-sm);border:1px solid var(--border);font-size:12px;color:var(--text2);}
+  .status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .status-dot.loading{background:var(--amber);animation:none;}
+  .status-dot.error{background:var(--red);animation:none;}
+  .countdown{margin-left:auto;font-size:11px;color:var(--text3);}
+  .tabs{display:flex;gap:3px;margin-bottom:18px;background:var(--bg2);border-radius:var(--radius-sm);padding:4px;border:1px solid var(--border);width:fit-content;flex-wrap:wrap;}
+  .tab{padding:7px 15px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);background:transparent;border:none;transition:all .18s;}
+  .tab:hover{color:var(--text);}
+  .tab.active{background:var(--bg3);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.15);}
+  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .search{flex:1;min-width:200px;padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-size:13px;outline:none;}
+  .search:focus{border-color:var(--blue);}
+  .search::placeholder{color:var(--text3);}
+  .filter-btns{display:flex;gap:6px;flex-wrap:wrap;}
+  .filter-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;transition:all .15s;}
+  .filter-btn:hover{border-color:var(--blue);color:var(--blue);}
+  .filter-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+  .table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead{background:var(--bg3);}
+  th{padding:9px 13px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;cursor:pointer;user-select:none;border-bottom:1px solid var(--border);}
+  th:hover{color:var(--text2);}
+  td{padding:9px 13px;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(0,0,0,.02);}
+  .cbadge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:600;}
+  .cbadge.pos{background:rgba(26,158,106,.1);color:var(--green);}
+  .cbadge.neg{background:rgba(217,48,48,.1);color:var(--red);}
+  .cbadge.neu{background:rgba(0,0,0,.06);color:var(--text2);}
+  .tbadge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;display:inline-block;}
+  .tbadge-Stock{background:rgba(37,99,235,.1);color:var(--blue);}
+  .tbadge-ETF{background:rgba(26,158,106,.1);color:var(--green);}
+  .tbadge-Crypto{background:rgba(217,119,6,.1);color:var(--amber);}
+  .tbadge-Cash{background:rgba(0,0,0,.06);color:var(--text2);}
+  .tbadge-People{background:rgba(124,58,237,.1);color:var(--purple);}
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
+  .chart-card h3{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em;}
+  .chart-card.full{grid-column:1/-1;}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
+  .legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+  .perf-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px;}
+  .perf-ticker{width:65px;color:var(--text2);font-weight:500;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;}
+  .perf-bar-outer{flex:1;background:var(--bg3);border-radius:3px;height:6px;overflow:hidden;}
+  .perf-bar-inner{height:100%;border-radius:3px;}
+  .perf-val{width:72px;text-align:right;font-weight:600;flex-shrink:0;font-size:12px;}
+  .analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .analysis-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
+  .analysis-card h3{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em;}
+  .stat-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-label{color:var(--text2);}
+  .stat-val{font-weight:600;}
+  .section{display:none;}
+  .section.active{display:block;}
+  /* FORMULAS */
+  .formula-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .formula-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+  .formula-card.full{grid-column:1/-1;}
+  .formula-card h3{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:14px;text-transform:uppercase;letter-spacing:.05em;}
+  .formula-box{background:var(--bg3);border-radius:8px;padding:12px 14px;margin-bottom:10px;border-left:3px solid var(--blue);}
+  .formula-name{font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;}
+  .formula-expr{font-family:'SF Mono','Fira Code',monospace;font-size:13px;color:var(--text);line-height:1.6;}
+  .formula-example{font-size:11px;color:var(--text2);margin-top:5px;font-style:italic;}
+  .fx-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px;}
+  .fx-table th{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:6px 10px;border-bottom:1px solid var(--border);text-align:left;}
+  .fx-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .fx-table tr:last-child td{border-bottom:none;}
+  .fx-flag{font-size:17px;margin-right:6px;}
+  .fx-rate{font-weight:700;font-size:14px;color:var(--text);}
+  .live-badge{font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(26,158,106,.1);color:var(--green);font-weight:600;margin-left:6px;}
+  .snap-badge{font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.06);color:var(--text3);font-weight:600;margin-left:6px;}
+  .flow-step{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;}
+  .flow-num{width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .flow-text{font-size:13px;color:var(--text);line-height:1.5;}
+  .flow-text strong{color:var(--blue);}
+  .flow-code{font-family:'SF Mono','Fira Code',monospace;font-size:12px;background:var(--bg3);padding:2px 6px;border-radius:4px;}
+  /* EDITOR */
+  .editor-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  .editor-toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg3);flex-wrap:wrap;gap:8px;}
+  .editor-toolbar h3{font-size:14px;font-weight:600;}
+  .editor-actions{display:flex;gap:8px;}
+  .btn{padding:7px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+  .btn-success{background:var(--green);color:#fff;}
+  .btn-success:hover{background:#158a5a;}
+  .btn-danger{background:var(--red);color:#fff;font-size:11px;padding:4px 9px;}
+  .btn-danger:hover{background:#b91c1c;}
+  .btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);}
+  .btn-secondary:hover{background:var(--border2);}
+  .editor-hint{font-size:12px;color:#92400e;padding:9px 16px;border-bottom:1px solid var(--border);background:#fffbf0;line-height:1.6;}
+  .editor-table-wrap{overflow-x:auto;max-height:540px;overflow-y:auto;}
+  .editor-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .editor-table th{padding:8px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;position:sticky;top:0;z-index:2;}
+  .editor-table td{padding:3px 5px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .editor-table tr:last-child td{border-bottom:none;}
+  .editor-table tr:hover td{background:rgba(37,99,235,.03);}
+  .cell-input{width:100%;padding:5px 7px;border:1px solid transparent;border-radius:5px;background:transparent;font-size:12px;color:var(--text);font-family:inherit;}
+  .cell-input:focus{outline:none;border-color:var(--blue);background:#fff;}
+  .cell-select{width:100%;padding:5px 4px;border:1px solid transparent;border-radius:5px;background:transparent;font-size:12px;color:var(--text);font-family:inherit;cursor:pointer;}
+  .cell-select:focus{outline:none;border-color:var(--blue);background:#fff;}
+  .add-row-btn{display:flex;align-items:center;gap:6px;padding:10px 16px;font-size:13px;font-weight:500;color:var(--blue);cursor:pointer;border:none;background:transparent;width:100%;border-top:1px solid var(--border);}
+  .add-row-btn:hover{background:rgba(37,99,235,.04);}
+  .save-notice{display:none;padding:10px 16px;background:#f0fdf4;border-top:1px solid #bbf7d0;font-size:13px;color:var(--green);font-weight:600;}
+  @media(max-width:768px){
+    .main{padding:14px;}
+    .charts-grid,.analysis-grid,.formula-grid{grid-template-columns:1fr;}
+    .header{padding:12px 16px;}
+    .metric-value{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">📈</div>
+    <div>
+      <h1>Portfolio Dashboard</h1>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="auto-badge">● Auto-refresh</span>
+    <span class="last-update" id="lastUpdate">—</span>
+    <button class="refresh-btn" id="refreshBtn" onclick="fetchLivePrices()">
+      <span id="refreshIcon">↻</span> Refresh now
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="status-bar">
+    <div class="status-dot loading" id="statusDot"></div>
+    <span id="statusText">Loading live prices…</span>
+    <span class="countdown" id="countdown"></span>
+  </div>
+
+  <div class="metrics" id="metricsGrid"></div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('holdings',this)">Holdings</button>
+    <button class="tab" onclick="switchTab('allocation',this)">Allocation</button>
+    <button class="tab" onclick="switchTab('performance',this)">Performance</button>
+    <button class="tab" onclick="switchTab('analysis',this)">Analysis</button>
+    <button class="tab" onclick="switchTab('formulas',this)">🧮 Formulas & FX</button>
+    <button class="tab" onclick="switchTab('editor',this)">✏️ Edit Portfolio</button>
+  </div>
+
+  <!-- HOLDINGS -->
+  <div class="section active" id="sec-holdings">
+    <div class="toolbar">
+      <input class="search" type="text" placeholder="Search ticker or company…" id="searchInput" oninput="renderTable()">
+      <div class="filter-btns" id="filterBtns"></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th onclick="sortBy('ticker')">Ticker</th>
+          <th onclick="sortBy('company')">Company</th>
+          <th onclick="sortBy('type')">Type</th>
+          <th onclick="sortBy('portfolio')">Portfolio</th>
+          <th onclick="sortBy('investment')" style="text-align:right">Invested</th>
+          <th onclick="sortBy('currentPrice')" style="text-align:right">Price (local)</th>
+          <th onclick="sortBy('currentValue')" style="text-align:right">Value (USD)</th>
+          <th onclick="sortBy('gainLoss')" style="text-align:right">Gain/Loss</th>
+          <th onclick="sortBy('gainLossPct')" style="text-align:right">Return %</th>
+          <th onclick="sortBy('allocationPct')" style="text-align:right">Alloc %</th>
+        </tr></thead>
+        <tbody id="holdingsTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ALLOCATION -->
+  <div class="section" id="sec-allocation">
+    <div class="charts-grid">
+      <div class="chart-card"><h3>By Sector</h3><div id="sectorLegend" class="legend"></div><div style="position:relative;height:240px"><canvas id="sectorChart"></canvas></div></div>
+      <div class="chart-card"><h3>By Asset Type</h3><div id="typeLegend" class="legend"></div><div style="position:relative;height:240px"><canvas id="typeChart"></canvas></div></div>
+      <div class="chart-card full"><h3>Top 15 Holdings by Value</h3><div style="position:relative" id="topWrap"><canvas id="topChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- PERFORMANCE -->
+  <div class="section" id="sec-performance">
+    <div class="charts-grid">
+      <div class="chart-card"><h3>Top Gainers (%)</h3><div id="gainersWrap"></div></div>
+      <div class="chart-card"><h3>Top Losers (%)</h3><div id="losersWrap"></div></div>
+      <div class="chart-card full"><h3>Gain / Loss by Position ($)</h3><div style="position:relative" id="glWrap"><canvas id="glChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- ANALYSIS -->
+  <div class="section" id="sec-analysis">
+    <div class="analysis-grid">
+      <div class="analysis-card"><h3>Portfolio Summary</h3><div id="summaryStats"></div></div>
+      <div class="analysis-card"><h3>Risk Overview</h3><div id="riskStats"></div></div>
+      <div class="analysis-card"><h3>Currency Exposure</h3><div id="currencyStats"></div></div>
+      <div class="analysis-card"><h3>Portfolio Health</h3><div id="healthStats"></div></div>
+    </div>
+  </div>
+
+  <!-- FORMULAS & FX -->
+  <div class="section" id="sec-formulas">
+    <div class="formula-grid">
+      <div class="formula-card full">
+        <h3>⚙️ How every position is calculated</h3>
+        <div class="flow-step"><div class="flow-num">1</div><div class="flow-text"><strong>Current Value (USD)</strong> = <span class="flow-code">currentPrice(local) × shares × FX_rate(USD per 1 local unit)</span><br>For USD positions, FX_rate = 1.0 exactly. Foreign positions use live rates fetched from exchangerate-api.com.</div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div class="flow-text"><strong>Gain / Loss ($)</strong> = <span class="flow-code">currentValue(USD) − amountInvested(USD)</span></div></div>
+        <div class="flow-step"><div class="flow-num">3</div><div class="flow-text"><strong>Return %</strong> = <span class="flow-code">(Gain/Loss ÷ amountInvested) × 100</span></div></div>
+        <div class="flow-step"><div class="flow-num">4</div><div class="flow-text"><strong>Allocation %</strong> = <span class="flow-code">(positionValue ÷ totalPortfolioValue) × 100</span> — recalculated live on every refresh.</div></div>
+        <div class="flow-step"><div class="flow-num">5</div><div class="flow-text"><strong>Auto-refresh:</strong> prices update every <strong>5 minutes</strong> automatically while the tab is open. Stocks via Yahoo Finance, crypto via CoinGecko, FX via exchangerate-api. A countdown timer is shown in the status bar.</div></div>
+      </div>
+      <div class="formula-card">
+        <h3>📐 Core formulas with examples</h3>
+        <div class="formula-box"><div class="formula-name">USD Position</div><div class="formula-expr">Value = Price × Shares</div><div class="formula-example">NVDA: $215.20 × 20.92 = $4,502</div></div>
+        <div class="formula-box"><div class="formula-name">EUR Position</div><div class="formula-expr">Value = Price(€) × Shares × EUR/USD</div><div class="formula-example">Deutsche Telekom: €27.40 × 23.72 × 1.175 = $764</div></div>
+        <div class="formula-box"><div class="formula-name">HKD Position</div><div class="formula-expr">Value = Price(HK$) × Shares × HKD/USD</div><div class="formula-example">JD.com: HK$117.50 × 108.29 × 0.1277 = $1,625</div></div>
+        <div class="formula-box"><div class="formula-name">NOK Position</div><div class="formula-expr">Value = Price(kr) × Shares × NOK/USD</div><div class="formula-example">Aker BP: kr333.27 × 40 × 0.1087 = $1,448</div></div>
+        <div class="formula-box"><div class="formula-name">GBX Position (pence)</div><div class="formula-expr">Value = Price(p) × Shares × GBP/USD ÷ 100</div><div class="formula-example">Domino's: 192.5p × 310 × 1.358 ÷ 100 = $810</div></div>
+      </div>
+      <div class="formula-card">
+        <h3>💱 Live FX rates (USD per 1 unit)</h3>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">Updated every 5 minutes from exchangerate-api.com</p>
+        <table class="fx-table">
+          <thead><tr><th>Currency</th><th>Rate</th><th>Status</th><th>Used for</th></tr></thead>
+          <tbody id="fxTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="section" id="sec-editor">
+    <div class="editor-wrap">
+      <div class="editor-toolbar">
+        <h3>✏️ Edit Your Portfolio Positions</h3>
+        <div class="editor-actions">
+          <button class="btn btn-secondary" onclick="resetEditor()">↺ Reset to default</button>
+          <button class="btn btn-success" onclick="applyEdits()">✓ Apply &amp; Save</button>
+        </div>
+      </div>
+      <div class="editor-hint">
+        💡 <strong>Add position:</strong> click + below &nbsp;|&nbsp; <strong>Remove:</strong> ✕ &nbsp;|&nbsp; <strong>Edit:</strong> click any cell &nbsp;|&nbsp;
+        <strong>Currency:</strong> enter price in that currency (HKD for HK stocks, EUR for EU stocks, etc.) &nbsp;|&nbsp;
+        <strong>Manual Price:</strong> fixed USD value — overrides live fetch (use for Cash, personal investments) &nbsp;|&nbsp;
+        Click <strong>Apply &amp; Save</strong> — edits persist in your browser automatically.
+      </div>
+      <div class="editor-table-wrap">
+        <table class="editor-table">
+          <thead><tr>
+            <th>Ticker</th><th>Company</th><th>Type</th><th>Sector</th><th>Portfolio</th>
+            <th>Currency</th><th>Shares</th><th>Cost Basis</th><th>Invested $</th><th>Manual Price (USD)</th><th></th>
+          </tr></thead>
+          <tbody id="editorTbody"></tbody>
+        </table>
+      </div>
+      <button class="add-row-btn" onclick="addEditorRow()">＋ Add new position</button>
+      <div class="save-notice" id="saveNotice">✓ Portfolio saved! Refreshing live prices…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── PORTFOLIO — exact values from Google Sheet (updated May 2026) ────────────
+//
+// IMPORTANT NOTES on HKD positions:
+//   9618 (JD.com):        price in HKD → multiply by HKD/USD rate ✓
+//   0001 (CK Hutchison):  sheet shows USD-equivalent price per share (already converted)
+//   0823 (Link REIT):     sheet shows USD-equivalent price per share (already converted)
+//   Both 0001 and 0823 use currency:'USD' to avoid double-conversion.
+//
+// snapshotPrice = exact current price from the sheet (fallback when API unavailable)
+// manualPrice   = fixed USD value (no live fetch) — used for Cash & Hugo
+
+const DEFAULT_PORTFOLIO = [
+  // ── GROWTH – Stocks ──────────────────────────────────────────────────────────
+  {ticker:'NVDA',    company:'NVIDIA Corp',            type:'Stock', sector:'Information Technology', portfolio:'Growth', currency:'USD', shares:20.92,    costBasis:14.34,    investment:300,      snapshotPrice:215.20},
+  {ticker:'META',    company:'Meta Platforms',         type:'Stock', sector:'Information Technology', portfolio:'Growth', currency:'USD', shares:2.51,     costBasis:208.99,   investment:525,      snapshotPrice:609.63},
+  {ticker:'MU',      company:'Micron Technology',      type:'Stock', sector:'Information Technology', portfolio:'Growth', currency:'USD', shares:6.53,     costBasis:62.20,    investment:405.89,   snapshotPrice:746.81},
+  {ticker:'MELI',    company:'MercadoLibre',           type:'Stock', sector:'Consumer Discretionary', portfolio:'Growth', currency:'USD', shares:1.23,     costBasis:1467.16,  investment:1800,     snapshotPrice:1632.52},
+  {ticker:'TSM',     company:'TSMC',                   type:'Stock', sector:'Information Technology', portfolio:'Growth', currency:'USD', shares:4.62,     costBasis:86.61,    investment:400,      snapshotPrice:411.68},
+  {ticker:'MSFT',    company:'Microsoft Corp',         type:'Stock', sector:'Information Technology', portfolio:'Growth', currency:'USD', shares:5.44,     costBasis:312.62,   investment:1700,     snapshotPrice:415.12},
+  {ticker:'GOOG',    company:'Alphabet Inc',           type:'Stock', sector:'Information Technology', portfolio:'Growth', currency:'USD', shares:11.25,    costBasis:124.48,   investment:1400,     snapshotPrice:397.05},
+  {ticker:'AMZN',    company:'Amazon Inc',             type:'Stock', sector:'Consumer Discretionary', portfolio:'Growth', currency:'USD', shares:9.10,     costBasis:153.87,   investment:1400,     snapshotPrice:272.68},
+  {ticker:'CRM',     company:'Salesforce Inc',         type:'Stock', sector:'Information Technology', portfolio:'Growth', currency:'USD', shares:7.05,     costBasis:212.68,   investment:1500,     snapshotPrice:181.82},
+  {ticker:'HPQ',     company:'HP Inc',                 type:'Stock', sector:'Information Technology', portfolio:'Growth', currency:'USD', shares:53.36,    costBasis:18.74,    investment:1000,     snapshotPrice:22.68},
+  {ticker:'DUOL',    company:'Duolingo Inc',           type:'Stock', sector:'Consumer Discretionary', portfolio:'Growth', currency:'USD', shares:10.24,    costBasis:126.96,   investment:1300,     snapshotPrice:107.99},
+  {ticker:'BRK-B',   company:'Berkshire Hathaway',     type:'Stock', sector:'Financials',             portfolio:'Growth', currency:'USD', shares:2.40,     costBasis:291.25,   investment:700,      snapshotPrice:475.94},
+  {ticker:'AAPL',    company:'Apple Inc',              type:'Stock', sector:'Information Technology', portfolio:'Growth', currency:'USD', shares:4.16,     costBasis:144.19,   investment:600,      snapshotPrice:293.32},
+  {ticker:'C',       company:'Citigroup Inc',          type:'Stock', sector:'Financials',             portfolio:'Growth', currency:'USD', shares:15.85,    costBasis:50.48,    investment:800,      snapshotPrice:125.55},
+  {ticker:'TGT',     company:'Target Corp',            type:'Stock', sector:'Consumer Discretionary', portfolio:'Growth', currency:'USD', shares:9.27,     costBasis:107.88,   investment:1000,     snapshotPrice:125.25},
+  {ticker:'FMC',     company:'FMC Corp',               type:'Stock', sector:'Industrials',            portfolio:'Growth', currency:'USD', shares:44.12,    costBasis:40.80,    investment:1800,     snapshotPrice:13.40},
+  {ticker:'ADM',     company:'Archer-Daniels-Midland', type:'Stock', sector:'Industrials',            portfolio:'Growth', currency:'USD', shares:45.19,    costBasis:48.68,    investment:2200,     snapshotPrice:77.66},
+  {ticker:'DTE.DE',  company:'Deutsche Telekom',       type:'Stock', sector:'Communication Services', portfolio:'Growth', currency:'EUR', shares:23.717,   costBasis:19.36,    investment:500,      snapshotPrice:27.40},
+  {ticker:'VOW3.DE', company:'Volkswagen Group',       type:'Stock', sector:'Consumer Discretionary', portfolio:'Growth', currency:'EUR', shares:23.85,    costBasis:97.16,    investment:2500,     snapshotPrice:87.62},
+  {ticker:'UNH',     company:'UnitedHealth Group',     type:'Stock', sector:'Healthcare',             portfolio:'Growth', currency:'USD', shares:4.69,     costBasis:383.50,   investment:1800,     snapshotPrice:379.98},
+  {ticker:'RUI.PA',  company:'Rubis SCA',              type:'Stock', sector:'Energy',                 portfolio:'Growth', currency:'EUR', shares:29.105,   costBasis:23.00,    investment:700,      snapshotPrice:35.10},
+  {ticker:'O',       company:'Realty Income',          type:'Stock', sector:'REIT',                   portfolio:'Growth', currency:'USD', shares:37.63,    costBasis:53.15,    investment:2000,     snapshotPrice:61.92},
+  {ticker:'JNJ',     company:'Johnson & Johnson',      type:'Stock', sector:'Healthcare',             portfolio:'Growth', currency:'USD', shares:6.60,     costBasis:151.62,   investment:1000,     snapshotPrice:221.32},
+  {ticker:'TSLA',    company:'Tesla Inc',              type:'Stock', sector:'Consumer Discretionary', portfolio:'Growth', currency:'USD', shares:2.82,     costBasis:141.95,   investment:400,      snapshotPrice:428.35},
+  {ticker:'BABA',    company:'Alibaba Group',          type:'Stock', sector:'Consumer Discretionary', portfolio:'Growth', currency:'USD', shares:9.25,     costBasis:97.29,    investment:900,      snapshotPrice:140.06},
+  // 9618: price in HKD, multiplied by HKD rate
+  {ticker:'9618',    company:'JD.com (HK)',            type:'Stock', sector:'Consumer Discretionary', portfolio:'Growth', currency:'HKD', shares:108.29,   costBasis:107.97,   investment:1500,     snapshotPrice:117.50},
+  // 0001: sheet already stores USD-equivalent price per share → currency:'USD'
+  {ticker:'0001',    company:'CK Hutchison Holdings',  type:'Stock', sector:'Consumer Discretionary', portfolio:'Growth', currency:'USD', shares:277.0766, costBasis:5.017,    investment:1400,     snapshotPrice:9.2595},
+  {ticker:'NKE',     company:'Nike Inc',               type:'Stock', sector:'Consumer Discretionary', portfolio:'Growth', currency:'USD', shares:18.67,    costBasis:74.98,    investment:1400,     snapshotPrice:44.14},
+  {ticker:'CVS',     company:'CVS Health Corp',        type:'Stock', sector:'Healthcare',             portfolio:'Growth', currency:'USD', shares:13.96,    costBasis:71.64,    investment:1000,     snapshotPrice:90.55},
+  {ticker:'CRSR',    company:'Corsair Gaming',         type:'Stock', sector:'Information Technology', portfolio:'Growth', currency:'USD', shares:10.01,    costBasis:19.98,    investment:200,      snapshotPrice:7.88},
+  {ticker:'UPWK',    company:'Upwork Inc',             type:'Stock', sector:'Industrials',            portfolio:'Growth', currency:'USD', shares:7.33,     costBasis:27.28,    investment:200,      snapshotPrice:8.82},
+  {ticker:'BBBY',    company:'Bed Bath & Beyond',      type:'Stock', sector:'Consumer Discretionary', portfolio:'Growth', currency:'USD', shares:7.05,     costBasis:42.56,    investment:300,      snapshotPrice:5.30},
+  {ticker:'BNGO',    company:'BioNano Genomics',       type:'Stock', sector:'Industrials',            portfolio:'Growth', currency:'USD', shares:0.28,     costBasis:1768.36,  investment:500,      snapshotPrice:1.29},
+  {ticker:'NIO',     company:'Nio Inc',                type:'Stock', sector:'Consumer Discretionary', portfolio:'Growth', currency:'USD', shares:60.66,    costBasis:14.84,    investment:900,      snapshotPrice:5.85},
+  {ticker:'BILI',    company:'Bilibili Inc',           type:'Stock', sector:'Information Technology', portfolio:'Growth', currency:'USD', shares:1.56,     costBasis:64.27,    investment:100,      snapshotPrice:22.06},
+  {ticker:'APPS',    company:'Digital Turbine',        type:'Stock', sector:'Information Technology', portfolio:'Growth', currency:'USD', shares:11.40,    costBasis:37.27,    investment:425,      snapshotPrice:4.04},
+  // ── GROWTH – ETFs ──────────────────────────────────────────────────────────
+  {ticker:'VOO',     company:'Vanguard S&P 500 ETF',   type:'ETF',   sector:'ETF',                   portfolio:'Growth', currency:'USD', shares:6.54,     costBasis:382.43,   investment:2500,     snapshotPrice:678.04},
+  {ticker:'XLU',     company:'Utilities Sector ETF',   type:'ETF',   sector:'Utilities',              portfolio:'Growth', currency:'USD', shares:47.39,    costBasis:31.65,    investment:1500,     snapshotPrice:44.72},
+  {ticker:'INDA',    company:'MSCI India ETF',         type:'ETF',   sector:'India',                  portfolio:'Growth', currency:'USD', shares:67.02,    costBasis:49.24,    investment:3300,     snapshotPrice:49.84},
+  {ticker:'SCHD',    company:'Schwab Dividend ETF',    type:'ETF',   sector:'Dividend',               portfolio:'Growth', currency:'USD', shares:123.02,   costBasis:25.20,    investment:3100,     snapshotPrice:31.62},
+  {ticker:'SPXS',    company:'S&P 500 Short ETF',      type:'ETF',   sector:'Hedging',                portfolio:'Growth', currency:'USD', shares:63.91,    costBasis:39.12,    investment:2500,     snapshotPrice:27.82},
+  {ticker:'UVXY',    company:'VIX ETF',                type:'ETF',   sector:'Hedging',                portfolio:'Growth', currency:'USD', shares:3.99,     costBasis:75.11,    investment:300,      snapshotPrice:36.10},
+  // ── GROWTH – Crypto ────────────────────────────────────────────────────────
+  {ticker:'BTC',     company:'Bitcoin',                type:'Crypto',sector:'Crypto',                 portfolio:'Growth', currency:'USD', shares:0.04851,  costBasis:24128.84, investment:1170,     snapshotPrice:80838.85},
+  {ticker:'ETH',     company:'Ethereum',               type:'Crypto',sector:'Crypto',                 portfolio:'Growth', currency:'USD', shares:0.7886,   costBasis:1902.22,  investment:1500,     snapshotPrice:2334.58},
+  {ticker:'XRP',     company:'XRP',                    type:'Crypto',sector:'Crypto',                 portfolio:'Growth', currency:'USD', shares:314.47,   costBasis:0.318,    investment:100,      snapshotPrice:1.454},
+  {ticker:'SOL',     company:'Solana',                 type:'Crypto',sector:'Crypto',                 portfolio:'Growth', currency:'USD', shares:25.13,    costBasis:130.54,   investment:3280,     snapshotPrice:95.530},
+  {ticker:'ADA',     company:'Cardano',                type:'Crypto',sector:'Crypto',                 portfolio:'Growth', currency:'USD', shares:1309.03,  costBasis:0.892,    investment:1167,     snapshotPrice:0.280},
+  {ticker:'XTZ',     company:'Tezos',                  type:'Crypto',sector:'Crypto',                 portfolio:'Growth', currency:'USD', shares:242.26,   costBasis:2.064,    investment:500,      snapshotPrice:0.524},
+  {ticker:'MIOTA',   company:'MIOTA',                  type:'Crypto',sector:'Crypto',                 portfolio:'Growth', currency:'USD', shares:992.65,   costBasis:0.504,    investment:500,      snapshotPrice:0.086},
+  {ticker:'MANA',    company:'Decentraland',           type:'Crypto',sector:'Crypto',                 portfolio:'Growth', currency:'USD', shares:417.61,   costBasis:1.542,    investment:644,      snapshotPrice:0.138},
+  // ── GROWTH – Special ───────────────────────────────────────────────────────
+  {ticker:'Hugo',    company:'Hugo (Personal)',        type:'People',sector:'People',                  portfolio:'Growth', currency:'USD', shares:1,        costBasis:800,      investment:800,      snapshotPrice:1115,      manualPrice:1115},
+  {ticker:'CASH-G',  company:'Cash (Growth)',          type:'Cash',  sector:'Cash',                   portfolio:'Growth', currency:'USD', shares:1,        costBasis:7805,     investment:7805,     snapshotPrice:7805,      manualPrice:7805},
+  // ── VALUE – Stocks ─────────────────────────────────────────────────────────
+  {ticker:'ACOMO.AS',company:'Acomo NV',               type:'Stock', sector:'Consumer Staples',       portfolio:'Value',  currency:'EUR', shares:60,       costBasis:24.00,    investment:1716,     snapshotPrice:26.00},
+  // 0823: sheet shows USD-equivalent price → currency:'USD'
+  {ticker:'0823',    company:'Link REIT',              type:'Stock', sector:'REIT',                   portfolio:'Value',  currency:'USD', shares:400,      costBasis:4.794,    investment:1915,     snapshotPrice:5.2467},
+  {ticker:'AKRBP.OL',company:'Aker BP',               type:'Stock', sector:'Energy',                  portfolio:'Value',  currency:'NOK', shares:40,       costBasis:251.92,   investment:1031,     snapshotPrice:333.27},
+  {ticker:'KLSE1163',company:'Allianz Malaysia',      type:'Stock', sector:'Insurance',               portfolio:'Value',  currency:'MYR', shares:300,      costBasis:20.76,    investment:1596.95,  snapshotPrice:21.40},
+  {ticker:'DNQ',     company:'Equinor ASA',            type:'Stock', sector:'Energy',                  portfolio:'Value',  currency:'NOK', shares:30,       costBasis:240.43,   investment:743,      snapshotPrice:338.46},
+  {ticker:'1883',    company:'Citic Telecom',          type:'Stock', sector:'Communication Services',  portfolio:'Value',  currency:'HKD', shares:3000,     costBasis:2.54,     investment:981,      snapshotPrice:2.82},
+  {ticker:'DOM',     company:"Domino's Pizza Group",   type:'Stock', sector:'Consumer Discretionary',  portfolio:'Value',  currency:'GBX', shares:310,      costBasis:178.20,   investment:731,      snapshotPrice:192.50},
+  {ticker:'PFE',     company:'Pfizer Inc',             type:'Stock', sector:'Healthcare',              portfolio:'Value',  currency:'USD', shares:30,       costBasis:25.96,    investment:779,      snapshotPrice:25.68},
+  // ── VALUE – ETF & Cash ─────────────────────────────────────────────────────
+  {ticker:'IBIT',    company:'iShares Bitcoin ETF',   type:'ETF',   sector:'Crypto',                  portfolio:'Value',  currency:'USD', shares:10,       costBasis:37.08,    investment:371,      snapshotPrice:45.45},
+  {ticker:'CASH-V',  company:'Cash (Value)',           type:'Cash',  sector:'Cash',                   portfolio:'Value',  currency:'USD', shares:1,        costBasis:728,      investment:728,      snapshotPrice:728,       manualPrice:728},
+];
+
+// CoinGecko IDs
+const CRYPTO_MAP={BTC:'bitcoin',ETH:'ethereum',XRP:'ripple',SOL:'solana',ADA:'cardano',XTZ:'tezos',MIOTA:'iota',MANA:'decentraland'};
+
+// FX: USD per 1 unit of foreign currency (fallback snapshot from sheet)
+let FX={EUR:1.17505, HKD:0.1277178, NOK:0.1086545, MYR:0.2545178, GBX:0.0135805};
+let fxLive={EUR:false,HKD:false,NOK:false,MYR:false,GBX:false};
+
+const FX_META={
+  EUR:{flag:'🇪🇺',name:'Euro',used:'DTE.DE, VOW3.DE, RUI.PA, ACOMO.AS'},
+  HKD:{flag:'🇭🇰',name:'HK Dollar',used:'9618, 1883 (Citic)'},
+  NOK:{flag:'🇳🇴',name:'Norwegian Krone',used:'AKRBP.OL, DNQ (Equinor)'},
+  MYR:{flag:'🇲🇾',name:'Malaysian Ringgit',used:'KLSE1163 (Allianz Malaysia)'},
+  GBX:{flag:'🇬🇧',name:'British Pence',used:'DOM (Domino\'s UK)'},
+};
+
+function loadPortfolio(){
+  try{
+    const s=localStorage.getItem('pfData2');
+    if(s) return JSON.parse(s).map(p=>({...p,currentPrice:p.manualPrice??p.snapshotPrice??p.costBasis,priceLoaded:false}));
+  }catch(e){}
+  return DEFAULT_PORTFOLIO.map(p=>({...p,currentPrice:p.manualPrice??p.snapshotPrice??p.costBasis,priceLoaded:false}));
+}
+function savePortfolio(d){try{localStorage.setItem('pfData2',JSON.stringify(d));}catch(e){}}
+
+let liveData=loadPortfolio();
+let sortKey='currentValue',sortDir=-1,activeFilter='All',chartsInited={};
+let countdownSec=300, countdownTimer=null;
+
+function toUSD(v,cur){return v*(FX[cur]??1);}
+function computeDerived(p){
+  let val=p.currentPrice*p.shares;
+  if(p.currency!=='USD') val=toUSD(val,p.currency);
+  const gl=val-p.investment, glPct=p.investment>0?(gl/p.investment)*100:0;
+  return{...p,currentValue:val,gainLoss:gl,gainLossPct:glPct};
+}
+function getData(){
+  const c=liveData.map(computeDerived);
+  const tot=c.reduce((a,b)=>a+b.currentValue,0);
+  return c.map(p=>({...p,allocationPct:tot>0?(p.currentValue/tot)*100:0}));
+}
+
+const fmtUSD=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:0,maximumFractionDigits:0}).format(n);
+const fmtP=n=>(n>0?'+':'')+n.toFixed(2)+'%';
+const pc=n=>n>0?'pos':n<0?'neg':'neu';
+function chunk(arr,n){const r=[];for(let i=0;i<arr.length;i+=n)r.push(arr.slice(i,i+n));return r;}
+function setStatus(t,m){
+  document.getElementById('statusDot').className='status-dot'+(t==='loading'?' loading':t==='error'?' error':'');
+  document.getElementById('statusText').textContent=m;
+}
+
+function startCountdown(){
+  if(countdownTimer) clearInterval(countdownTimer);
+  countdownSec=300;
+  countdownTimer=setInterval(()=>{
+    countdownSec--;
+    if(countdownSec<=0){clearInterval(countdownTimer);fetchLivePrices();return;}
+    const m=Math.floor(countdownSec/60), s=countdownSec%60;
+    document.getElementById('countdown').textContent=`Next refresh in ${m}:${String(s).padStart(2,'0')}`;
+  },1000);
+}
+
+async function fetchLivePrices(){
+  setStatus('loading','Fetching live prices…');
+  document.getElementById('countdown').textContent='Refreshing…';
+  const btn=document.getElementById('refreshBtn');
+  btn.classList.add('loading');
+  document.getElementById('refreshIcon').innerHTML='<span class="spin">↻</span>';
+
+  // ── FX rates ──────────────────────────────────────────────────────────────
+  try{
+    const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    if(r.ok){
+      const d=await r.json();
+      if(d.rates.EUR){FX.EUR=1/d.rates.EUR;fxLive.EUR=true;}
+      if(d.rates.HKD){FX.HKD=1/d.rates.HKD;fxLive.HKD=true;}
+      if(d.rates.NOK){FX.NOK=1/d.rates.NOK;fxLive.NOK=true;}
+      if(d.rates.MYR){FX.MYR=1/d.rates.MYR;fxLive.MYR=true;}
+      if(d.rates.GBP){FX.GBX=(1/d.rates.GBP)/100;fxLive.GBX=true;}
+    }
+  }catch(e){}
+
+  // ── Stocks & ETFs via Yahoo Finance ──────────────────────────────────────
+  const stockTix=liveData
+    .filter(p=>(p.type==='Stock'||p.type==='ETF')&&p.manualPrice==null)
+    .map(p=>p.ticker);
+  for(const ch of chunk(stockTix,10)){
+    try{
+      const url=`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ch.join(',')}&fields=regularMarketPrice`;
+      const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+      if(r.ok){
+        const qs=JSON.parse((await r.json()).contents)?.quoteResponse?.result||[];
+        qs.forEach(q=>{
+          const i=liveData.findIndex(p=>p.ticker===q.symbol);
+          if(i>=0&&q.regularMarketPrice){liveData[i].currentPrice=q.regularMarketPrice;liveData[i].priceLoaded=true;}
+        });
+      }
+    }catch(e){}
+  }
+
+  // ── Crypto via CoinGecko ─────────────────────────────────────────────────
+  try{
+    const ids=Object.values(CRYPTO_MAP).join(',');
+    const r=await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
+    if(r.ok){
+      const d=await r.json();
+      Object.entries(CRYPTO_MAP).forEach(([t,id])=>{
+        const i=liveData.findIndex(p=>p.ticker===t);
+        if(i>=0&&d[id]?.usd){liveData[i].currentPrice=d[id].usd;liveData[i].priceLoaded=true;}
+      });
+    }
+  }catch(e){}
+
+  const loaded=liveData.filter(p=>p.priceLoaded).length;
+  const now=new Date();
+  document.getElementById('lastUpdate').textContent=
+    'Updated '+now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+
+    ' · '+now.toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'});
+  setStatus(loaded>5?'ok':'error',
+    loaded>5?`${loaded} live prices loaded · snapshot used for rest`:'Using snapshot prices (API unavailable)');
+  btn.classList.remove('loading');
+  document.getElementById('refreshIcon').innerHTML='↻';
+  renderAll();
+  if(chartsInited.formulas)renderFXTable();
+  startCountdown();
+}
+
+function renderAll(){
+  renderMetrics();renderTable();
+  if(chartsInited.allocation)redrawAllocation();
+  if(chartsInited.performance)redrawPerformance();
+  if(chartsInited.analysis)redrawAnalysis();
+}
+
+// ── Metrics ────────────────────────────────────────────────────────────────
+function renderMetrics(){
+  const d=getData();
+  const totInv=d.reduce((a,b)=>a+b.investment,0);
+  const totVal=d.reduce((a,b)=>a+b.currentValue,0);
+  const totGL=totVal-totInv;
+  const win=d.filter(x=>x.gainLoss>0),los=d.filter(x=>x.gainLoss<0);
+  const best=[...d].sort((a,b)=>b.gainLossPct-a.gainLossPct)[0];
+  const worst=[...d].filter(x=>x.type!=='Cash').sort((a,b)=>a.gainLossPct-b.gainLossPct)[0];
+  const cash=d.filter(x=>x.type==='Cash').reduce((a,b)=>a+b.currentValue,0);
+  document.getElementById('metricsGrid').innerHTML=`
+    <div class="metric"><div class="metric-label">Total Value</div><div class="metric-value">${fmtUSD(totVal)}</div><div class="metric-sub neu">Invested: ${fmtUSD(totInv)}</div></div>
+    <div class="metric"><div class="metric-label">Total Return</div><div class="metric-value ${pc(totGL)}">${fmtUSD(totGL)}</div><div class="metric-sub ${pc(totGL)}">${fmtP(totGL/totInv*100)}</div></div>
+    <div class="metric"><div class="metric-label">Positions</div><div class="metric-value">${d.length}</div><div class="metric-sub neu"><span class="pos">▲${win.length} up</span>&nbsp;<span class="neg">▼${los.length} down</span></div></div>
+    <div class="metric"><div class="metric-label">Best Position</div><div class="metric-value pos" style="font-size:18px">${best.ticker}</div><div class="metric-sub pos">${fmtP(best.gainLossPct)}</div></div>
+    <div class="metric"><div class="metric-label">Worst Position</div><div class="metric-value neg" style="font-size:18px">${worst.ticker}</div><div class="metric-sub neg">${fmtP(worst.gainLossPct)}</div></div>
+    <div class="metric"><div class="metric-label">Cash</div><div class="metric-value">${fmtUSD(cash)}</div><div class="metric-sub neu">${(cash/totVal*100).toFixed(1)}% of portfolio</div></div>
+  `;
+}
+
+// ── Filters & Table ────────────────────────────────────────────────────────
+function renderFilters(){
+  document.getElementById('filterBtns').innerHTML='';
+  ['All','Stock','ETF','Crypto','Cash','People'].forEach(t=>{
+    const b=document.createElement('button');
+    b.className='filter-btn'+(activeFilter===t?' active':'');
+    b.textContent=t;
+    b.onclick=()=>{activeFilter=t;renderFilters();renderTable();};
+    document.getElementById('filterBtns').appendChild(b);
+  });
+}
+function sortBy(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=-1;}renderTable();}
+
+function localPriceStr(d){
+  if(d.type==='Cash'||d.type==='People') return '—';
+  const syms={EUR:'€',HKD:'HK$',NOK:'kr ',MYR:'RM ',GBX:'p',USD:'$'};
+  const sym=syms[d.currency]||'';
+  const p=d.currentPrice;
+  const dec=p<1?4:p<10?3:2;
+  return sym+p.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+}
+
+function renderTable(){
+  const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  const rows=getData().filter(d=>{
+    if(activeFilter!=='All'&&d.type!==activeFilter) return false;
+    if(q&&!d.ticker.toLowerCase().includes(q)&&!d.company.toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b)=>{
+    const av=a[sortKey],bv=b[sortKey];
+    return typeof av==='string'?sortDir*av.localeCompare(bv):sortDir*(av-bv);
+  });
+  const pd=p=>`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${p==='Growth'?'#2563eb':'#1a9e6a'};margin-right:5px;vertical-align:middle"></span>${p}`;
+  const gb=(v,p)=>`<span class="cbadge ${pc(v)}">${v>=0?'▲':'▼'}${Math.abs(p).toFixed(1)}%</span>`;
+  document.getElementById('holdingsTbody').innerHTML=rows.map(d=>`
+    <tr>
+      <td style="font-weight:700">${d.ticker}</td>
+      <td style="color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis">${d.company}</td>
+      <td><span class="tbadge tbadge-${d.type}">${d.type}</span></td>
+      <td style="font-size:12px">${pd(d.portfolio)}</td>
+      <td style="text-align:right;color:var(--text2)">${fmtUSD(d.investment)}</td>
+      <td style="text-align:right;font-weight:600;font-size:12px">${localPriceStr(d)}</td>
+      <td style="text-align:right;font-weight:700">${fmtUSD(d.currentValue)}</td>
+      <td style="text-align:right" class="${pc(d.gainLoss)}">${d.gainLoss>=0?'+':''}${fmtUSD(d.gainLoss)}</td>
+      <td style="text-align:right">${gb(d.gainLoss,d.gainLossPct)}</td>
+      <td style="text-align:right;color:var(--text2)">${d.allocationPct.toFixed(1)}%</td>
+    </tr>`).join('');
+}
+
+// ── FX Table ───────────────────────────────────────────────────────────────
+function renderFXTable(){
+  document.getElementById('fxTableBody').innerHTML=Object.entries(FX_META).map(([cur,m])=>`
+    <tr>
+      <td><span class="fx-flag">${m.flag}</span><strong>${cur}</strong> — ${m.name}</td>
+      <td><span class="fx-rate">${FX[cur].toFixed(6)}</span>${fxLive[cur]?'<span class="live-badge">● LIVE</span>':'<span class="snap-badge">SNAPSHOT</span>'}</td>
+      <td style="font-size:11px;color:var(--text3)">${m.used}</td>
+    </tr>`).join('');
+}
+
+// ── Chart colours ─────────────────────────────────────────────────────────
+const SC={
+  'Information Technology':'#2563eb','Consumer Discretionary':'#d97706','Financials':'#059669',
+  'Industrials':'#7c3aed','Healthcare':'#db2777','Energy':'#dc2626','Communication Services':'#0891b2',
+  'Consumer Staples':'#65a30d','REIT':'#ea580c','ETF':'#6d28d9','Crypto':'#b45309',
+  'Hedging':'#64748b','Cash':'#94a3b8','People':'#a21caf','Utilities':'#16a34a',
+  'India':'#c2410c','Dividend':'#7e22ce','Insurance':'#0e7490',
+};
+let sC,tC,topC,glC;
+
+function redrawAllocation(){
+  const d=getData(),tot=d.reduce((a,b)=>a+b.currentValue,0);
+  const sT={};d.forEach(p=>{sT[p.sector]=(sT[p.sector]||0)+p.currentValue;});
+  const sE=Object.entries(sT).sort((a,b)=>b[1]-a[1]);
+  if(sC)sC.destroy();
+  document.getElementById('sectorLegend').innerHTML=sE.slice(0,9).map(([s,v])=>`<span class="legend-item"><span class="legend-dot" style="background:${SC[s]||'#888'}"></span>${s} ${(v/tot*100).toFixed(1)}%</span>`).join('');
+  sC=new Chart(document.getElementById('sectorChart'),{type:'doughnut',data:{labels:sE.map(e=>e[0]),datasets:[{data:sE.map(e=>e[1]),backgroundColor:sE.map(e=>SC[e[0]]||'#888'),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtUSD(c.raw)} (${(c.raw/tot*100).toFixed(1)}%)`}}}}});
+
+  const tT={};d.forEach(p=>{tT[p.type]=(tT[p.type]||0)+p.currentValue;});
+  const tE=Object.entries(tT).sort((a,b)=>b[1]-a[1]);
+  const TC={Stock:'#2563eb',ETF:'#1a9e6a',Crypto:'#d97706',Cash:'#64748b',People:'#a21caf'};
+  if(tC)tC.destroy();
+  document.getElementById('typeLegend').innerHTML=tE.map(([t,v])=>`<span class="legend-item"><span class="legend-dot" style="background:${TC[t]||'#888'}"></span>${t} ${(v/tot*100).toFixed(1)}%</span>`).join('');
+  tC=new Chart(document.getElementById('typeChart'),{type:'doughnut',data:{labels:tE.map(e=>e[0]),datasets:[{data:tE.map(e=>e[1]),backgroundColor:tE.map(([t])=>TC[t]||'#888'),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtUSD(c.raw)}`}}}}});
+
+  const top15=[...d].filter(p=>p.type!=='Cash').sort((a,b)=>b.currentValue-a.currentValue).slice(0,15);
+  document.getElementById('topWrap').style.height=Math.max(320,top15.length*32+60)+'px';
+  if(topC)topC.destroy();
+  topC=new Chart(document.getElementById('topChart'),{type:'bar',data:{labels:top15.map(p=>p.ticker),datasets:[{data:top15.map(p=>p.currentValue),backgroundColor:top15.map(p=>SC[p.sector]||'#2563eb'),borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtUSD(c.raw)}}},scales:{x:{ticks:{color:'#5a6278',callback:v=>fmtUSD(v)},grid:{color:'rgba(0,0,0,.05)'}},y:{ticks:{color:'#5a6278',autoSkip:false},grid:{display:false}}}}});
+}
+
+function redrawPerformance(){
+  const d=getData().filter(p=>p.type!=='Cash');
+  const s=[...d].sort((a,b)=>b.gainLossPct-a.gainLossPct);
+  const g=s.slice(0,8),l=s.slice(-8).reverse();
+  const mG=g[0]?.gainLossPct||1,mL=Math.abs(l[0]?.gainLossPct||1);
+  document.getElementById('gainersWrap').innerHTML=g.map(p=>`<div class="perf-row"><div class="perf-ticker">${p.ticker}</div><div class="perf-bar-outer"><div class="perf-bar-inner" style="width:${(p.gainLossPct/mG*100).toFixed(1)}%;background:var(--green)"></div></div><div class="perf-val pos">${fmtP(p.gainLossPct)}</div></div>`).join('');
+  document.getElementById('losersWrap').innerHTML=l.map(p=>`<div class="perf-row"><div class="perf-ticker">${p.ticker}</div><div class="perf-bar-outer"><div class="perf-bar-inner" style="width:${(Math.abs(p.gainLossPct)/mL*100).toFixed(1)}%;background:var(--red)"></div></div><div class="perf-val neg">${fmtP(p.gainLossPct)}</div></div>`).join('');
+  const gl=[...d].filter(p=>Math.abs(p.gainLoss)>30).sort((a,b)=>b.gainLoss-a.gainLoss).slice(0,22);
+  document.getElementById('glWrap').style.height=Math.max(340,gl.length*30+60)+'px';
+  if(glC)glC.destroy();
+  glC=new Chart(document.getElementById('glChart'),{type:'bar',data:{labels:gl.map(p=>p.ticker),datasets:[{data:gl.map(p=>p.gainLoss),backgroundColor:gl.map(p=>p.gainLoss>=0?'rgba(26,158,106,.75)':'rgba(217,48,48,.75)'),borderWidth:0,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(c.raw>=0?'+':'')+fmtUSD(c.raw)}}},scales:{x:{ticks:{color:'#5a6278',callback:v=>(v<0?'-':'')+fmtUSD(Math.abs(v))},grid:{color:'rgba(0,0,0,.05)'}},y:{ticks:{color:'#5a6278',autoSkip:false},grid:{display:false}}}}});
+}
+
+function redrawAnalysis(){
+  const d=getData();
+  const tI=d.reduce((a,b)=>a+b.investment,0),tV=d.reduce((a,b)=>a+b.currentValue,0),tGL=tV-tI;
+  const win=d.filter(x=>x.gainLoss>0),los=d.filter(x=>x.gainLoss<0);
+  const sr=(l,v,c='')=>`<div class="stat-row"><span class="stat-label">${l}</span><span class="stat-val ${c}">${v}</span></div>`;
+  document.getElementById('summaryStats').innerHTML=
+    sr('Total invested',fmtUSD(tI))+sr('Total value',fmtUSD(tV))+sr('Total gain/loss',fmtUSD(tGL),pc(tGL))+
+    sr('Overall return',fmtP(tGL/tI*100),pc(tGL))+
+    sr('Win rate',(win.length/(win.length+los.length)*100).toFixed(0)+'%')+
+    sr('Avg winning',fmtP(win.length?win.reduce((a,b)=>a+b.gainLossPct,0)/win.length:0),'pos')+
+    sr('Avg losing',fmtP(los.length?los.reduce((a,b)=>a+b.gainLossPct,0)/los.length:0),'neg');
+  const bW=[...d].sort((a,b)=>b.gainLoss-a.gainLoss)[0];
+  const bL=[...d].filter(x=>x.type!=='Cash').sort((a,b)=>a.gainLoss-b.gainLoss)[0];
+  const bP=[...d].sort((a,b)=>b.gainLossPct-a.gainLossPct)[0];
+  const wP=[...d].filter(x=>x.type!=='Cash').sort((a,b)=>a.gainLossPct-b.gainLossPct)[0];
+  document.getElementById('riskStats').innerHTML=
+    sr('Biggest $ gain',`${bW.ticker} ${fmtUSD(bW.gainLoss)}`,'pos')+sr('Biggest $ loss',`${bL.ticker} ${fmtUSD(bL.gainLoss)}`,'neg')+
+    sr('Best % return',`${bP.ticker} ${fmtP(bP.gainLossPct)}`,'pos')+sr('Worst % return',`${wP.ticker} ${fmtP(wP.gainLossPct)}`,'neg')+
+    sr('Positions in loss',los.length)+sr('Unrealized loss',fmtUSD(los.reduce((a,b)=>a+b.gainLoss,0)),'neg');
+  const cT={};d.forEach(p=>{const c=p.currency==='USD'?'USD':p.currency+' (→USD)';cT[c]=(cT[c]||0)+p.currentValue;});
+  document.getElementById('currencyStats').innerHTML=Object.entries(cT).sort((a,b)=>b[1]-a[1]).map(([c,v])=>sr(c,`${fmtUSD(v)} (${(v/tV*100).toFixed(1)}%)`)).join('');
+  const tT={};d.forEach(p=>{tT[p.type]=(tT[p.type]||0)+p.currentValue;});
+  document.getElementById('healthStats').innerHTML=
+    sr('Cash buffer',fmtP((tT['Cash']||0)/tV*100))+sr('Crypto exposure',fmtP((tT['Crypto']||0)/tV*100))+
+    sr('Hedge positions',fmtP(d.filter(p=>p.sector==='Hedging').reduce((a,b)=>a+b.currentValue,0)/tV*100))+
+    sr('Asset classes',Object.keys(tT).length)+sr('Sectors covered',new Set(d.map(p=>p.sector)).size)+
+    sr('Currencies',new Set(d.map(p=>p.currency)).size);
+}
+
+// ── Editor ─────────────────────────────────────────────────────────────────
+const TYPES=['Stock','ETF','Crypto','Cash','People'];
+const CURS=['USD','EUR','HKD','NOK','MYR','GBX'];
+const PORTS=['Growth','Value'];
+
+function renderEditor(){
+  const tb=document.getElementById('editorTbody');tb.innerHTML='';
+  liveData.forEach((p,i)=>{
+    const tr=document.createElement('tr');
+    const sel=(opts,val,cb)=>`<select class="cell-select" onchange="${cb}" style="width:100%">${opts.map(o=>`<option${val===o?' selected':''}>${o}</option>`).join('')}</select>`;
+    tr.innerHTML=`
+      <td><input class="cell-input" value="${p.ticker||''}" onchange="liveData[${i}].ticker=this.value" style="width:78px;font-weight:700"></td>
+      <td><input class="cell-input" value="${p.company||''}" onchange="liveData[${i}].company=this.value" style="width:148px"></td>
+      <td>${sel(TYPES,p.type,`liveData[${i}].type=this.value`)}</td>
+      <td><input class="cell-input" value="${p.sector||''}" onchange="liveData[${i}].sector=this.value" style="width:128px"></td>
+      <td>${sel(PORTS,p.portfolio,`liveData[${i}].portfolio=this.value`)}</td>
+      <td>${sel(CURS,p.currency,`liveData[${i}].currency=this.value`)}</td>
+      <td><input class="cell-input" type="number" value="${p.shares}" onchange="liveData[${i}].shares=parseFloat(this.value)||0" style="width:82px"></td>
+      <td><input class="cell-input" type="number" value="${p.costBasis}" onchange="liveData[${i}].costBasis=parseFloat(this.value)||0" style="width:82px"></td>
+      <td><input class="cell-input" type="number" value="${p.investment}" onchange="liveData[${i}].investment=parseFloat(this.value)||0" style="width:82px"></td>
+      <td><input class="cell-input" type="number" value="${p.manualPrice??''}" placeholder="auto" onchange="liveData[${i}].manualPrice=this.value?parseFloat(this.value):null" style="width:82px"></td>
+      <td><button class="btn btn-danger" onclick="deleteRow(${i})">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function deleteRow(i){if(confirm(`Delete ${liveData[i].ticker}?`)){liveData.splice(i,1);renderEditor();}}
+function addEditorRow(){
+  liveData.push({ticker:'NEW',company:'New Position',type:'Stock',sector:'',portfolio:'Growth',currency:'USD',shares:0,costBasis:0,investment:0,snapshotPrice:0,manualPrice:null,currentPrice:0,priceLoaded:false});
+  renderEditor();
+  document.getElementById('editorTbody').lastChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function applyEdits(){
+  liveData=liveData.map(p=>({...p,currentPrice:p.manualPrice!=null?p.manualPrice:(p.priceLoaded?p.currentPrice:(p.snapshotPrice||p.costBasis))}));
+  savePortfolio(liveData);
+  const n=document.getElementById('saveNotice');n.style.display='block';setTimeout(()=>n.style.display='none',3500);
+  renderAll();fetchLivePrices();
+}
+function resetEditor(){
+  if(confirm('Reset to default portfolio? All local edits will be lost.')){
+    localStorage.removeItem('pfData2');
+    liveData=DEFAULT_PORTFOLIO.map(p=>({...p,currentPrice:p.manualPrice??p.snapshotPrice??p.costBasis,priceLoaded:false}));
+    renderEditor();renderAll();
+  }
+}
+
+function switchTab(name,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('sec-'+name).classList.add('active');
+  if(name==='allocation'){chartsInited.allocation=true;setTimeout(redrawAllocation,50);}
+  if(name==='performance'){chartsInited.performance=true;setTimeout(redrawPerformance,50);}
+  if(name==='analysis'){chartsInited.analysis=true;setTimeout(redrawAnalysis,50);}
+  if(name==='formulas'){chartsInited.formulas=true;renderFXTable();}
+  if(name==='editor')renderEditor();
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+renderFilters();renderMetrics();renderTable();
+fetchLivePrices(); // fetches live + starts countdown on completion
+</script>
+</body>
+</html>
