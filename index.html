@@ -1807,60 +1807,102 @@ async function fetchFromGoogleSheet() {
     try { lines = text.trim().split('\n'); } catch(e) { showDebugToast('❌ Split failed: '+e.message); return false; }
 
     showDebugToast(`📄 ${lines.length} lines, ${text.length} bytes`);
-    showDebugToast('H: ' + lines[0]?.substring(0,60));
-    showDebugToast('R1: ' + lines[1]?.substring(0,60));
-
-    // Verify it looks like our sheet format
-    const hdr = lines[0] || '';
-    if (!hdr.toLowerCase().includes('portfolio') && !hdr.includes(',')) {
-      showDebugToast('❌ Header does not look like portfolio CSV: ' + hdr.substring(0,50));
-      dataHealth.sheetOk = false;
-      dataHealth.sheetError = 'CSV header unexpected: ' + hdr.substring(0,80);
-      return false;
-    }
-
-    const rows = lines.slice(1);
-    const newPositions = [];
+    showDebugToast('H: ' + lines[0]?.substring(0,80));
+    showDebugToast('R1: ' + lines[1]?.substring(0,80));
 
     dataHealth.rawCsvPreview = text.split('\n').slice(0, 6).join('\n');
     dataHealth.rawCsvFull    = text;
-    dataHealth.csvRowCount   = rows.length;
-    console.log('[Sheet] CSV received, rows:', rows.length);
-    console.log('[Sheet] Header:', lines[0]);
-    console.log('[Sheet] Row 1:', rows[0]?.substring(0, 200));
+    dataHealth.csvRowCount   = lines.length - 1;
 
-    let parseErrors = 0;
-    rows.forEach((row, rowIdx) => {
-      try {
-      // Robust CSV parser — handles quoted fields with embedded commas
+    // ── Parse a single CSV row into an array of strings ──────────
+    function parseCSVRow(row) {
       const cols = [];
-      let cur2 = '', inQ = false;
+      let cur = '', inQ = false;
       for (let ci = 0; ci < row.length; ci++) {
         const ch = row[ci];
         if (ch === '"') { inQ = !inQ; }
-        else if (ch === ',' && !inQ) { cols.push(cur2); cur2 = ''; }
-        else { cur2 += ch; }
+        else if (ch === ',' && !inQ) { cols.push(cur.replace(/^"|"$/g,'').trim()); cur = ''; }
+        else { cur += ch; }
       }
-      cols.push(cur2);
-      const c = i => (cols[i] || '').replace(/^"|"$/g, '').trim();
+      cols.push(cur.replace(/^"|"$/g,'').trim());
+      return cols;
+    }
 
-      const portfolio    = c(0);
-      const sector       = c(1);
-      const type         = c(2);
-      const company      = c(3);
-      const localCcy     = c(4).toUpperCase() || 'USD';
-      const exchCurrent  = cleanNum(c(6));   // current FX rate → USD
-      const rawTicker    = c(7);
-      const investment   = cleanNum(c(8));   // already in USD
-      const localPrice   = cleanNum(c(11));  // current price in local currency (display only)
-      const shares       = cleanNum(c(12));
-      const currentValUSD= cleanNum(c(13));  // already in USD  ← authoritative
+    // ── Detect columns by header name (robust to reordering) ─────
+    const headerRow = parseCSVRow(lines[0] || '');
+    showDebugToast(`Cols(${headerRow.length}): ${headerRow.slice(0,8).join(' | ')}`);
 
-      // Skip header bleed-through, TOTAL row, empty rows
+    // Map header names → column indices (case-insensitive, partial match)
+    function findCol(headers, ...names) {
+      for (const name of names) {
+        const idx = headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
+        if (idx >= 0) return idx;
+      }
+      return -1;
+    }
+
+    const COL = {
+      portfolio:   findCol(headerRow, 'portfolio'),
+      sector:      findCol(headerRow, 'sector'),
+      type:        findCol(headerRow, 'type'),
+      company:     findCol(headerRow, 'company'),
+      currency:    findCol(headerRow, 'curr'),
+      exchCurrent: findCol(headerRow, 'current exch', 'current exchange', 'exch.'),
+      ticker:      findCol(headerRow, 'ticker'),
+      investment:  findCol(headerRow, 'investment'),
+      startPrice:  findCol(headerRow, 'start price', 'cost'),
+      curPrice:    findCol(headerRow, 'current price'),
+      shares:      findCol(headerRow, 'shares'),
+      curValue:    findCol(headerRow, 'current value'),
+    };
+
+    showDebugToast(`COL: port=${COL.portfolio} tick=${COL.ticker} inv=${COL.investment} val=${COL.curValue} shr=${COL.shares}`);
+
+    // If header detection failed, fall back to hardcoded indices
+    if (COL.portfolio < 0) { COL.portfolio = 0; showDebugToast('⚠️ portfolio col not found, using 0'); }
+    if (COL.ticker    < 0) { COL.ticker    = 7; showDebugToast('⚠️ ticker col not found, using 7'); }
+    if (COL.investment< 0) { COL.investment= 8; showDebugToast('⚠️ investment col not found, using 8'); }
+    if (COL.shares    < 0) { COL.shares    = 12; showDebugToast('⚠️ shares col not found, using 12'); }
+    if (COL.curValue  < 0) { COL.curValue  = 13; showDebugToast('⚠️ curValue col not found, using 13'); }
+    if (COL.curPrice  < 0) { COL.curPrice  = 11; }
+    if (COL.exchCurrent<0) { COL.exchCurrent= 6; }
+    if (COL.sector    < 0) { COL.sector    = 1; }
+    if (COL.type      < 0) { COL.type      = 2; }
+    if (COL.company   < 0) { COL.company   = 3; }
+    if (COL.currency  < 0) { COL.currency  = 4; }
+
+    const rows = lines.slice(1).filter(r => r.trim());
+    const newPositions = [];
+    let parseErrors = 0;
+
+    rows.forEach((row, rowIdx) => {
+      try {
+      const cols = parseCSVRow(row);
+      const c = i => (i >= 0 && i < cols.length) ? cols[i] : '';
+
+      const portfolio    = c(COL.portfolio);
+      const sector       = c(COL.sector);
+      const type         = c(COL.type);
+      const company      = c(COL.company);
+      const localCcy     = (c(COL.currency) || 'USD').toUpperCase();
+      const exchCurrent  = cleanNum(c(COL.exchCurrent));
+      const rawTicker    = c(COL.ticker);
+      const investment   = cleanNum(c(COL.investment));
+      const localPrice   = cleanNum(c(COL.curPrice));
+      const shares       = cleanNum(c(COL.shares));
+      const currentValUSD= cleanNum(c(COL.curValue));
+
+      // Debug first 3 data rows
+      if (rowIdx < 3) {
+        showDebugToast(`R${rowIdx+1}: port="${portfolio}" tick="${rawTicker}" val="${c(COL.curValue)}" shr="${c(COL.shares)}"`);
+      }
+
+      // Skip TOTAL row, empty rows
       if (!rawTicker || rawTicker.toUpperCase() === 'TOTAL') return;
-      if (!portfolio || !['Growth','Value'].includes(portfolio)) return;
-      // Skip zero-investment placeholder rows (XLE, DOW = $0)
-      if (shares === 0 && investment === 0) return;
+      // Accept any portfolio value — don't filter on Growth/Value strictly
+      if (!portfolio) return;
+      // Skip zero-investment AND zero-value placeholder rows
+      if (shares === 0 && investment === 0 && currentValUSD === 0) return;
 
       // ── Update FX table from this row's current exchange rate ──
       if (exchCurrent > 0) {
@@ -1910,22 +1952,11 @@ async function fetchFromGoogleSheet() {
     showDebugToast(`✅ Parsed: ${newPositions.length} from ${rows.length} rows`);
     if (newPositions.length > 0) {
       const p0 = newPositions[0];
-      showDebugToast(`P0: ${p0.ticker} curValUSD=${p0.currentValueUSD} inv=${p0.investment} shares=${p0.shares}`);
-      const p1 = newPositions[1];
-      if (p1) showDebugToast(`P1: ${p1.ticker} curValUSD=${p1.currentValueUSD} inv=${p1.investment}`);
+      showDebugToast(`P0: ${p0.ticker} val=${p0.currentValueUSD?.toFixed(0)} inv=${p0.investment?.toFixed(0)} shr=${p0.shares?.toFixed(3)}`);
     }
 
     if (newPositions.length === 0) {
-      showDebugToast('❌ 0 positions parsed — checking why…');
-      // Show what the first 3 rows look like
-      rows.slice(0,3).forEach((row,i) => {
-        const cols = [];
-        let cur='',inQ=false;
-        for(const ch of row){if(ch==='"'){inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur);cur='';}else cur+=ch;}
-        cols.push(cur);
-        const c = i2 => (cols[i2]||'').replace(/^"|"$/g,'').trim();
-        showDebugToast(`Row${i+1}: col0="${c(0)}" col2="${c(2)}" col7="${c(7)}" col8="${c(8)}" col13="${c(13)}"`);
-      });
+      showDebugToast('❌ 0 positions — portfolio col=' + COL.portfolio + ' ticker col=' + COL.ticker);
       console.warn('[Sheet] No positions parsed — check sheet format/columns');
       dataHealth.sheetOk = false;
       dataHealth.sheetError = 'No positions found — check sheet column order (expected: Portfolio, Sector, Type, Company, Curr, Exch Cost, Current Exch, Ticker, Investment…)';
