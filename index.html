@@ -1801,26 +1801,37 @@ async function fetchFromGoogleSheet() {
     return false;
   }
 
-  try {
-    const lines = text.trim().split('\n');
-    showDebugToast(`📄 CSV: ${lines.length} lines · ${text.length} bytes`);
-    showDebugToast('📋 Header: ' + lines[0]?.substring(0,80));
-    showDebugToast('📋 Row1: ' + lines[1]?.substring(0,80));
-    showDebugToast('📋 Row2: ' + lines[2]?.substring(0,80));
+  // NO outer try — catch each stage individually for precise error reporting
+  {
+    let lines;
+    try { lines = text.trim().split('\n'); } catch(e) { showDebugToast('❌ Split failed: '+e.message); return false; }
 
-    const rows = lines.slice(1); // skip header row
+    showDebugToast(`📄 ${lines.length} lines, ${text.length} bytes`);
+    showDebugToast('H: ' + lines[0]?.substring(0,60));
+    showDebugToast('R1: ' + lines[1]?.substring(0,60));
+
+    // Verify it looks like our sheet format
+    const hdr = lines[0] || '';
+    if (!hdr.toLowerCase().includes('portfolio') && !hdr.includes(',')) {
+      showDebugToast('❌ Header does not look like portfolio CSV: ' + hdr.substring(0,50));
+      dataHealth.sheetOk = false;
+      dataHealth.sheetError = 'CSV header unexpected: ' + hdr.substring(0,80);
+      return false;
+    }
+
+    const rows = lines.slice(1);
     const newPositions = [];
 
-    // Store raw CSV for debug inspection
     dataHealth.rawCsvPreview = text.split('\n').slice(0, 6).join('\n');
     dataHealth.rawCsvFull    = text;
     dataHealth.csvRowCount   = rows.length;
     console.log('[Sheet] CSV received, rows:', rows.length);
     console.log('[Sheet] Header:', lines[0]);
-    console.log('[Sheet] Row 1 sample:', rows[0]?.substring(0, 200));
-    console.log('[Sheet] Row 2 sample:', rows[1]?.substring(0, 200));
+    console.log('[Sheet] Row 1:', rows[0]?.substring(0, 200));
 
-    rows.forEach(row => {
+    let parseErrors = 0;
+    rows.forEach((row, rowIdx) => {
+      try {
       // Robust CSV parser — handles quoted fields with embedded commas
       const cols = [];
       let cur2 = '', inQ = false;
@@ -1883,18 +1894,25 @@ async function fetchFromGoogleSheet() {
         shares:          effectiveShares,
         costBasis:       usdCostBasis,
         investment,
-        currentValueUSD, // ← col13, authoritative — used by computeDerived directly
+        currentValueUSD,
         snapshotPrice:   usdPricePerShare,
         manualPrice:     null,
         currentPrice:    usdPricePerShare,
         priceLoaded:     usdPricePerShare > 0,
       });
+      } catch(rowErr) {
+        parseErrors++;
+        if (parseErrors <= 3) showDebugToast(`⚠️ Row ${rowIdx} parse error: ${rowErr.message}`);
+      }
     });
+    if (parseErrors > 0) showDebugToast(`⚠️ ${parseErrors} rows had parse errors`);
 
-    showDebugToast(`✅ Parsed ${newPositions.length} positions from ${rows.length} rows`);
+    showDebugToast(`✅ Parsed: ${newPositions.length} from ${rows.length} rows`);
     if (newPositions.length > 0) {
       const p0 = newPositions[0];
-      showDebugToast(`📊 First: ${p0.ticker} val=$${p0.currentValueUSD?.toFixed(0)} inv=$${p0.investment?.toFixed(0)}`);
+      showDebugToast(`P0: ${p0.ticker} curValUSD=${p0.currentValueUSD} inv=${p0.investment} shares=${p0.shares}`);
+      const p1 = newPositions[1];
+      if (p1) showDebugToast(`P1: ${p1.ticker} curValUSD=${p1.currentValueUSD} inv=${p1.investment}`);
     }
 
     if (newPositions.length === 0) {
@@ -1978,14 +1996,8 @@ async function fetchFromGoogleSheet() {
     updateHealthBtn();
     return true;
 
-  } catch(e) {
-    showDebugToast('❌ Parse error: ' + e.message);
-    console.warn('[Sheet] Parse failed:', e.message);
-    dataHealth.sheetOk    = false;
-    dataHealth.sheetError = e.message;
-    updateHealthBtn();
-    return false;
-  }
+    showDebugToast(`🏁 Parse done: ${newPositions.length} positions`);
+  } // end parse block
 }
 
 // ── Setup modal (Google Sheet URL entry) ─────────────────────
