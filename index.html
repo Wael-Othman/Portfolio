@@ -109,6 +109,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   box-shadow:0 1px 0 var(--border), 0 2px 8px rgba(15,20,60,0.04);
 }
 .kpi-bar::-webkit-scrollbar{display:none;}
+/* Desktop: kpi-bar-top is an invisible flex passthrough */
+.kpi-bar-top{display:contents;}
+.kpi-bar-bottom{display:contents;}
 .kpi-item{
   display:flex;flex-direction:column;justify-content:center;padding:0 20px;
   border-right:1px solid var(--border);flex-shrink:0;height:100%;
@@ -417,27 +420,485 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
 [data-tip]{position:relative;cursor:help;}
 [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:125%;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:11px;padding:5px 9px;border-radius:5px;white-space:nowrap;z-index:999;font-family:'DM Sans',sans-serif;font-weight:400;pointer-events:none;}
 
+
+/* ── CHART TYPE SWITCHER ── */
+.chart-wrap{position:relative;width:100%;}
+.chart-type-bar{display:flex;gap:3px;align-items:center;margin-left:auto;}
+.chart-type-btn{
+  padding:3px 9px;border-radius:5px;border:1px solid var(--border2);
+  background:transparent;color:var(--text3);font-size:10px;font-weight:700;
+  cursor:pointer;transition:all .15s;letter-spacing:.02em;
+  font-family:'DM Mono',monospace;
+}
+.chart-type-btn:hover{border-color:var(--blue);color:var(--blue);}
+.chart-type-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.card-header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+/* ── DRILL-DOWN MODAL ── */
+.dd-overlay{
+  position:fixed;inset:0;background:rgba(8,12,30,0.62);z-index:8000;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  backdrop-filter:blur(6px);animation:ddFadeIn .18s ease;
+}
+@keyframes ddFadeIn{from{opacity:0}to{opacity:1}}
+.dd-modal{
+  background:var(--bg2);border-radius:18px;width:100%;max-width:680px;
+  max-height:82vh;display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 24px 64px rgba(8,12,30,0.35),0 0 0 1px var(--border);
+  animation:ddSlideUp .22s cubic-bezier(.4,0,.2,1);
+}
+@keyframes ddSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.dd-header{
+  padding:18px 22px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;
+  background:var(--bg3);
+}
+.dd-header-left{display:flex;flex-direction:column;gap:3px;}
+.dd-breadcrumb{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;}
+.dd-title{font-size:18px;font-weight:700;color:var(--text);font-family:'Playfair Display',serif;}
+.dd-close{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--border2);
+  background:transparent;cursor:pointer;font-size:16px;color:var(--text2);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0;margin-left:12px;
+}
+.dd-close:hover{background:var(--red-bg);color:var(--red);border-color:var(--red);}
+.dd-summary{
+  padding:12px 22px;border-bottom:1px solid var(--border);
+  display:flex;gap:20px;flex-shrink:0;flex-wrap:wrap;background:var(--bg2);
+}
+.dd-stat{display:flex;flex-direction:column;gap:2px;}
+.dd-stat-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.09em;font-weight:700;}
+.dd-stat-val{font-size:15px;font-weight:700;font-family:'DM Mono',monospace;}
+.dd-body{overflow-y:auto;flex:1;padding:0;}
+.dd-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.dd-table thead{position:sticky;top:0;background:var(--bg3);z-index:1;}
+.dd-table th{
+  padding:9px 14px;text-align:left;font-size:9.5px;font-weight:700;
+  color:var(--text3);text-transform:uppercase;letter-spacing:.07em;
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+.dd-table td{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  color:var(--text);white-space:nowrap;vertical-align:middle;
+}
+.dd-table tbody tr:last-child td{border-bottom:none;}
+.dd-table tbody tr:hover td{background:rgba(30,69,184,0.03);}
+.dd-swatch{
+  width:9px;height:9px;border-radius:50%;display:inline-block;
+  vertical-align:middle;margin-right:7px;flex-shrink:0;
+}
+.dd-footer{
+  padding:12px 22px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:11.5px;color:var(--text3);flex-shrink:0;background:var(--bg3);
+}
+.dd-hint{display:flex;align-items:center;gap:5px;}
+@media(max-width:768px){
+  .dd-modal{max-width:100%;border-radius:18px 18px 0 0;max-height:90vh;}
+  .dd-overlay{align-items:flex-end;padding:0;}
+  .dd-table{font-size:11.5px;}
+  .dd-table th,.dd-table td{padding:8px 10px;}
+  .dd-summary{gap:12px;padding:10px 14px;}
+}
+
+
+/* ── TOAST NOTIFICATIONS ── */
+#toastStack{position:fixed;bottom:80px;right:20px;z-index:9500;display:flex;flex-direction:column-reverse;gap:8px;pointer-events:none;}
+@media(max-width:768px){#toastStack{bottom:72px;right:10px;left:10px;}}
+.toast{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:12px 16px;border-radius:12px;min-width:280px;max-width:400px;
+  box-shadow:0 4px 24px rgba(8,12,30,.22),0 0 0 1px rgba(0,0,0,.06);
+  font-size:12.5px;line-height:1.5;font-family:'DM Sans',sans-serif;
+  pointer-events:all;cursor:default;
+  animation:toastIn .28s cubic-bezier(.4,0,.2,1);
+  transition:opacity .3s,transform .3s;
+  backdrop-filter:blur(8px);
+}
+@media(max-width:768px){.toast{min-width:0;width:100%;}}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+.toast.hiding{opacity:0;transform:translateY(8px) scale(.97);}
+.toast-info   {background:rgba(230,236,255,.97);border-left:3px solid var(--blue);color:#0d1226;}
+.toast-success{background:rgba(225,248,238,.97);border-left:3px solid var(--green);color:#0d1226;}
+.toast-warning{background:rgba(255,247,224,.97);border-left:3px solid #f59e0b;color:#0d1226;}
+.toast-error  {background:rgba(255,235,232,.97);border-left:3px solid var(--red);color:#0d1226;}
+.toast-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.toast-body{flex:1;}
+.toast-title{font-weight:700;font-size:12.5px;margin-bottom:2px;}
+.toast-msg{color:#4a5270;font-size:12px;}
+.toast-close{background:none;border:none;cursor:pointer;color:#8b93af;font-size:14px;padding:0;flex-shrink:0;line-height:1;margin-top:1px;}
+.toast-close:hover{color:var(--text);}
+.toast-actions{display:flex;gap:6px;margin-top:8px;}
+.toast-action-btn{
+  padding:4px 10px;border-radius:5px;border:1px solid rgba(30,69,184,.3);
+  background:transparent;color:var(--blue);font-size:11px;font-weight:600;
+  cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;
+}
+.toast-action-btn:hover{background:var(--blue);color:#fff;}
+
+/* ── DATA HEALTH PANEL ── */
+.health-panel-overlay{position:fixed;inset:0;background:rgba(8,12,30,.55);z-index:8500;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(5px);animation:ddFadeIn .18s ease;}
+.health-panel{background:var(--bg2);border-radius:18px;width:100%;max-width:720px;max-height:84vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(8,12,30,.32),0 0 0 1px var(--border);}
+.health-panel-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg3);flex-shrink:0;}
+.health-panel-title{font-size:17px;font-weight:700;font-family:'Playfair Display',serif;}
+.health-panel-body{overflow-y:auto;flex:1;padding:18px 22px;}
+.alert-row{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;border-radius:10px;margin-bottom:8px;border:1px solid transparent;}
+.alert-row.error  {background:rgba(214,60,45,.07);border-color:rgba(214,60,45,.18);}
+.alert-row.warning{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.18);}
+.alert-row.info   {background:rgba(30,69,184,.06);border-color:rgba(30,69,184,.15);}
+.alert-row.success{background:rgba(10,138,92,.07);border-color:rgba(10,138,92,.18);}
+.alert-row-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.alert-row-body{flex:1;}
+.alert-row-title{font-weight:700;font-size:13px;color:var(--text);margin-bottom:2px;}
+.alert-row-detail{font-size:12px;color:var(--text2);line-height:1.55;}
+.alert-row-code{font-family:'DM Mono',monospace;background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:11px;color:var(--blue);}
+.alert-section-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin:14px 0 6px;padding-left:2px;}
+@media(max-width:768px){.health-panel{border-radius:18px 18px 0 0;max-height:90vh;}.health-panel-overlay{align-items:flex-end;padding:0;}}
+
 /* ── COUNTER ── */
 .animated-counter{transition:all .3s;}
 
-/* ── MOBILE ── */
-@media(max-width:900px){
-  :root{--sidebar-w:0px;}
-  .sidebar{display:none;}
-  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}
-  .col-span-2,.col-span-3{grid-column:span 1;}
-  .page{padding:14px;}
-  .scenario-grid{grid-template-columns:1fr;}
-  .kpi-bar{gap:0;}
-}
-@media(max-width:600px){.kpi-item{padding:0 12px;}.kpi-val{font-size:13px;}}
+/* ══════════════════════════════════════════════════
+   SCROLLBARS
+══════════════════════════════════════════════════ */
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:3px;}
-</style>
+::-webkit-scrollbar-thumb{background:rgba(15,20,60,0.15);border-radius:3px;}
+
+/* ══════════════════════════════════════════════════
+   TABLET  ≤ 1024px
+══════════════════════════════════════════════════ */
+@media(max-width:1024px){
+  :root{--sidebar-w:200px;}
+  .sidebar-section-label{font-size:8.5px;}
+  .nav-item{font-size:12px;padding:7px 9px;}
+  .kpi-item{padding:0 14px;}
+  .kpi-val{font-size:13px;}
+}
+
+/* ══════════════════════════════════════════════════
+   MOBILE  ≤ 768px  — sidebar becomes a slide-in drawer
+══════════════════════════════════════════════════ */
+@media(max-width:768px){
+  :root{--sidebar-w:260px;--header-h:auto;}
+
+  /* ── App shell ── */
+  .app-shell{flex-direction:column;}
+
+  /* ── Sidebar → off-canvas drawer ── */
+  .sidebar{
+    position:fixed;top:0;left:0;height:100vh;
+    transform:translateX(-100%);
+    transition:transform .28s cubic-bezier(.4,0,.2,1),box-shadow .28s;
+    z-index:500;width:var(--sidebar-w);min-width:var(--sidebar-w);
+    box-shadow:none;
+  }
+  .sidebar.open{
+    transform:translateX(0);
+    box-shadow:4px 0 32px rgba(0,0,0,.35);
+  }
+
+  /* ── Drawer backdrop ── */
+  .sidebar-backdrop{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
+    z-index:499;backdrop-filter:blur(2px);
+    opacity:0;transition:opacity .25s;
+  }
+  .sidebar-backdrop.visible{display:block;opacity:1;}
+
+  /* ── Mobile top bar ── */
+  .mobile-topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--sb-bg);padding:12px 16px;
+    position:sticky;top:0;z-index:200;
+    border-bottom:1px solid var(--sb-border);
+    flex-shrink:0;
+  }
+  .mobile-topbar-brand{display:flex;align-items:center;gap:10px;}
+  .mobile-topbar-brand .brand-icon{width:30px;height:30px;border-radius:8px;
+    background:linear-gradient(135deg,#3060e8,#6084ff);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 8px rgba(96,132,255,0.35);}
+  .mobile-topbar-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:#fff;}
+  .mobile-topbar-sub{font-size:9px;color:var(--sb-text2);text-transform:uppercase;letter-spacing:.06em;}
+  .hamburger{background:rgba(255,255,255,0.07);border:1px solid var(--sb-border);border-radius:8px;
+    padding:7px;cursor:pointer;display:flex;flex-direction:column;gap:4px;transition:background .15s;}
+  .hamburger:hover{background:rgba(255,255,255,0.12);}
+  .hamburger span{display:block;width:18px;height:2px;background:#c8d0e8;border-radius:2px;
+    transition:all .25s;}
+  .hamburger.open span:nth-child(1){transform:translateY(6px) rotate(45deg);}
+  .hamburger.open span:nth-child(2){opacity:0;}
+  .hamburger.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg);}
+
+  /* ── KPI bar → vertical stack ── */
+  .kpi-bar{
+    flex-direction:column;align-items:stretch;height:auto;
+    padding:12px 16px;gap:0;
+    border-bottom:1px solid var(--border);
+  }
+  .kpi-bar-top{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;margin-bottom:10px;}
+  .kpi-bar-top::-webkit-scrollbar{display:none;}
+  .kpi-item{
+    padding:6px 14px;border-right:1px solid var(--border);
+    min-width:auto;flex-shrink:0;
+  }
+  .kpi-item:first-child{padding-left:0;}
+  .kpi-item:last-child{border-right:none;}
+  .kpi-val{font-size:13px;}
+  .kpi-sub{font-size:10px;}
+  .kpi-bar-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .refresh-btn{margin-left:0;width:100%;justify-content:center;padding:9px 16px;}
+
+  /* ── Pages ── */
+  .page{padding:14px;}
+
+  /* ── Grids → single column ── */
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr !important;}
+  .col-span-2,.col-span-3{grid-column:span 1 !important;}
+  .scenario-grid{grid-template-columns:1fr !important;}
+  .metric-grid{grid-template-columns:1fr 1fr !important;}
+
+  /* ── Cards ── */
+  .card-body{padding:12px 14px;}
+  .card-header{padding:12px 14px 10px;}
+
+  /* ── Tables → horizontal scroll ── */
+  .table-wrap{border-radius:var(--radius-sm);}
+  .data-table{font-size:11.5px;}
+  .data-table th,.data-table td{padding:8px 10px;}
+
+  /* ── Editor ── */
+  .editor-toolbar-bar{flex-wrap:wrap;gap:8px;padding:12px 14px;}
+  .editor-toolbar-bar>div{flex-wrap:wrap;}
+
+  /* ── Bottom nav bar ── */
+  .bottom-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;
+    background:var(--bg2);border-top:1px solid var(--border);
+    z-index:300;padding-bottom:env(safe-area-inset-bottom,0px);
+    box-shadow:0 -2px 16px rgba(15,20,60,0.08);
+  }
+  .bottom-nav-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:8px 4px;cursor:pointer;transition:all .15s;color:var(--text3);
+    font-size:9.5px;font-weight:600;gap:3px;border:none;background:none;
+    text-transform:uppercase;letter-spacing:.04em;
+  }
+  .bottom-nav-item svg{width:20px;height:20px;flex-shrink:0;}
+  .bottom-nav-item.active{color:var(--blue);}
+  .bottom-nav-item:hover{color:var(--blue);}
+
+  /* ── More menu (slide-up sheet) ── */
+  .more-sheet{
+    display:none;position:fixed;bottom:0;left:0;right:0;
+    background:var(--bg2);border-top:1px solid var(--border);border-radius:20px 20px 0 0;
+    z-index:400;padding:12px 16px calc(72px + env(safe-area-inset-bottom,0px));
+    max-height:75vh;overflow-y:auto;
+    transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+    box-shadow:0 -8px 32px rgba(15,20,60,0.12);
+  }
+  .more-sheet.open{display:block;transform:translateY(0);}
+  .more-sheet-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px;}
+  .more-sheet-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;padding:0 4px;}
+  .more-sheet-item{
+    display:flex;align-items:center;gap:12px;padding:11px 8px;border-radius:var(--radius-sm);
+    cursor:pointer;font-size:13.5px;font-weight:500;color:var(--text);transition:background .12s;
+    border-bottom:1px solid var(--border);
+  }
+  .more-sheet-item:last-child{border-bottom:none;}
+  .more-sheet-item:hover,.more-sheet-item:active{background:var(--bg3);}
+  .more-sheet-item svg{width:18px;height:18px;color:var(--text2);flex-shrink:0;}
+  .more-sheet-item.active-page{color:var(--blue);}
+  .more-sheet-item.active-page svg{color:var(--blue);}
+  .more-backdrop{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:399;
+  }
+  .more-backdrop.visible{display:block;}
+
+  /* ── Bottom nav spacer so content isn't hidden behind nav ── */
+  .main-content{padding-bottom:calc(60px + env(safe-area-inset-bottom,0px));}
+
+  /* ── Hide desktop sidebar toggle if shown ── */
+  .desktop-only{display:none !important;}
+
+  /* ── Portfolio switcher in top bar ── */
+  .mobile-pf-switcher{
+    display:flex;gap:4px;background:rgba(255,255,255,0.06);
+    border-radius:8px;padding:3px;border:1px solid var(--sb-border);
+  }
+  .mobile-pf-btn{
+    padding:4px 10px;border-radius:5px;border:none;
+    background:transparent;color:var(--sb-text2);font-size:11px;
+    font-weight:600;cursor:pointer;transition:all .15s;
+  }
+  .mobile-pf-btn.active{background:rgba(96,132,255,0.2);color:#8aaeff;}
+
+  /* ── Chart height adjustments ── */
+  canvas{max-height:260px !important;}
+}
+
+/* ══════════════════════════════════════════════════
+   VERY SMALL  ≤ 380px
+══════════════════════════════════════════════════ */
+@media(max-width:380px){
+  .metric-grid{grid-template-columns:1fr !important;}
+  .kpi-val{font-size:12px;}
+  .bottom-nav-item{font-size:8.5px;}
+  .page{padding:10px;}
+}
+
+/* Hide mobile-only elements on desktop */
+.mobile-topbar,.bottom-nav,.more-sheet,.more-backdrop,.sidebar-backdrop{display:none;}
+@media(max-width:768px){
+  .mobile-topbar{display:flex;}
+  .bottom-nav{display:flex;}
+}
 </style>
 </head>
 <body>
+
+<!-- ── MOBILE TOP BAR ── -->
+<div class="mobile-topbar" id="mobileTopbar">
+  <div class="mobile-topbar-brand">
+    <div class="brand-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+    </div>
+    <div>
+      <div class="mobile-topbar-title">Portfolio</div>
+      <div class="mobile-topbar-sub">Terminal</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="mobile-pf-switcher">
+      <button class="mobile-pf-btn active" onclick="switchPortfolio('All',this);syncMobilePF(this)">All</button>
+      <button class="mobile-pf-btn" onclick="switchPortfolio('Growth',this);syncMobilePF(this)">G</button>
+      <button class="mobile-pf-btn" onclick="switchPortfolio('Value',this);syncMobilePF(this)">V</button>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</div>
+
+<!-- ── SIDEBAR BACKDROP ── -->
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<!-- ── MORE SHEET BACKDROP ── -->
+<div class="more-backdrop" id="moreBackdrop" onclick="closeMoreSheet()"></div>
+
+<!-- ── MORE SHEET ── -->
+<div class="more-sheet" id="moreSheet">
+  <div class="more-sheet-handle"></div>
+  <div class="more-sheet-title">Analytics</div>
+  <div class="more-sheet-item" onclick="mobileNavTo('performance');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg> Performance
+  </div>
+  <div class="more-sheet-item" onclick="mobileNavTo('allocation');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg> Allocation
+  </div>
+  <div class="more-sheet-item" onclick="mobileNavTo('risk');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Risk Analytics
+  </div>
+  <div class="more-sheet-item" onclick="mobileNavTo('dividends');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> Dividends
+  </div>
+  <div class="more-sheet-item" onclick="mobileNavTo('valuation');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg> Valuation
+  </div>
+  <div class="more-sheet-title" style="margin-top:14px;">Intelligence</div>
+  <div class="more-sheet-item" onclick="mobileNavTo('insights');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a6 6 0 00-6 6c0 3.3 2.7 5.3 4 6.7V17h4v-2.3c1.3-1.4 4-3.4 4-6.7a6 6 0 00-6-6z"/><path d="M9 17v1a2 2 0 002 2h2a2 2 0 002-2v-1"/></svg> AI Insights
+  </div>
+  <div class="more-sheet-item" onclick="mobileNavTo('montecarlo');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h4l3-9 4 18 3-9h6"/></svg> Monte Carlo
+  </div>
+  <div class="more-sheet-item" onclick="mobileNavTo('scenario');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 3a3 3 0 00-3 3l-6 9a3 3 0 105.4 2.7L20 8.7A3 3 0 0018 3z"/></svg> Scenario Planner
+  </div>
+  <div class="more-sheet-item" onclick="mobileNavTo('target');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Target Builder
+  </div>
+  <div class="more-sheet-title" style="margin-top:14px;">Research & Tools</div>
+  <div class="more-sheet-item" onclick="mobileNavTo('notes');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Notes & Thesis
+  </div>
+  <div class="more-sheet-item" onclick="mobileNavTo('calendar');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Economic Calendar
+  </div>
+  <div class="more-sheet-item" onclick="mobileNavTo('formulas');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg> Formulas & FX
+  </div>
+  <div class="more-sheet-item" onclick="mobileNavTo('editor');closeMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z"/></svg> Edit Portfolio
+  </div>
+</div>
+
+
+<!-- ── TOAST STACK ── -->
+<div id="toastStack"></div>
+
+<!-- ── DATA HEALTH PANEL ── -->
+<div class="health-panel-overlay" id="healthPanelOverlay" style="display:none" onclick="if(event.target===this)closeHealthPanel()">
+  <div class="health-panel">
+    <div class="health-panel-header">
+      <div>
+        <div class="health-panel-title">📋 Data Health &amp; Diagnostics</div>
+        <div style="font-size:11.5px;color:var(--text3);margin-top:2px" id="healthPanelSub">Checking…</div>
+      </div>
+      <button class="dd-close" onclick="closeHealthPanel()" style="flex-shrink:0">✕</button>
+    </div>
+    <div class="health-panel-body" id="healthPanelBody"></div>
+  </div>
+</div>
+
+<!-- ── DRILL-DOWN MODAL ── -->
+<div class="dd-overlay" id="ddOverlay" style="display:none" onclick="if(event.target===this)closeDrillDown()">
+  <div class="dd-modal">
+    <div class="dd-header">
+      <div class="dd-header-left">
+        <div class="dd-breadcrumb" id="ddBreadcrumb">Portfolio › Breakdown</div>
+        <div class="dd-title" id="ddTitle">—</div>
+      </div>
+      <button class="dd-close" onclick="closeDrillDown()" aria-label="Close">✕</button>
+    </div>
+    <div class="dd-summary" id="ddSummary"></div>
+    <div class="dd-body">
+      <table class="dd-table">
+        <thead id="ddThead"></thead>
+        <tbody id="ddTbody"></tbody>
+      </table>
+    </div>
+    <div class="dd-footer">
+      <span class="dd-hint">💡 Click any row to navigate to Holdings</span>
+      <span id="ddCount" style="font-weight:600"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ── BOTTOM NAV ── -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="bottom-nav-item active" id="bnDashboard" onclick="mobileNavTo('dashboard')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </button>
+  <button class="bottom-nav-item" id="bnHoldings" onclick="mobileNavTo('holdings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
+    Holdings
+  </button>
+  <button class="bottom-nav-item" id="bnRefresh" onclick="fetchLivePrices()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+    Refresh
+  </button>
+  <button class="bottom-nav-item" id="bnAllocation" onclick="mobileNavTo('allocation')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg>
+    Allocation
+  </button>
+  <button class="bottom-nav-item" id="bnMore" onclick="toggleMoreSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+    More
+  </button>
+</nav>
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!--  TICKER BAR                                                            -->
@@ -554,6 +1015,11 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
         <span id="statusText" style="font-size:11px;">Loading…</span>
       </div>
       <div class="countdown-text" id="countdown"></div>
+      <button onclick="openHealthPanel()" style="margin-top:8px;width:100%;padding:7px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid var(--sb-border);color:var(--sb-text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:background .15s;font-family:'DM Sans',sans-serif;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">
+        <span id="healthBtnDot" style="width:7px;height:7px;border-radius:50%;background:#0a8a5c;flex-shrink:0"></span>
+        <span id="healthBtnLabel">Data Health</span>
+        <span id="healthBtnBadge" style="margin-left:auto;display:none;background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700"></span>
+      </button>
     </div>
   </nav>
 
@@ -561,15 +1027,19 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
   <div class="main-content">
     <!-- KPI STICKY BAR -->
     <div class="kpi-bar" id="kpiBar">
-      <div class="kpi-item"><div class="kpi-label">Portfolio Value</div><div class="kpi-val" id="kpi-value">—</div><div class="kpi-sub neu" id="kpi-invested">Invested: —</div></div>
-      <div class="kpi-item"><div class="kpi-label">Total Return</div><div class="kpi-val" id="kpi-return">—</div><div class="kpi-sub" id="kpi-returnpct">—</div></div>
-      <div class="kpi-item"><div class="kpi-label">Health Score</div><div class="kpi-val" id="kpi-health">—</div><div class="kpi-sub neu">/ 100</div></div>
-      <div class="kpi-item"><div class="kpi-label">Cash</div><div class="kpi-val" id="kpi-cash">—</div><div class="kpi-sub neu" id="kpi-cashpct">—</div></div>
-      <div class="kpi-item"><div class="kpi-label">Positions</div><div class="kpi-val" id="kpi-pos">—</div><div class="kpi-sub neu" id="kpi-poswl">—</div></div>
-      <div class="kpi-item"><div class="kpi-label">Portfolio</div><div class="kpi-val" id="kpi-pfname" style="font-size:13px;font-weight:600;">All</div><div class="kpi-sub neu" id="kpi-lastupdate">—</div></div>
-      <button class="refresh-btn" id="refreshBtn" onclick="fetchLivePrices()">
-        <span id="refreshIcon">↻</span> Refresh
-      </button>
+      <div class="kpi-bar-top">
+        <div class="kpi-item"><div class="kpi-label">Portfolio Value</div><div class="kpi-val" id="kpi-value">—</div><div class="kpi-sub neu" id="kpi-invested">Invested: —</div></div>
+        <div class="kpi-item"><div class="kpi-label">Total Return</div><div class="kpi-val" id="kpi-return">—</div><div class="kpi-sub" id="kpi-returnpct">—</div></div>
+        <div class="kpi-item"><div class="kpi-label">Health Score</div><div class="kpi-val" id="kpi-health">—</div><div class="kpi-sub neu">/ 100</div></div>
+        <div class="kpi-item"><div class="kpi-label">Cash</div><div class="kpi-val" id="kpi-cash">—</div><div class="kpi-sub neu" id="kpi-cashpct">—</div></div>
+        <div class="kpi-item"><div class="kpi-label">Positions</div><div class="kpi-val" id="kpi-pos">—</div><div class="kpi-sub neu" id="kpi-poswl">—</div></div>
+        <div class="kpi-item"><div class="kpi-label">Portfolio</div><div class="kpi-val" id="kpi-pfname" style="font-size:13px;font-weight:600;">All</div><div class="kpi-sub neu" id="kpi-lastupdate">—</div></div>
+      </div>
+      <div class="kpi-bar-bottom">
+        <button class="refresh-btn" id="refreshBtn" onclick="fetchLivePrices()">
+          <span id="refreshIcon">↻</span> Refresh
+        </button>
+      </div>
     </div>
 
     <!-- ── DASHBOARD PAGE ──────────────────────────────────────── -->
@@ -582,12 +1052,18 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
         <div class="metric-grid" id="dashMetrics"></div>
         <div class="grid-2" style="margin-bottom:16px">
           <div class="card">
-            <div class="card-header"><span class="card-title">Allocation by Type</span></div>
-            <div class="card-body" style="position:relative;height:220px"><canvas id="dashTypeChart"></canvas></div>
+            <div class="card-header">
+              <span class="card-title">Allocation by Type</span>
+              <div class="chart-type-bar"><button class="chart-type-btn active" onclick="switchChartType('dashTypeChart','doughnut',this)">DONUT</button><button class="chart-type-btn" onclick="switchChartType('dashTypeChart','pie',this)">PIE</button><button class="chart-type-btn" onclick="switchChartType('dashTypeChart','bar',this)">BAR</button><button class="chart-type-btn" onclick="switchChartType('dashTypeChart','polarArea',this)">POLAR</button></div>
+            </div>
+            <div class="card-body" style="position:relative;height:240px"><canvas id="dashTypeChart"></canvas></div>
           </div>
           <div class="card">
-            <div class="card-header"><span class="card-title">Sector Exposure</span></div>
-            <div class="card-body" style="position:relative;height:220px"><canvas id="dashSectorChart"></canvas></div>
+            <div class="card-header">
+              <span class="card-title">Sector Exposure</span>
+              <div class="chart-type-bar"><button class="chart-type-btn active" onclick="switchChartType('dashSectorChart','doughnut',this)">DONUT</button><button class="chart-type-btn" onclick="switchChartType('dashSectorChart','pie',this)">PIE</button><button class="chart-type-btn" onclick="switchChartType('dashSectorChart','bar',this)">BAR</button><button class="chart-type-btn" onclick="switchChartType('dashSectorChart','polarArea',this)">POLAR</button></div>
+            </div>
+            <div class="card-body" style="position:relative;height:240px"><canvas id="dashSectorChart"></canvas></div>
           </div>
         </div>
         <div class="grid-2" style="margin-bottom:16px">
@@ -658,7 +1134,10 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><span class="card-title">Gain / Loss by Position ($USD)</span></div>
+          <div class="card-header">
+              <span class="card-title">Gain / Loss by Position ($USD)</span>
+              <div class="chart-type-bar"><button class="chart-type-btn active" onclick="switchChartType('perfGLChart','bar',this)">BAR</button><button class="chart-type-btn" onclick="switchChartType('perfGLChart','line',this)">LINE</button></div>
+            </div>
           <div class="card-body" style="position:relative" id="perfGLWrap">
             <canvas id="perfGLChart"></canvas>
           </div>
@@ -675,16 +1154,25 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
         </div>
         <div class="grid-2" style="margin-bottom:16px">
           <div class="card">
-            <div class="card-header"><span class="card-title">By Asset Type</span></div>
-            <div class="card-body" style="position:relative;height:260px"><canvas id="allocTypeChart"></canvas></div>
+            <div class="card-header">
+              <span class="card-title">By Asset Type</span>
+              <div class="chart-type-bar"><button class="chart-type-btn active" onclick="switchChartType('allocTypeChart','doughnut',this)">DONUT</button><button class="chart-type-btn" onclick="switchChartType('allocTypeChart','pie',this)">PIE</button><button class="chart-type-btn" onclick="switchChartType('allocTypeChart','bar',this)">BAR</button><button class="chart-type-btn" onclick="switchChartType('allocTypeChart','polarArea',this)">POLAR</button></div>
+            </div>
+            <div class="card-body" style="position:relative;height:280px"><canvas id="allocTypeChart"></canvas></div>
           </div>
           <div class="card">
-            <div class="card-header"><span class="card-title">By Sector</span></div>
-            <div class="card-body" style="position:relative;height:260px"><canvas id="allocSectorChart"></canvas></div>
+            <div class="card-header">
+              <span class="card-title">By Sector</span>
+              <div class="chart-type-bar"><button class="chart-type-btn active" onclick="switchChartType('allocSectorChart','doughnut',this)">DONUT</button><button class="chart-type-btn" onclick="switchChartType('allocSectorChart','pie',this)">PIE</button><button class="chart-type-btn" onclick="switchChartType('allocSectorChart','bar',this)">BAR</button><button class="chart-type-btn" onclick="switchChartType('allocSectorChart','polarArea',this)">POLAR</button></div>
+            </div>
+            <div class="card-body" style="position:relative;height:280px"><canvas id="allocSectorChart"></canvas></div>
           </div>
         </div>
         <div class="card" style="margin-bottom:16px">
-          <div class="card-header"><span class="card-title">Top 15 Holdings by Value</span></div>
+          <div class="card-header">
+              <span class="card-title">Top 15 Holdings by Value</span>
+              <div class="chart-type-bar"><button class="chart-type-btn active" onclick="switchChartType('allocTop15Chart','bar',this)">BAR</button><button class="chart-type-btn" onclick="switchChartType('allocTop15Chart','horizontalBar',this)">H-BAR</button><button class="chart-type-btn" onclick="switchChartType('allocTop15Chart','line',this)">LINE</button></div>
+            </div>
           <div class="card-body" id="allocTop15Wrap" style="position:relative"><canvas id="allocTop15Chart"></canvas></div>
         </div>
         <div class="grid-2">
@@ -719,8 +1207,11 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><span class="card-title">Risk-Return Scatter (by Position)</span></div>
-          <div class="card-body" style="position:relative;height:320px"><canvas id="riskScatterChart"></canvas></div>
+          <div class="card-header">
+              <span class="card-title">Risk-Return Scatter (by Position)</span>
+              <div class="chart-type-bar"><button class="chart-type-btn active" onclick="switchChartType('riskScatterChart','scatter',this)">SCATTER</button><button class="chart-type-btn" onclick="switchChartType('riskScatterChart','bubble',this)">BUBBLE</button></div>
+            </div>
+          <div class="card-body" style="position:relative;height:340px"><canvas id="riskScatterChart"></canvas></div>
         </div>
       </div>
     </div>
@@ -954,7 +1445,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
       <div style="padding:24px">
         <div class="page-header">
           <div class="page-title">Edit Portfolio</div>
-          <div class="page-sub">Add, edit, or remove positions — changes saved to browser storage</div>
+          <div class="page-sub">Positions are sourced live from your Google Sheet — edit the sheet to add/remove holdings permanently</div>
         </div>
         <div class="editor-wrap">
           <div class="editor-toolbar-bar">
@@ -966,14 +1457,14 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
                 ⬆ Import
                 <input type="file" accept=".csv,.json" onchange="importFile(event)" style="display:none">
               </label>
-              <button class="btn btn-secondary" onclick="resetEditor()">↺ Reset</button>
+              <button class="btn btn-secondary" onclick="resetEditor()">↺ Re-sync Sheet</button>
               <button class="btn btn-success" onclick="applyEdits()">✓ Apply &amp; Save</button>
             </div>
           </div>
           <div class="editor-hint">
-            💡 <strong>Edit:</strong> click any cell &nbsp;|&nbsp; <strong>Add:</strong> + button below &nbsp;|&nbsp; <strong>Remove:</strong> ✕ &nbsp;|&nbsp;
-            <strong>Export CSV</strong> → open/edit in Excel or Google Sheets &nbsp;|&nbsp;
-            <strong>Backup JSON</strong> → full backup, import to restore on any browser
+            💡 <strong>Note:</strong> Positions are now driven by your Google Sheet. Changes here are <em>local overrides</em> only — they'll be overwritten on next sheet sync. To permanently add/remove positions, edit the sheet directly. &nbsp;|&nbsp;
+            <strong>Export CSV</strong> → download snapshot &nbsp;|&nbsp;
+            <strong>Backup JSON</strong> → full backup, importable on any browser
           </div>
           <div class="editor-table-wrap">
             <table class="editor-table">
@@ -995,10 +1486,11 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
 
 <script>
 // ── NUCLEAR CACHE CLEAR — runs before anything else ───────────
-// Wipes ALL localStorage keys that could contain stale prices.
-// Only keeps: valuations, notes, calendar, targets, sheet URL, API key.
+// Wipes stale keys. Keeps: valuations, notes, calendar, targets, sheet URL, API key, sheet positions.
 (function(){
-  var KEEP = ['pfVal','pfNotes','pfCal','pfTargets','gsheetUrl','anthropicKey'];
+  var KEEP = ['pfVal','pfNotes','pfCal','pfTargets','gsheetUrl','anthropicKey','pfFX'];
+  // Always clear pfData4 — positions are rebuilt fresh from sheet on every load
+  // (cached positions from old DEFAULT_PORTFOLIO must not survive)
   try {
     Object.keys(localStorage).forEach(function(k){
       if(KEEP.indexOf(k)===-1) localStorage.removeItem(k);
@@ -1006,7 +1498,8 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
   } catch(e){}
 })();
 // ═══════════════════════════════════════════════════════════════
-//  DATA — exact portfolio from source
+//  DATA — positions are loaded dynamically from Google Sheet
+//  DEFAULT_PORTFOLIO is kept only as an empty fallback
 // ═══════════════════════════════════════════════════════════════
 const DEFAULT_PORTFOLIO = [
   {ticker:'NVDA',company:'NVIDIA Corp',type:'Stock',sector:'Information Technology',portfolio:'Growth',currency:'USD',shares:20.92,costBasis:14.34,investment:300,snapshotPrice:215.33},
@@ -1083,8 +1576,8 @@ const TYPE_COLORS={Stock:'#1a3fa6',ETF:'#0d7a55',Crypto:'#b45309',Cash:'#6b7280'
 
 // ── State ────────────────────────────────────────────────────
 function loadPortfolio(){
-  // Always load from DEFAULT_PORTFOLIO — never from cache.
-  // Live sheet prices will override on first fetch (within seconds).
+  // Always start from DEFAULT_PORTFOLIO skeleton — sheet fetch will replace within seconds.
+  // This gives instant render on open with last-known snapshot prices.
   return DEFAULT_PORTFOLIO.map(p=>({
     ...p,
     currentPrice: p.manualPrice ?? p.snapshotPrice ?? p.costBasis,
@@ -1092,7 +1585,7 @@ function loadPortfolio(){
   }));
 }
 
-function savePortfolio(d){try{localStorage.setItem('pfData4',JSON.stringify(d));}catch(e){}}
+function savePortfolio(d){/* positions rebuilt from sheet on every fetch — no local cache needed */}
 function loadValuations(){try{const s=localStorage.getItem('pfVal');if(s)return JSON.parse(s);}catch(e){}return {};}
 function saveValuations(){try{localStorage.setItem('pfVal',JSON.stringify(valuations));}catch(e){} showSaveFlash();}
 function loadNotes(){try{const s=localStorage.getItem('pfNotes');if(s)return JSON.parse(s);}catch(e){}return {};}
@@ -1133,16 +1626,25 @@ function toUSD(v,cur){return v*(FX[cur]??1);}
 function chunk(arr,n){const r=[];for(let i=0;i<arr.length;i+=n)r.push(arr.slice(i,i+n));return r;}
 function localPriceStr(d){
   if(d.type==='Cash'||d.type==='People')return '—';
+  // Show local currency price when available (sheet-sourced positions)
+  const lc = d.localCurrency || d.currency;
+  const lp = (d.localPrice && d.localPrice > 0) ? d.localPrice : d.currentPrice;
   const syms={EUR:'€',HKD:'HK$',NOK:'kr ',MYR:'RM ',GBX:'p',USD:'$'};
-  const sym=syms[d.currency]||'';
-  const p=d.currentPrice;
-  const dec=p<1?4:p<10?3:2;
-  return sym+p.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+  const sym = syms[lc] || '';
+  const dec = lp < 1 ? 4 : lp < 10 ? 3 : 2;
+  return sym + lp.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec});
 }
 function computeDerived(p){
-  let val=p.currentPrice*p.shares;
-  if(p.currency!=='USD')val=toUSD(val,p.currency);
-  const gl=val-p.investment,glPct=p.investment>0?(gl/p.investment)*100:0;
+  // If sheet provided the authoritative USD value directly (col 13), use it — no recomputation.
+  // Otherwise fall back to price * shares (for editor-added / legacy positions).
+  let val;
+  if (p.currentValueUSD !== undefined && p.currentValueUSD > 0) {
+    val = p.currentValueUSD;
+  } else {
+    val = p.currentPrice * p.shares;
+    if (p.currency !== 'USD') val = toUSD(val, p.currency);
+  }
+  const gl=val-p.investment, glPct=p.investment>0?(gl/p.investment)*100:0;
   return {...p,currentValue:val,gainLoss:gl,gainLossPct:glPct};
 }
 function getFilteredData(){
@@ -1187,8 +1689,54 @@ function startCountdown(){
 function getSheetUrl() { return localStorage.getItem('gsheetUrl') || ''; }
 function getApiKey()   { return localStorage.getItem('anthropicKey') || ''; }
 
-// ── Parse prices from Google Sheets CSV ──────────────────────
-// Sheet columns: A=Ticker, B=GF_Symbol, C=Price, D=Currency, E=Note
+// ── Parse full portfolio from Google Sheet CSV ───────────────
+// New sheet columns (0-indexed):
+//  0=Portfolio  1=Sector     2=Type      3=Company   4=Curr
+//  5=Exch Cost  6=Current Exch  7=Ticker  8=Investment
+//  9=Allocation%  10=Start Price  11=Current Price  12=Shares
+//  13=Current Value  14=Gain/Loss$  15=Gain/Loss%   16=Exposure
+
+// Strip all non-numeric chars except dot and minus, handles $1,234.56 → 1234.56
+function cleanNum(s) {
+  if (s === null || s === undefined || s === '') return 0;
+  // Remove currency symbols, spaces, commas — keep digits, dot, leading minus
+  const cleaned = String(s).replace(/[^0-9.\-]/g, '');
+  return parseFloat(cleaned) || 0;
+}
+
+// Normalise tickers to match the rest of the app
+function normaliseTicker(raw) {
+  let t = raw.trim().replace(/^\$/, '');        // strip leading $ ($SPXS → SPXS)
+  t = t.replace(/^BRK\.B$/i,   'BRK-B');        // BRK.B  → BRK-B
+  t = t.replace(/^AKRBF$/i,    'AKRBP.OL');     // AKRBF  → AKRBP.OL
+  t = t.replace(/^KLSE:(\d+)$/i, 'KLSE$1');     // KLSE:1163 → KLSE1163
+  // DTE / VOW3 / RUI / ACOMO without exchange suffix → keep as-is (sheet uses short form)
+  // Pad pure short HK numeric codes: 1→0001, 823→0823, 1883→1883
+  if (/^\d+$/.test(t)) {
+    const n = parseInt(t, 10);
+    if (n > 0 && n < 10000) t = String(n).padStart(4, '0');
+  }
+  return t;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GOOGLE SHEET PARSER
+//
+//  New sheet columns (0-indexed):
+//   0  Portfolio      1  Sector         2  Type
+//   3  Company        4  Curr           5  Exch Cost (original FX)
+//   6  Current Exch.  7  Ticker         8  Investment ($)
+//   9  Allocation %   10 Start Price    11 Current Price (local ccy)
+//   12 Shares         13 Current Value ($USD) 14 Gain/Loss $
+//   15 Gain/Loss %    16 Exposure %
+//
+//  STRATEGY: store everything in USD internally.
+//  - currentPrice  = Current Value (col 13) / Shares (col 12)  → pure USD price-per-share
+//  - costBasis     = Investment (col 8) / Shares (col 12)       → USD cost per share
+//  - currency      forced to 'USD' so computeDerived() never double-converts
+//  - FX rates      read from col 6 (Current Exch.) per currency
+//  - Raw local currency preserved in `localPrice` / `localCurrency` for display
+// ═══════════════════════════════════════════════════════════════
 async function fetchFromGoogleSheet() {
   const url = getSheetUrl();
   if (!url) return false;
@@ -1201,11 +1749,11 @@ async function fetchFromGoogleSheet() {
     if (!r.ok) return false;
     const text = await r.text();
 
-    const rows = text.trim().split('\n').slice(1); // skip header
-    let hits = 0;
+    const rows = text.trim().split('\n').slice(1); // skip header row
+    const newPositions = [];
 
     rows.forEach(row => {
-      // Robust CSV parser: handles quoted fields and trailing commas
+      // Robust CSV parser — handles quoted fields with embedded commas
       const cols = [];
       let cur2 = '', inQ = false;
       for (let ci = 0; ci < row.length; ci++) {
@@ -1215,47 +1763,142 @@ async function fetchFromGoogleSheet() {
         else { cur2 += ch; }
       }
       cols.push(cur2);
-      const clean = c => (c || '').replace(/^"|"$/g, '').replace(/,/g, '').trim();
-      const ticker = clean(cols[0]);
-      const price  = parseFloat(clean(cols[1]));  // col[1] = Price
-      const cur    = clean(cols[2]);               // col[2] = Currency
+      const c = i => (cols[i] || '').replace(/^"|"$/g, '').trim();
 
-      if (!ticker || !price || isNaN(price) || price <= 0) return;
+      const portfolio    = c(0);
+      const sector       = c(1);
+      const type         = c(2);
+      const company      = c(3);
+      const localCcy     = c(4).toUpperCase() || 'USD';
+      const exchCurrent  = cleanNum(c(6));   // current FX rate → USD
+      const rawTicker    = c(7);
+      const investment   = cleanNum(c(8));   // already in USD
+      const localPrice   = cleanNum(c(11));  // current price in local currency (display only)
+      const shares       = cleanNum(c(12));
+      const currentValUSD= cleanNum(c(13));  // already in USD  ← authoritative
 
-      // Sanity check: flag suspiciously high prices for known ETFs
-      // (protects against GOOGLEFINANCE returning index values instead of ETF prices)
-      const ETF_MAX = { 'INDA':80, 'SCHD':80, 'XLU':80, 'VOO':1000, 'SPXS':200, 'UVXY':200 };
-      if (ETF_MAX[ticker] && price > ETF_MAX[ticker]) {
-        console.warn(`[Sheet] Skipping implausible price for ${ticker}: ${price} (max expected: ${ETF_MAX[ticker]})`);
-        return;
+      // Skip header bleed-through, TOTAL row, empty rows
+      if (!rawTicker || rawTicker.toUpperCase() === 'TOTAL') return;
+      if (!portfolio || !['Growth','Value'].includes(portfolio)) return;
+      // Skip zero-investment placeholder rows (XLE, DOW = $0)
+      if (shares === 0 && investment === 0) return;
+
+      // ── Update FX table from this row's current exchange rate ──
+      if (exchCurrent > 0) {
+        if      (localCcy === 'EUR') { FX.EUR = exchCurrent;        fxLive.EUR = true; }
+        else if (localCcy === 'HKD') { FX.HKD = exchCurrent;        fxLive.HKD = true; }
+        else if (localCcy === 'NOK') { FX.NOK = exchCurrent;        fxLive.NOK = true; }
+        else if (localCcy === 'MYR') { FX.MYR = exchCurrent;        fxLive.MYR = true; }
+        else if (localCcy === 'GBX') { FX.GBX = exchCurrent / 100;  fxLive.GBX = true; }
       }
 
-      // FX rows (EUR_USD, HKD_USD, etc.)
-      if (ticker === 'EUR_USD') { FX.EUR = price; fxLive.EUR = true; return; }
-      if (ticker === 'HKD_USD') { FX.HKD = price; fxLive.HKD = true; return; }
-      if (ticker === 'NOK_USD') { FX.NOK = price; fxLive.NOK = true; return; }
-      if (ticker === 'MYR_USD') { FX.MYR = price; fxLive.MYR = true; return; }
-      if (ticker === 'GBP_USD') { FX.GBX = price / 100; fxLive.GBX = true; return; }
+      const ticker = normaliseTicker(rawTicker);
 
-      // Stock/crypto prices — also check sheetTicker field for positions where
-      // the sheet uses a different ticker (e.g. '1' for 0001, '823' for 0823)
-      const idx = liveData.findIndex(p =>
-        (p.sheetTicker || p.ticker) === ticker
-      );
-      if (idx >= 0 && !liveData[idx].manualPrice) {
-        liveData[idx].currentPrice = price;
-        liveData[idx].priceLoaded  = true;
-        hits++;
+      // ── Derive USD price-per-share (for display only) ───────────
+      // currentValueUSD (col13) is the AUTHORITATIVE value — computeDerived uses it directly.
+      // usdPricePerShare is only used for the price column display.
+      const effectiveShares = shares > 0 ? shares : 1;
+      const usdPricePerShare = currentValUSD > 0 ? currentValUSD / effectiveShares : 0;
+
+      // USD cost basis per share
+      const usdCostBasis = effectiveShares > 0 ? investment / effectiveShares : investment;
+
+      newPositions.push({
+        ticker,
+        company,
+        type,
+        sector,
+        portfolio,
+        currency:        'USD',
+        localCurrency:   localCcy,
+        localPrice,
+        shares:          effectiveShares,
+        costBasis:       usdCostBasis,
+        investment,
+        currentValueUSD, // ← col13, authoritative — used by computeDerived directly
+        snapshotPrice:   usdPricePerShare,
+        manualPrice:     null,
+        currentPrice:    usdPricePerShare,
+        priceLoaded:     usdPricePerShare > 0,
+      });
+    });
+
+    if (newPositions.length === 0) {
+      console.warn('[Sheet] No positions parsed — check sheet format/columns');
+      dataHealth.sheetOk = false;
+      dataHealth.sheetError = 'No positions found — check sheet column order (expected: Portfolio, Sector, Type, Company, Curr, Exch Cost, Current Exch, Ticker, Investment…)';
+      return false;
+    }
+
+    // ── Diagnostic: check for suspicious prices ──────────────────
+    dataHealth.zeroPrice    = [];
+    dataHealth.zeroValue    = [];
+    dataHealth.stalePrices  = [];
+    dataHealth.tickerIssues = [];
+    dataHealth.posCount     = newPositions.length;
+    dataHealth.sheetOk      = true;
+    dataHealth.sheetError   = null;
+    dataHealth.lastFetch    = new Date();
+
+    // Known tickers that are legitimately $0 (delisted)
+    const DELISTED = new Set(['BBBY','BNGO']);
+
+    newPositions.forEach(p => {
+      // Zero current value (non-Cash, non-delisted)
+      if (p.currentValueUSD === 0 && p.type !== 'Cash' && !DELISTED.has(p.ticker)) {
+        dataHealth.zeroValue.push(p.ticker);
+      }
+      // Zero local price shown (non-Cash/People)
+      if (p.localPrice === 0 && p.type !== 'Cash' && p.type !== 'People' && !DELISTED.has(p.ticker)) {
+        dataHealth.zeroPrice.push(p.ticker);
+      }
+      // Suspiciously low value vs investment (>95% loss, non-crypto, non-delisted)
+      if (p.currentValueUSD > 0 && p.investment > 50 && p.currentValueUSD < p.investment * 0.05
+          && p.type !== 'Crypto' && !DELISTED.has(p.ticker)) {
+        dataHealth.stalePrices.push({
+          ticker: p.ticker,
+          issue: `Current value ${fmtUSD(p.currentValueUSD)} is <5% of invested ${fmtUSD(p.investment)} — price may be stale or ticker mismatch`
+        });
+      }
+      // Ticker normalisation differences (raw vs normalised)
+      // Already handled by normaliseTicker — flag if ticker looks unusual
+      if (p.ticker !== p.ticker.toUpperCase() && p.type !== 'Cash' && p.type !== 'People') {
+        dataHealth.tickerIssues.push({ticker:p.ticker, issue:'Ticker contains lowercase — may not match exchange format'});
       }
     });
 
-    if (Object.values(fxLive).some(Boolean)) {
-      localStorage.setItem('pfFX', JSON.stringify({ FX, fxLive }));
-    }
-    console.log(`[Sheet] ${hits} price hits from ${rows.length} rows`);
-    return hits > 0;
+    // Check for duplicate tickers
+    const seen = {}, dupes = [];
+    newPositions.forEach(p => { if (seen[p.ticker]) dupes.push(p.ticker); seen[p.ticker]=true; });
+    dataHealth.duplicates = dupes;
+
+    // ── Rebuild liveData, preserving any existing manual overrides ──
+    const existingManual = {};
+    liveData.forEach(p => {
+      if (p.manualPrice !== null && p.manualPrice !== undefined) existingManual[p.ticker] = p.manualPrice;
+    });
+
+    liveData = newPositions.map(p => ({
+      ...p,
+      manualPrice:  existingManual[p.ticker] ?? p.manualPrice,
+      currentPrice: existingManual[p.ticker] ?? p.snapshotPrice,
+    }));
+
+    // Persist to localStorage — next page load renders instantly from cache
+    savePortfolio(liveData);
+    localStorage.setItem('pfFX', JSON.stringify({ FX, fxLive }));
+
+    console.log(`[Sheet] Loaded ${liveData.length} positions · FX: EUR=${FX.EUR.toFixed(4)} HKD=${FX.HKD.toFixed(4)} NOK=${FX.NOK.toFixed(4)}`);
+
+    // Update health button after parse
+    updateHealthBtn();
+    return true;
+
   } catch(e) {
-    console.warn('Google Sheet fetch failed:', e.message);
+    console.warn('[Sheet] Fetch failed:', e.message);
+    dataHealth.sheetOk    = false;
+    dataHealth.sheetError = e.message;
+    updateHealthBtn();
     return false;
   }
 }
@@ -1270,7 +1913,7 @@ function showSetupModal(msg) {
     <div style="background:#fff;border-radius:16px;padding:28px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.35);max-height:90vh;overflow-y:auto;">
       <div style="font-size:20px;font-weight:700;margin-bottom:6px;">📊 Connect Google Sheet</div>
       <div style="font-size:13px;color:#4a5270;margin-bottom:20px;line-height:1.65;">
-        ${msg || 'Your Google Sheet is the <strong>primary price source</strong> — it uses GOOGLEFINANCE formulas to fetch live prices for all 60+ positions including HK, EU, NOK, MYR and GBX exchanges. Prices refresh every 60 seconds automatically.'}
+        ${msg || 'Your Google Sheet is the <strong>single source of truth</strong> — it defines all positions (ticker, company, type, shares, cost basis, investment) and provides live prices. Add, remove, or edit any row in the sheet and the dashboard will reflect it on the next refresh.'}
       </div>
 
       <div style="background:#f0f2f7;border-radius:10px;padding:14px;margin-bottom:16px;font-size:12.5px;line-height:1.9;color:#0f1420;">
@@ -1350,8 +1993,11 @@ async function fetchCryptoPrices() {
       Object.entries(BINANCE).forEach(([ticker, pair]) => {
         const idx = liveData.findIndex(p => p.ticker === ticker);
         if (idx >= 0 && byPair[pair]) {
-          liveData[idx].currentPrice = byPair[pair];
-          liveData[idx].priceLoaded  = true;
+          const livePrice = byPair[pair];
+          liveData[idx].currentPrice    = livePrice;
+          liveData[idx].localPrice      = livePrice;
+          liveData[idx].currentValueUSD = livePrice * liveData[idx].shares; // keep authoritative value in sync
+          liveData[idx].priceLoaded     = true;
         }
       });
     }
@@ -1372,7 +2018,7 @@ async function fetchCryptoPrices() {
 }
 
 async function fetchLivePrices() {
-  setStatus('loading', 'Fetching live prices…');
+  setStatus('loading', 'Syncing portfolio from sheet…');
   const btn = document.getElementById('refreshBtn');
   if (btn) { btn.classList.add('spinning'); document.getElementById('refreshIcon').innerHTML = '<span class="spin">↻</span>'; }
 
@@ -1383,18 +2029,16 @@ async function fetchLivePrices() {
     if (c.fxLive) Object.assign(fxLive, c.fxLive);
   } catch(e) {}
 
-
   let ok = false;
 
-  // Primary: Google Sheet (stocks, ETFs, FX rates)
+  // Primary: Google Sheet — rebuilds all positions + prices + FX
   if (getSheetUrl()) {
     ok = await fetchFromGoogleSheet();
   }
 
-  // Fetch crypto from Binance only if sheet didn't supply crypto prices
-  // (Your sheet includes BTC, ETH, XRP, SOL, ADA, XTZ, MIOTA, MANA directly)
-  const sheetHasCrypto = liveData.some(p => p.type === 'Crypto' && p.priceLoaded);
-  if (!sheetHasCrypto) {
+  // Always overlay live crypto from Binance for tickers present in liveData
+  // (Binance prices are real-time vs sheet which refreshes every ~10 min)
+  if (liveData.some(p => p.type === 'Crypto')) {
     await fetchCryptoPrices();
   }
 
@@ -1411,10 +2055,38 @@ async function fetchLivePrices() {
   const anyLoaded = sheetLoaded > 0;
   if (anyLoaded) {
     const src = ok ? `📊 Sheet` : `🔄 Fallback`;
-    setStatus('ok', `${src}: ${sheetLoaded}/${total} prices · ${timeStr}`);
+    setStatus('ok', `${src}: ${sheetLoaded} positions loaded · ${timeStr}`);
     startCountdown();
+
+    // Toast on first successful load
+    if (!dataHealth._notifiedOk) {
+      dataHealth._notifiedOk = true;
+      showToast('success','Portfolio Synced',`${sheetLoaded} positions loaded from sheet · ${timeStr}`,4000);
+    }
+
+    // Toast for any data issues found
+    const issues = (dataHealth.zeroValue||[]).length + (dataHealth.zeroPrice||[]).length
+                 + (dataHealth.stalePrices||[]).length + (dataHealth.duplicates||[]).length
+                 + (dataHealth.tickerIssues||[]).length;
+    if (issues > 0) {
+      showToast('warning','Data Issues Detected',
+        `${issues} issue${issues!==1?'s':''} found — click "Data Health" in sidebar for details`,
+        7000,
+        [{label:'View Issues',action:'openHealthPanel()'}]
+      );
+    }
+
+    // FX loaded?
+    const fxMissing = Object.entries(fxLive).filter(([,v])=>!v).map(([k])=>k);
+    if (fxMissing.length > 0) {
+      showToast('info','FX Rates Using Snapshot',`No live rate for: ${fxMissing.join(', ')} — using cached values`,5000);
+    }
+
   } else {
-    setStatus('error', getSheetUrl() ? 'Sheet fetch failed — check URL or permissions' : 'No price source — connect a Google Sheet');
+    const errMsg = getSheetUrl() ? 'Sheet fetch failed — check URL or publish settings' : 'No sheet connected — add your portfolio sheet URL';
+    setStatus('error', errMsg);
+    showToast('error', 'Sheet Load Failed', errMsg, 0,
+      [{label:'Configure Sheet', action:'showSetupModal()'}]);
     if (!getSheetUrl()) showSetupModal();
   }
 
@@ -1535,13 +2207,15 @@ function renderDashboard(){
   // Mini charts
   const tT={};d.forEach(p=>{tT[p.type]=(tT[p.type]||0)+p.currentValue;});
   const tE=Object.entries(tT).sort((a,b)=>b[1]-a[1]);
-  if(chartsInited.dashType)chartsInited.dashType.destroy();
-  chartsInited.dashType=new Chart(document.getElementById('dashTypeChart'),{type:'doughnut',data:{labels:tE.map(e=>e[0]),datasets:[{data:tE.map(e=>e[1]),backgroundColor:tE.map(([t])=>TYPE_COLORS[t]||'#888'),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11,family:'DM Sans'},boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtUSD(c.raw)} (${(c.raw/totV*100).toFixed(1)}%)`}}}}});
+  buildChart('dashTypeChart','doughnut',tE.map(e=>e[0]),tE.map(e=>e[1]),tE.map(([t])=>TYPE_COLORS[t]||'#888'),
+    {tooltip:{label:c=>`${c.label}: ${fmtUSD(c.raw)} (${(c.raw/totV*100).toFixed(1)}%)`},
+    drillConfig:{field:'type',colorMap:TYPE_COLORS,breadcrumb:'Dashboard › Asset Type'}});
 
   const sT={};d.forEach(p=>{sT[p.sector]=(sT[p.sector]||0)+p.currentValue;});
-  const sE=Object.entries(sT).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  if(chartsInited.dashSector)chartsInited.dashSector.destroy();
-  chartsInited.dashSector=new Chart(document.getElementById('dashSectorChart'),{type:'doughnut',data:{labels:sE.map(e=>e[0]),datasets:[{data:sE.map(e=>e[1]),backgroundColor:sE.map(([s])=>SECTOR_COLORS[s]||'#888'),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:10,family:'DM Sans'},boxWidth:9,padding:6}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtUSD(c.raw)} (${(c.raw/totV*100).toFixed(1)}%)`}}}}});
+  const sE=Object.entries(sT).sort((a,b)=>b[1]-a[1]).slice(0,9);
+  buildChart('dashSectorChart','doughnut',sE.map(e=>e[0]),sE.map(e=>e[1]),sE.map(([s])=>SECTOR_COLORS[s]||'#888'),
+    {tooltip:{label:c=>`${c.label}: ${fmtUSD(c.raw)} (${(c.raw/totV*100).toFixed(1)}%)`},
+    drillConfig:{field:'sector',colorMap:SECTOR_COLORS,breadcrumb:'Dashboard › Sector'}});
 
   // Gainers & losers
   renderPerfBars('dashGainers','dashLosers',d);
@@ -1616,10 +2290,11 @@ function renderPerformance(){
   }).join('');
 
   // G/L chart
-  const gl=clean.filter(p=>Math.abs(p.gainLoss)>30).sort((a,b)=>b.gainLoss-a.gainLoss).slice(0,22);
-  document.getElementById('perfGLWrap').style.height=Math.max(340,gl.length*30+60)+'px';
-  if(chartsInited.glChart)chartsInited.glChart.destroy();
-  chartsInited.glChart=new Chart(document.getElementById('perfGLChart'),{type:'bar',data:{labels:gl.map(p=>p.ticker),datasets:[{data:gl.map(p=>p.gainLoss),backgroundColor:gl.map(p=>p.gainLoss>=0?'rgba(13,122,85,.75)':'rgba(192,57,43,.75)'),borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(c.raw>=0?'+':'')+fmtUSD(c.raw)}}},scales:{x:{ticks:{color:getComputedStyle(document.body).getPropertyValue('--text2').trim(),callback:v=>(v<0?'-':'')+fmtUSD(Math.abs(v))},grid:{color:'rgba(0,0,0,.04)'}},y:{ticks:{color:getComputedStyle(document.body).getPropertyValue('--text2').trim(),autoSkip:false,font:{family:'DM Mono',size:11}},grid:{display:false}}}}});
+  const gl=clean.filter(p=>Math.abs(p.gainLoss)>10).sort((a,b)=>b.gainLoss-a.gainLoss).slice(0,25);
+  document.getElementById('perfGLWrap').style.height=Math.max(360,gl.length*34+80)+'px';
+  buildBarChart('perfGLChart',gl.map(p=>p.ticker),gl.map(p=>p.gainLoss),
+    gl.map(p=>p.gainLoss>=0?'rgba(10,138,92,.82)':'rgba(214,60,45,.82)'),
+    {tooltip:{label:c=>(c.raw>=0?'+':'')+fmtUSD(c.raw)},xFmt:v=>(v<0?'-':'')+fmtUSD(Math.abs(v)),showLegend:false});
 }
 
 // ── ALLOCATION ────────────────────────────────────────────────
@@ -1629,21 +2304,24 @@ function renderAllocation(){
 
   const tT={};d.forEach(p=>{tT[p.type]=(tT[p.type]||0)+p.currentValue;});
   const tE=Object.entries(tT).sort((a,b)=>b[1]-a[1]);
-  if(chartsInited.allocType)chartsInited.allocType.destroy();
-  chartsInited.allocType=new Chart(document.getElementById('allocTypeChart'),{type:'doughnut',data:{labels:tE.map(e=>e[0]),datasets:[{data:tE.map(e=>e[1]),backgroundColor:tE.map(([t])=>TYPE_COLORS[t]||'#888'),borderWidth:3,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11,family:'DM Sans'},boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtUSD(c.raw)} (${(c.raw/totV*100).toFixed(1)}%)`}}}}});
+  buildChart('allocTypeChart','doughnut',tE.map(e=>e[0]),tE.map(e=>e[1]),tE.map(([t])=>TYPE_COLORS[t]||'#888'),
+    {tooltip:{label:c=>`${c.label}: ${fmtUSD(c.raw)} (${(c.raw/totV*100).toFixed(1)}%)`},
+    drillConfig:{field:'type',colorMap:TYPE_COLORS,breadcrumb:'Allocation › Asset Type'}});
 
   const sT={};d.forEach(p=>{sT[p.sector]=(sT[p.sector]||0)+p.currentValue;});
   const sE=Object.entries(sT).sort((a,b)=>b[1]-a[1]);
-  if(chartsInited.allocSector)chartsInited.allocSector.destroy();
-  chartsInited.allocSector=new Chart(document.getElementById('allocSectorChart'),{type:'doughnut',data:{labels:sE.map(e=>e[0]),datasets:[{data:sE.map(e=>e[1]),backgroundColor:sE.map(([s])=>SECTOR_COLORS[s]||'#888'),borderWidth:3,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:10,family:'DM Sans'},boxWidth:9,padding:5}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtUSD(c.raw)} (${(c.raw/totV*100).toFixed(1)}%)`}}}}});
+  buildChart('allocSectorChart','doughnut',sE.map(e=>e[0]),sE.map(e=>e[1]),sE.map(([s])=>SECTOR_COLORS[s]||'#888'),
+    {tooltip:{label:c=>`${c.label}: ${fmtUSD(c.raw)} (${(c.raw/totV*100).toFixed(1)}%)`},
+    drillConfig:{field:'sector',colorMap:SECTOR_COLORS,breadcrumb:'Allocation › Sector'}});
 
   const top15=[...d].filter(p=>p.type!=='Cash').sort((a,b)=>b.currentValue-a.currentValue).slice(0,15);
-  document.getElementById('allocTop15Wrap').style.height=Math.max(320,top15.length*30+60)+'px';
-  if(chartsInited.allocTop15)chartsInited.allocTop15.destroy();
-  chartsInited.allocTop15=new Chart(document.getElementById('allocTop15Chart'),{type:'bar',data:{labels:top15.map(p=>p.ticker),datasets:[{data:top15.map(p=>p.currentValue),backgroundColor:top15.map(p=>SECTOR_COLORS[p.sector]||'#1a3fa6'),borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmtUSD(c.raw)} (${(c.raw/totV*100).toFixed(1)}%)`}}},scales:{x:{ticks:{color:'#4a5270',callback:v=>fmtUSD(v)},grid:{color:'rgba(0,0,0,.04)'}},y:{ticks:{color:'#4a5270',autoSkip:false,font:{family:'DM Mono',size:11}},grid:{display:false}}}}});
+  document.getElementById('allocTop15Wrap').style.height=Math.max(340,top15.length*34+80)+'px';
+  buildBarChart('allocTop15Chart',top15.map(p=>p.ticker),top15.map(p=>p.currentValue),
+    top15.map(p=>SECTOR_COLORS[p.sector]||'#1a3fa6'),
+    {tooltip:{label:c=>`${fmtUSD(c.raw)} (${(c.raw/totV*100).toFixed(1)}%)`},xFmt:v=>fmtUSD(v),singleDrill:true});
 
-  // Currency exposure
-  const cT={};d.forEach(p=>{const c=p.currency==='USD'?'USD':'Non-USD ('+p.currency+')';cT[c]=(cT[c]||0)+p.currentValue;});
+  // Currency exposure — use localCurrency (original) not currency (always USD internally)
+  const cT={};d.forEach(p=>{const c=p.localCurrency||p.currency;cT[c]=(cT[c]||0)+p.currentValue;});
   const sr=(l,v,extra='')=>`<div class="stat-row"><span class="stat-label">${l}</span><span class="stat-val">${v}${extra}</span></div>`;
   document.getElementById('allocCurrency').innerHTML=Object.entries(cT).sort((a,b)=>b[1]-a[1]).map(([c,v])=>sr(c,fmtUSD(v),` <span style="color:var(--text3);font-size:11px">(${(v/totV*100).toFixed(1)}%)</span>`)).join('');
 
@@ -1679,7 +2357,7 @@ function computeHealthScore(d){
   const maxSector=Math.max(...Object.values(sT))/totV;
   const topHolding=[...d].sort((a,b)=>b.currentValue-a.currentValue)[0];
   const topHoldingWt=topHolding?topHolding.currentValue/totV:0;
-  const currencies=new Set(d.map(p=>p.currency)).size;
+  const currencies=new Set(d.map(p=>p.localCurrency||p.currency)).size;
 
   // Scoring
   const cashScore=Math.min(20,Math.max(5,cash)*100);
@@ -1728,7 +2406,7 @@ function renderRisk(){
 
   // Diversification
   const sectorCount=new Set(d.map(p=>p.sector)).size;
-  const diversScore=Math.min(100,sectorCount*8+new Set(d.map(p=>p.currency)).size*5).toFixed(0);
+  const diversScore=Math.min(100,sectorCount*8+new Set(d.map(p=>p.localCurrency||p.currency)).size*5).toFixed(0);
 
   const gauges=[
     {label:'Portfolio Beta',val:beta,sub:'vs Market',color:parseFloat(beta)>1.3?'var(--red)':parseFloat(beta)>1?'var(--amber)':'var(--green)'},
@@ -1768,15 +2446,38 @@ function renderRisk(){
   // Scatter chart
   const scatterData=d.filter(p=>p.type!=='Cash'&&p.type!=='People').map(p=>{
     const volProxy={'Stock':18,'ETF':12,'Crypto':65}[p.type]||15;
-    const noise=(Math.random()-0.5)*10;
-    return{x:volProxy+noise,y:p.gainLossPct,label:p.ticker,type:p.type};
+    const alloc=p.allocationPct||1;
+    const noise=(Math.sin(p.ticker.charCodeAt(0)*7)-0.5)*8; // deterministic jitter
+    return{x:Math.max(2,volProxy+noise),y:p.gainLossPct,label:p.ticker,type:p.type,r:Math.max(5,Math.min(28,alloc*3))};
   });
   if(chartsInited.riskScatter)chartsInited.riskScatter.destroy();
-  const types=['Stock','ETF','Crypto'];
-  chartsInited.riskScatter=new Chart(document.getElementById('riskScatterChart'),{
-    type:'scatter',
-    data:{datasets:types.map(t=>({label:t,data:scatterData.filter(d=>d.type===t).map(d=>({x:d.x,y:d.y,label:d.label})),backgroundColor:TYPE_COLORS[t]+'aa',borderColor:TYPE_COLORS[t],borderWidth:1,pointRadius:5}))},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{family:'DM Sans',size:11},boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>`${c.raw.label}: Vol≈${c.raw.x.toFixed(0)}% | Return: ${c.raw.y.toFixed(1)}%`}}},scales:{x:{title:{display:true,text:'Estimated Volatility %',font:{family:'DM Sans',size:11}},ticks:{color:'#4a5270'},grid:{color:'rgba(0,0,0,.04)'}},y:{title:{display:true,text:'Return %',font:{family:'DM Sans',size:11}},ticks:{color:'#4a5270'},grid:{color:'rgba(0,0,0,.04)'}}}}
+  const scatterTypes=['Stock','ETF','Crypto'];
+  const currentScatterType=chartTypeState['riskScatterChart']||'scatter';
+  const scatterCanvas = document.getElementById('riskScatterChart');
+  if(scatterCanvas) scatterCanvas.style.cursor='pointer';
+  chartsInited.riskScatter=new Chart(scatterCanvas,{
+    type: currentScatterType==='bubble'?'bubble':'scatter',
+    data:{datasets:scatterTypes.map(t=>({
+      label:t,
+      data:scatterData.filter(s=>s.type===t).map(s=>currentScatterType==='bubble'?{x:s.x,y:s.y,r:s.r,label:s.label}:{x:s.x,y:s.y,label:s.label}),
+      backgroundColor:TYPE_COLORS[t]+'99',borderColor:TYPE_COLORS[t],borderWidth:1.5,
+      pointRadius:currentScatterType==='bubble'?undefined:6,
+      pointHoverRadius:8
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      onClick: makeScatterDrillHandler(),
+      plugins:{
+        legend:{display:true,position:'bottom',labels:{font:{family:'DM Sans',size:11},boxWidth:10,padding:10}},
+        tooltip:{callbacks:{
+          label:c=>`${c.raw.label}: Vol≈${c.raw.x.toFixed(0)}% | Return: ${fmtP(c.raw.y)}`,
+          afterLabel:()=>'  🔍 Click to drill down'
+        }}
+      },
+      scales:{
+        x:{title:{display:true,text:'Estimated Volatility %',color:'#4a5270',font:{family:'DM Sans',size:11}},ticks:{color:'#8b93af'},grid:{color:'rgba(15,20,60,.04)'}},
+        y:{title:{display:true,text:'Return %',color:'#4a5270',font:{family:'DM Sans',size:11}},ticks:{color:'#8b93af',callback:v=>fmtP(v)},grid:{color:'rgba(15,20,60,.04)'}}
+      }
+    }
   });
 }
 
@@ -1817,9 +2518,13 @@ const DIV_DATA={
   'BRK-B':   {freq:'None',       yield:0,    notes:'No dividend'},
   // ── EUR stocks ────────────────────────────────────────────────
   'DTE.DE':  {freq:'Annual',     yield:4.2,  notes:'Deutsche Telekom'},
+  'DTE':     {freq:'Annual',     yield:4.2,  notes:'Deutsche Telekom'},
   'VOW3.DE': {freq:'Annual',     yield:6.8,  notes:'VW Group annual'},
+  'VOW3':    {freq:'Annual',     yield:6.8,  notes:'VW Group annual'},
   'RUI.PA':  {freq:'Annual',     yield:7.2,  notes:'French energy co.'},
+  'RUI':     {freq:'Annual',     yield:7.2,  notes:'French energy co.'},
   'ACOMO.AS':{freq:'Semi-annual',yield:6.5,  notes:'Dutch dividend stock'},
+  'ACOMO':   {freq:'Semi-annual',yield:6.5,  notes:'Dutch dividend stock'},
   // ── HKD stocks ────────────────────────────────────────────────
   '9618':    {freq:'Semi-annual',yield:1.8,  notes:'JD.com HK'},
   '0001':    {freq:'Semi-annual',yield:6.5,  notes:'CK Hutchison'},
@@ -2659,11 +3364,600 @@ function applyEdits(){
   renderAll();fetchLivePrices();
 }
 function resetEditor(){
-  if(confirm('Reset to default portfolio? All local edits will be lost.')){
+  if(confirm('Re-sync portfolio from Google Sheet? All local manual edits will be replaced with the latest sheet data.')){
     localStorage.removeItem('pfData4');
     liveData=DEFAULT_PORTFOLIO.map(p=>({...p,currentPrice:p.manualPrice??p.snapshotPrice??p.costBasis,priceLoaded:false}));
     renderEditor();renderAll();
+    fetchLivePrices();
   }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  CHART ENGINE — buildChart, buildBarChart, switchChartType
+//  + DRILL-DOWN — click any chart segment to see positions
+// ═══════════════════════════════════════════════════════════════
+
+// Stores current chart type per canvas id
+const chartTypeState = {};
+// Stores data per canvas id for re-rendering on type switch
+const chartDataStore = {};
+
+const CHART_FONT = {family:'DM Sans',size:11};
+const CHART_MONO = {family:'DM Mono',size:10};
+const GRID_COLOR = 'rgba(15,20,60,0.05)';
+const TICK_COLOR = '#8b93af';
+
+// ── Destroy chart instance ────────────────────────────────────
+function destroyChart(id) {
+  for (const [k,v] of Object.entries(chartsInited)) {
+    if (v && v.canvas && v.canvas.id === id) { v.destroy(); delete chartsInited[k]; break; }
+  }
+  const existing = Chart.getChart(id);
+  if (existing) existing.destroy();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  DRILL-DOWN ENGINE
+// ════════════════════════════════════════════════════════════════
+
+function openDrillDown(config) {
+  // config: { breadcrumb, title, filterFn, colorKey, colorMap }
+  const allData  = getAllData();
+  const filtered = config.filterFn ? allData.filter(config.filterFn) : allData;
+  if (!filtered.length) return;
+
+  const totVal  = filtered.reduce((s,p) => s + p.currentValue, 0);
+  const totInv  = filtered.reduce((s,p) => s + p.investment,   0);
+  const totGL   = totVal - totInv;
+  const totGLPct = totInv > 0 ? (totGL / totInv) * 100 : 0;
+
+  // Breadcrumb & title
+  document.getElementById('ddBreadcrumb').textContent = config.breadcrumb || 'Portfolio › Breakdown';
+  document.getElementById('ddTitle').textContent      = config.title      || '—';
+  document.getElementById('ddCount').textContent      = `${filtered.length} position${filtered.length!==1?'s':''}`;
+
+  // Summary bar
+  const glClass = totGL >= 0 ? 'pos' : 'neg';
+  document.getElementById('ddSummary').innerHTML = `
+    <div class="dd-stat"><div class="dd-stat-label">Current Value</div><div class="dd-stat-val">${fmtUSD(totVal)}</div></div>
+    <div class="dd-stat"><div class="dd-stat-label">Invested</div><div class="dd-stat-val">${fmtUSD(totInv)}</div></div>
+    <div class="dd-stat"><div class="dd-stat-label">Gain / Loss</div><div class="dd-stat-val ${glClass}">${totGL>=0?'+':''}${fmtUSD(totGL)}</div></div>
+    <div class="dd-stat"><div class="dd-stat-label">Return</div><div class="dd-stat-val ${glClass}">${fmtP(totGLPct)}</div></div>
+    <div class="dd-stat"><div class="dd-stat-label">Positions</div><div class="dd-stat-val">${filtered.length}</div></div>
+  `;
+
+  // Table header
+  document.getElementById('ddThead').innerHTML = `<tr>
+    <th>Ticker</th><th>Company</th><th style="text-align:right">Value (USD)</th>
+    <th style="text-align:right">Invested</th><th style="text-align:right">G/L $</th>
+    <th style="text-align:right">Return %</th><th style="text-align:right">Alloc %</th>
+  </tr>`;
+
+  // Table rows — sorted by value desc
+  const sorted = [...filtered].sort((a,b) => b.currentValue - a.currentValue);
+  const allTot = getAllData().reduce((s,p) => s + p.currentValue, 0);
+
+  document.getElementById('ddTbody').innerHTML = sorted.map(p => {
+    const color = config.colorMap ? (config.colorMap[p[config.colorKey]] || '#888') : '#1a3fa6';
+    const glC   = p.gainLoss >= 0 ? 'pos' : 'neg';
+    return `<tr onclick="closeDrillDown();mobileNavTo('holdings');" style="cursor:pointer" title="Go to Holdings">
+      <td>
+        <span class="dd-swatch" style="background:${color}"></span>
+        <strong style="font-family:'DM Mono',monospace;font-size:12px">${p.ticker}</strong>
+      </td>
+      <td style="color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis">${p.company}</td>
+      <td style="text-align:right;font-weight:700;font-family:'DM Mono',monospace">${fmtUSD(p.currentValue)}</td>
+      <td style="text-align:right;color:var(--text2);font-family:'DM Mono',monospace">${fmtUSD(p.investment)}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace" class="${glC}">${p.gainLoss>=0?'+':''}${fmtUSD(p.gainLoss)}</td>
+      <td style="text-align:right"><span class="cbadge ${glC}">${p.gainLoss>=0?'▲':'▼'}${Math.abs(p.gainLossPct).toFixed(1)}%</span></td>
+      <td style="text-align:right;color:var(--text2);font-family:'DM Mono',monospace">${(p.currentValue/allTot*100).toFixed(1)}%</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('ddOverlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDrillDown() {
+  document.getElementById('ddOverlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// Close on Escape key
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrillDown(); });
+
+// ── Drill-down click handler factory ─────────────────────────
+// Returns an onClick plugin for Chart.js
+function makeDrillHandler(id) {
+  const store = chartDataStore[id];
+  if (!store || !store.drillConfig) return null;
+
+  return function(event, elements) {
+    if (!elements || !elements.length) return;
+    const idx   = elements[0].index;
+    const label = store.labels[idx]; // e.g. "Information Technology" or "Stock"
+    const cfg   = store.drillConfig;
+
+    openDrillDown({
+      breadcrumb: cfg.breadcrumb || 'Portfolio › Detail',
+      title:      label,
+      filterFn:   p => p[cfg.field] === label,
+      colorKey:   cfg.field,
+      colorMap:   cfg.colorMap,
+    });
+  };
+}
+
+// Drill config for the bar/GL charts (click = single position detail)
+function makeSinglePosDrillHandler(id) {
+  return function(event, elements) {
+    if (!elements || !elements.length) return;
+    const store = chartDataStore[id];
+    if (!store) return;
+    const idx    = elements[0].index;
+    const ticker = store.labels[idx];
+    const pos    = getAllData().find(p => p.ticker === ticker);
+    if (!pos) return;
+
+    openDrillDown({
+      breadcrumb: 'Portfolio › Position',
+      title:      `${ticker} — ${pos.company}`,
+      filterFn:   p => p.ticker === ticker,
+      colorKey:   'type',
+      colorMap:   TYPE_COLORS,
+    });
+  };
+}
+
+// Scatter/bubble click = single position
+function makeScatterDrillHandler() {
+  return function(event, elements) {
+    if (!elements || !elements.length) return;
+    const pt = elements[0];
+    const raw = pt.element.$context?.raw;
+    if (!raw || !raw.label) return;
+    const ticker = raw.label;
+    const pos = getAllData().find(p => p.ticker === ticker);
+    if (!pos) return;
+    openDrillDown({
+      breadcrumb: 'Risk › Position',
+      title: `${ticker} — ${pos.company}`,
+      filterFn: p => p.ticker === ticker,
+      colorKey: 'type', colorMap: TYPE_COLORS,
+    });
+  };
+}
+
+// ════════════════════════════════════════════════════════════════
+//  buildChart — pie / doughnut / bar / polarArea
+// ════════════════════════════════════════════════════════════════
+function buildChart(id, defaultType, labels, data, colors, opts={}) {
+  const type = chartTypeState[id] || defaultType;
+  chartDataStore[id] = {kind:'round', defaultType, labels, data, colors, opts,
+    drillConfig: opts.drillConfig || null};
+
+  destroyChart(id);
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+
+  // Make canvas cursor pointer — signals clickability
+  canvas.style.cursor = 'pointer';
+
+  const isBar          = type === 'bar';
+  const isHorizontalBar = type === 'horizontalBar';
+  const isRound        = ['doughnut','pie','polarArea'].includes(type);
+  const actualType     = isHorizontalBar ? 'bar' : type;
+  const total          = data.reduce((a,b) => a+b, 0);
+  const tooltipLabel   = opts.tooltip?.label || (c => `${c.label}: ${fmtUSD(c.raw)} (${(c.raw/total*100).toFixed(1)}%)`);
+
+  const bgColors    = colors.map(c => isRound ? c : c+'dd');
+  const borderColors = colors.map(c => isRound ? '#ffffff' : c);
+
+  const drillHandler = opts.drillConfig
+    ? makeDrillHandler(id)
+    : (opts.singleDrill ? makeSinglePosDrillHandler(id) : null);
+
+  const chart = new Chart(canvas, {
+    type: actualType,
+    data: { labels, datasets: [{
+      data,
+      backgroundColor: bgColors,
+      borderColor: borderColors,
+      borderWidth: isRound ? 2 : 0,
+      borderRadius: (isBar || isHorizontalBar) ? 5 : undefined,
+      hoverOffset: isRound ? 10 : undefined,
+      hoverBorderWidth: isRound ? 0 : 1,
+      hoverBorderColor: '#fff',
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: isHorizontalBar ? 'y' : undefined,
+      animation: { duration: 480, easing: 'easeInOutQuart' },
+      onClick: drillHandler,
+      plugins: {
+        legend: {
+          display: true,
+          position: (isBar || isHorizontalBar) ? 'top' : 'bottom',
+          labels: {
+            font: CHART_FONT, boxWidth: 11, padding: 10,
+            generateLabels: chart => {
+              const ds = chart.data.datasets[0];
+              return chart.data.labels.map((label,i) => ({
+                text:      label,
+                fillStyle: Array.isArray(ds.backgroundColor) ? ds.backgroundColor[i] : ds.backgroundColor,
+                strokeStyle: '#fff', lineWidth: 1, hidden: false, index: i,
+              }));
+            }
+          },
+          onClick: (e, legendItem, legend) => {
+            // Legend click = same as chart segment click — open drill-down
+            if (opts.drillConfig) {
+              const label = legend.chart.data.labels[legendItem.index];
+              const cfg   = opts.drillConfig;
+              openDrillDown({
+                breadcrumb: cfg.breadcrumb || 'Portfolio › Detail',
+                title:      label,
+                filterFn:   p => p[cfg.field] === label,
+                colorKey:   cfg.field,
+                colorMap:   cfg.colorMap,
+              });
+            }
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(13,18,38,0.92)',
+          titleFont: CHART_FONT, bodyFont: CHART_FONT,
+          padding: 10, cornerRadius: 8,
+          callbacks: {
+            label: tooltipLabel,
+            afterLabel: () => opts.drillConfig ? '  🔍 Click to drill down' : undefined,
+          }
+        }
+      },
+      scales: (isBar || isHorizontalBar) ? {
+        x: { ticks:{color:TICK_COLOR,font:CHART_MONO,maxRotation:40}, grid:{color:GRID_COLOR} },
+        y: { ticks:{color:TICK_COLOR,font:CHART_FONT,callback:v=>fmtUSD(v)}, grid:{color:GRID_COLOR} }
+      } : {},
+      cutout: type==='doughnut' ? '62%' : undefined,
+    }
+  });
+
+  chartsInited[id] = chart;
+  return chart;
+}
+
+// ════════════════════════════════════════════════════════════════
+//  buildBarChart — horizontal bar (GL, Top15)
+// ════════════════════════════════════════════════════════════════
+function buildBarChart(id, labels, data, colors, opts={}) {
+  const type = chartTypeState[id] || 'bar';
+  chartDataStore[id] = {kind:'bar', labels, data, colors, opts};
+  destroyChart(id);
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+
+  canvas.style.cursor = 'pointer';
+
+  const isLine     = type === 'line';
+  const isVertical = type === 'verticalBar';
+  const actualType = isLine ? 'line' : 'bar';
+
+  const dataset = isLine ? {
+    data, label: '',
+    borderColor: '#3060e8', backgroundColor: 'rgba(48,96,232,0.12)',
+    borderWidth: 2, fill: true, tension: 0.38, pointRadius: 4,
+    pointBackgroundColor: colors,
+  } : {
+    data, backgroundColor: colors, borderWidth: 0,
+    borderRadius: 5,
+    hoverBackgroundColor: colors.map(c => c.replace(/[\d.]+\)$/, '1)')),
+  };
+
+  const chart = new Chart(canvas, {
+    type: actualType,
+    data: { labels, datasets: [dataset] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: (isLine || isVertical) ? 'x' : 'y',
+      animation: { duration: 480, easing: 'easeInOutQuart' },
+      onClick: makeSinglePosDrillHandler(id),
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(13,18,38,0.92)',
+          titleFont: CHART_FONT, bodyFont: CHART_FONT,
+          padding: 10, cornerRadius: 8,
+          callbacks: {
+            label: opts.tooltip?.label || (c => fmtUSD(c.raw)),
+            afterLabel: () => '  🔍 Click to drill down',
+          }
+        }
+      },
+      scales: {
+        x: { ticks:{color:TICK_COLOR,font:CHART_FONT,callback:opts.xFmt||undefined}, grid:{color:GRID_COLOR} },
+        y: { ticks:{color:TICK_COLOR,font:{family:'DM Mono',size:11},autoSkip:false}, grid:{display: isLine} }
+      }
+    }
+  });
+  chartsInited[id] = chart;
+  return chart;
+}
+
+// ════════════════════════════════════════════════════════════════
+//  switchChartType — called by type switcher buttons
+// ════════════════════════════════════════════════════════════════
+function switchChartType(id, newType, btn) {
+  const bar = btn.closest('.chart-type-bar');
+  if (bar) bar.querySelectorAll('.chart-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  chartTypeState[id] = newType;
+
+  const store = chartDataStore[id];
+  if (!store) return;
+
+  if (store.kind === 'round') {
+    buildChart(id, newType, store.labels, store.data, store.colors, store.opts);
+  } else if (store.kind === 'bar') {
+    buildBarChart(id, store.labels, store.data, store.colors, store.opts);
+  } else {
+    renderRisk();
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  DATA HEALTH STATE
+// ═══════════════════════════════════════════════════════════════
+const dataHealth = {
+  sheetOk:     null,
+  sheetError:  null,
+  posCount:    0,
+  zeroPrice:   [],
+  zeroValue:   [],
+  stalePrices: [],
+  tickerIssues:[],
+  duplicates:  [],
+  lastFetch:   null,
+  _notifiedOk: false,
+};
+
+function updateHealthBtn() {
+  const dot   = document.getElementById('healthBtnDot');
+  const label = document.getElementById('healthBtnLabel');
+  const badge = document.getElementById('healthBtnBadge');
+  if (!dot) return;
+
+  const issues = (dataHealth.zeroValue||[]).length + (dataHealth.zeroPrice||[]).length
+               + (dataHealth.stalePrices||[]).length + (dataHealth.duplicates||[]).length
+               + (dataHealth.tickerIssues||[]).length;
+  const hasError = !dataHealth.sheetOk && dataHealth.sheetOk !== null;
+
+  if (hasError) {
+    dot.style.background = '#d63c2d';
+    label.textContent    = 'Sheet Error';
+    badge.style.display  = 'inline';
+    badge.textContent    = '!';
+    badge.style.background = '#d63c2d';
+  } else if (issues > 0) {
+    dot.style.background = '#f59e0b';
+    label.textContent    = `Data Health`;
+    badge.style.display  = 'inline';
+    badge.textContent    = issues;
+    badge.style.background = '#f59e0b';
+    badge.style.color    = '#0d1226';
+  } else {
+    dot.style.background = '#0a8a5c';
+    label.textContent    = 'Data Health';
+    badge.style.display  = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TOAST NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════════
+const TOAST_ICONS = {success:'✅',error:'❌',warning:'⚠️',info:'ℹ️'};
+const _activeToasts = new Set();
+
+function showToast(type='info', title='', msg='', duration=5000, actions=[]) {
+  const stack = document.getElementById('toastStack');
+  if (!stack) return;
+
+  // Dedupe: don't show same title+type twice within 30s
+  const key = type + title;
+  if (_activeToasts.has(key)) return;
+  _activeToasts.add(key);
+  setTimeout(() => _activeToasts.delete(key), 30000);
+
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `
+    <div class="toast-icon">${TOAST_ICONS[type]||'ℹ️'}</div>
+    <div class="toast-body">
+      <div class="toast-title">${title}</div>
+      ${msg ? `<div class="toast-msg">${msg}</div>` : ''}
+      ${actions.length ? `<div class="toast-actions">${actions.map(a=>`<button class="toast-action-btn" onclick="${a.action}">${a.label}</button>`).join('')}</div>` : ''}
+    </div>
+    <button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>
+  `;
+  stack.appendChild(el);
+
+  if (duration > 0) {
+    setTimeout(() => dismissToast(el), duration);
+  }
+  return el;
+}
+
+function dismissToast(el) {
+  if (!el || el.classList.contains('hiding')) return;
+  el.classList.add('hiding');
+  setTimeout(() => el.remove(), 300);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DATA HEALTH PANEL
+// ═══════════════════════════════════════════════════════════════
+function openHealthPanel() {
+  renderHealthPanel();
+  document.getElementById('healthPanelOverlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeHealthPanel() {
+  document.getElementById('healthPanelOverlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function renderHealthPanel() {
+  const h = dataHealth;
+  const now = h.lastFetch ? h.lastFetch.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : 'Never';
+  const totalIssues = (h.zeroValue||[]).length + (h.zeroPrice||[]).length
+                    + (h.stalePrices||[]).length + (h.duplicates||[]).length
+                    + (h.tickerIssues||[]).length + (!h.sheetOk && h.sheetOk!==null ? 1 : 0);
+
+  document.getElementById('healthPanelSub').textContent =
+    `Last checked: ${now} · ${totalIssues} issue${totalIssues!==1?'s':''} found · ${h.posCount} positions`;
+
+  let body = '';
+
+  // ── Sheet connection ──────────────────────────────────────────
+  body += '<div class="alert-section-label">Sheet Connection</div>';
+  if (h.sheetOk === null) {
+    body += alertRow('info','⏳','Not checked yet','Refresh prices to run diagnostics');
+  } else if (!h.sheetOk) {
+    body += alertRow('error','❌','Sheet fetch failed',
+      h.sheetError || 'Could not load data from Google Sheet',
+      [{label:'Configure Sheet',action:'closeHealthPanel();showSetupModal()'}]);
+  } else {
+    body += alertRow('success','✅','Sheet connected',`${h.posCount} positions loaded successfully at ${now}`);
+  }
+
+  // ── FX Rates ─────────────────────────────────────────────────
+  body += '<div class="alert-section-label">FX Rates</div>';
+  const FX_META_FULL = {
+    EUR:{name:'Euro',        usedFor:'DTE, VOW3, RUI, ACOMO'},
+    HKD:{name:'Hong Kong Dollar', usedFor:'9618, 0001, 0823, 1883'},
+    NOK:{name:'Norwegian Krone',  usedFor:'AKRBP.OL, DNQ'},
+    MYR:{name:'Malaysian Ringgit',usedFor:'KLSE1163'},
+    GBX:{name:'British Pence',    usedFor:'DOM'},
+  };
+  let anyFxIssue = false;
+  Object.entries(FX_META_FULL).forEach(([ccy, meta]) => {
+    const live = fxLive[ccy];
+    const rate = FX[ccy];
+    if (!live) {
+      anyFxIssue = true;
+      body += alertRow('warning','⚡',`${ccy} rate is snapshot (not live)`,
+        `Using cached rate ${rate ? rate.toFixed(6) : 'N/A'} — affects: ${meta.usedFor}`);
+    } else {
+      body += alertRow('success','✅',`${ccy} live rate: ${rate.toFixed(6)}`,
+        `1 ${ccy} = $${rate.toFixed(4)} USD — used for: ${meta.usedFor}`);
+    }
+  });
+  if (!anyFxIssue) {
+    body = body.replace(
+      '<div class="alert-section-label">FX Rates</div>',
+      '<div class="alert-section-label">FX Rates</div>'
+    );
+  }
+
+  // ── Position Issues ───────────────────────────────────────────
+  body += '<div class="alert-section-label">Position Data</div>';
+
+  let posIssues = 0;
+
+  if ((h.zeroValue||[]).length > 0) {
+    posIssues++;
+    body += alertRow('error','❌','Zero-value positions detected',
+      `These positions have $0 current value — check if the ticker is correct in your sheet or if the position is delisted:<br>` +
+      h.zeroValue.map(t=>`<span class="alert-row-code">${t}</span>`).join(' '));
+  }
+
+  if ((h.zeroPrice||[]).length > 0) {
+    posIssues++;
+    body += alertRow('warning','⚠️','Zero local price (col 11)',
+      `Current Price column shows 0 for these tickers — GOOGLEFINANCE may have failed or the ticker format is wrong:<br>` +
+      h.zeroPrice.map(t=>`<span class="alert-row-code">${t}</span>`).join(' ') +
+      '<br><small style="color:var(--text3)">Tip: check GOOGLEFINANCE formula in your sheet for these tickers</small>');
+  }
+
+  if ((h.stalePrices||[]).length > 0) {
+    posIssues++;
+    body += alertRow('warning','⚠️','Possibly stale or mismatched prices',
+      h.stalePrices.map(p=>`<strong>${p.ticker}:</strong> ${p.issue}`).join('<br>'));
+  }
+
+  if ((h.duplicates||[]).length > 0) {
+    posIssues++;
+    body += alertRow('error','❌','Duplicate tickers in sheet',
+      `These tickers appear more than once — remove duplicates from your sheet:<br>` +
+      h.duplicates.map(t=>`<span class="alert-row-code">${t}</span>`).join(' '));
+  }
+
+  if ((h.tickerIssues||[]).length > 0) {
+    posIssues++;
+    body += alertRow('info','ℹ️','Ticker format notes',
+      h.tickerIssues.map(p=>`<strong>${p.ticker}:</strong> ${p.issue}`).join('<br>'));
+  }
+
+  if (posIssues === 0 && h.sheetOk) {
+    body += alertRow('success','✅','All position data looks clean',`${h.posCount} positions parsed with no issues`);
+  }
+
+  // ── Ticker Reference ─────────────────────────────────────────
+  body += '<div class="alert-section-label">Ticker Normalisations Applied</div>';
+  body += alertRow('info','🔄','Automatic ticker fixes',
+    `These conversions are applied when parsing your sheet:<br>
+    <span class="alert-row-code">BRK.B</span> → <span class="alert-row-code">BRK-B</span> &nbsp;
+    <span class="alert-row-code">AKRBF</span> → <span class="alert-row-code">AKRBP.OL</span> &nbsp;
+    <span class="alert-row-code">KLSE:1163</span> → <span class="alert-row-code">KLSE1163</span> &nbsp;
+    <span class="alert-row-code">$SPXS</span> → <span class="alert-row-code">SPXS</span> &nbsp;
+    <span class="alert-row-code">$UVXY</span> → <span class="alert-row-code">UVXY</span> &nbsp;
+    <span class="alert-row-code">1</span> → <span class="alert-row-code">0001</span> &nbsp;
+    <span class="alert-row-code">823</span> → <span class="alert-row-code">0823</span>`);
+
+  // ── Positions quick view ──────────────────────────────────────
+  if (liveData.length > 0) {
+    const notLoaded = liveData.filter(p => !p.priceLoaded && p.type !== 'Cash' && p.type !== 'People');
+    if (notLoaded.length > 0) {
+      body += '<div class="alert-section-label">Prices Not Loaded</div>';
+      body += alertRow('warning','⚡','These positions have no live price',
+        `Using snapshot values for:<br>` +
+        notLoaded.map(p=>`<span class="alert-row-code">${p.ticker}</span>`).join(' '));
+    }
+  }
+
+  // ── Enhancement Suggestions ──────────────────────────────────
+  body += '<div class="alert-section-label">💡 Suggested Enhancements</div>';
+  const suggestions = [
+    {icon:'📊',title:'Add Benchmark Comparison',detail:'Compare portfolio performance vs S&P 500 (VOO) and MSCI World over time to see true alpha generated.'},
+    {icon:'🗓',title:'Trade History Log',detail:'Add a "Trades" sheet tab to track buy/sell history. Enables FIFO/LIFO P&L, average cost tracking, and wash-sale alerts.'},
+    {icon:'📱',title:'PWA / Offline Mode',detail:'Package this as a Progressive Web App so it installs on your phone home screen and loads instantly without internet.'},
+    {icon:'🔔',title:'Price Alerts',detail:'Set target prices for your positions — get a browser notification when a stock crosses your threshold (requires the tab to be open).'},
+    {icon:'💹',title:'Position Sizing Calculator',detail:'Add a tool to calculate optimal position size based on your risk tolerance, account size, and stop-loss level (Kelly Criterion / fixed %).'},
+    {icon:'📰',title:'News Feed per Ticker',detail:'Embed a news widget (via RSS or free API) showing latest headlines for each position in the Notes page.'},
+    {icon:'🧾',title:'Tax Report Export',detail:'Generate a year-end CSV with realised gains/losses, holding periods, and cost basis — ready to hand to your accountant.'},
+    {icon:'📈',title:'Sparkline Price Charts',detail:'Add mini sparkline charts (last 30 days) to the Holdings table price column for at-a-glance price trend per position.'},
+    {icon:'🔁',title:'Auto-Rebalance Suggestions',detail:'In Target Builder, add a "Buy X / Sell Y" action table showing exact $ amounts to trade to reach target allocations.'},
+    {icon:'🌍',title:'Geographic Exposure Map',detail:'Visual world map with countries shaded by exposure weight — US, EU, HK/China, Norway, Malaysia, UK.'},
+  ];
+  suggestions.forEach(s => {
+    body += alertRow('info', s.icon, s.title, s.detail);
+  });
+
+  document.getElementById('healthPanelBody').innerHTML = body;
+}
+
+function alertRow(type, icon, title, detail, actions=[]) {
+  const actionsHtml = actions.length
+    ? `<div class="toast-actions" style="margin-top:8px">${actions.map(a=>`<button class="toast-action-btn" onclick="${a.action}">${a.label}</button>`).join('')}</div>`
+    : '';
+  return `<div class="alert-row ${type}">
+    <div class="alert-row-icon">${icon}</div>
+    <div class="alert-row-body">
+      <div class="alert-row-title">${title}</div>
+      <div class="alert-row-detail">${detail}${actionsHtml}</div>
+    </div>
+  </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2671,19 +3965,124 @@ function resetEditor(){
 // ═══════════════════════════════════════════════════════════════
 
 // ── PRE-LOAD GOOGLE SHEET URL ───────────────────────────────────
-// Sheet is already configured — save it if not already set
+// New portfolio sheet — always overwrite with the latest URL
 (function() {
-  const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTyW3xAUWQv4W2Re0wYS3swDxdbxhNwNALn0TR7GfRbMBgtu27g9yIuixTaLf3_W1LzmEoqhrB8cK7X/pub?gid=0&single=true&output=csv';
-  if (!localStorage.getItem('gsheetUrl')) {
-    localStorage.setItem('gsheetUrl', SHEET_URL);
-  }
-})();
+  const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsSFvbe1a0iVIJ6wdDoKQylXzuUvjkKf67jn_6yKKDlRLgGlTXwASCrReeSkU5Pe52m79oAafWi_bC/pub?gid=600914265&single=true&output=csv';
+  // Always set — ensures the new sheet is used even if a stale URL was cached
+  localStorage.setItem('gsheetUrl', SHEET_URL);
+})()
 
 renderHoldingsFilters();
 renderAll();
 // Update price source badge on load
 updatePriceSourceBadge();
 fetchLivePrices();
+
+// ═══════════════════════════════════════════════════════════════
+//  MOBILE NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+
+// Bottom nav page → button id map
+const BOTTOM_NAV_PAGES = {
+  'dashboard': 'bnDashboard',
+  'holdings':  'bnHoldings',
+  'allocation':'bnAllocation',
+};
+
+function mobileNavTo(page) {
+  // Use existing navTo — find the matching desktop nav-item to keep state in sync
+  const desktopNavItems = document.querySelectorAll('.nav-item');
+  let matched = null;
+  desktopNavItems.forEach(item => {
+    const onclick = item.getAttribute('onclick') || '';
+    if (onclick.includes("'" + page + "'") || onclick.includes('"' + page + '"')) matched = item;
+  });
+  navTo(page, matched);
+  // Update bottom nav active state
+  document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+  const bnId = BOTTOM_NAV_PAGES[page];
+  if (bnId) document.getElementById(bnId)?.classList.add('active');
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function syncMobilePF(btn) {
+  // Keep desktop portfolio switcher in sync
+  document.querySelectorAll('.mobile-pf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.ps-btn').forEach(b => {
+    const txt = b.textContent.trim();
+    const btnTxt = btn.textContent.trim();
+    if (txt === btnTxt || (btnTxt === 'G' && txt === 'Growth') || (btnTxt === 'V' && txt === 'Value')) {
+      b.classList.add('active');
+    } else {
+      b.classList.remove('active');
+    }
+  });
+}
+
+// Sidebar drawer
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  const hamburger = document.getElementById('hamburger');
+  const isOpen = sidebar.classList.contains('open');
+  if (isOpen) {
+    closeSidebar();
+  } else {
+    sidebar.classList.add('open');
+    backdrop.classList.add('visible');
+    hamburger.classList.add('open');
+  }
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('visible');
+  document.getElementById('hamburger').classList.remove('open');
+}
+
+// Close sidebar when a nav item is clicked on mobile
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    if (window.innerWidth <= 768) closeSidebar();
+  });
+});
+
+// More sheet
+function toggleMoreSheet() {
+  const sheet = document.getElementById('moreSheet');
+  const backdrop = document.getElementById('moreBackdrop');
+  const isOpen = sheet.classList.contains('open');
+  if (isOpen) {
+    closeMoreSheet();
+  } else {
+    sheet.classList.add('open');
+    backdrop.classList.add('visible');
+    document.getElementById('bnMore').classList.add('active');
+  }
+}
+function closeMoreSheet() {
+  document.getElementById('moreSheet').classList.remove('open');
+  document.getElementById('moreBackdrop').classList.remove('visible');
+  document.getElementById('bnMore').classList.remove('active');
+}
+
+// Patch navTo to also update bottom nav on desktop nav-item clicks
+const _origNavTo = navTo;
+window.navTo = function(page, el) {
+  _origNavTo(page, el);
+  document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+  const bnId = BOTTOM_NAV_PAGES[page];
+  if (bnId) document.getElementById(bnId)?.classList.add('active');
+};
+
+// Swipe-to-close sidebar
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (dx < -60 && document.getElementById('sidebar').classList.contains('open')) closeSidebar();
+}, { passive: true });
 </script>
 </body>
 </html>
