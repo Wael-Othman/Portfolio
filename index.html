@@ -1739,18 +1739,86 @@ function normaliseTicker(raw) {
 // ═══════════════════════════════════════════════════════════════
 async function fetchFromGoogleSheet() {
   const url = getSheetUrl();
-  if (!url) return false;
+  if (!url) {
+    showDebugToast('❌ No sheet URL in localStorage');
+    return false;
+  }
+
+  showDebugToast('⏳ Fetching sheet via proxy…');
+
+  // ── Fetch strategy ──────────────────────────────────────────
+  // 1. Direct (works on GitHub Pages / any https host)
+  // 2. Google Apps Script relay (set APPS_SCRIPT_URL below if deployed)
+  // 3. CORS proxies as last resort
+  const APPS_SCRIPT_URL = localStorage.getItem('appsScriptUrl') || '';
+
+  const fetchWithTimeout = (fetchUrl, ms=12000) => Promise.race([
+    fetch(fetchUrl, {cache:'no-store'}),
+    new Promise((_,reject)=>setTimeout(()=>reject(new Error('Timeout')),ms))
+  ]);
+
+  const isValidCsv = t => {
+    const s = t.trim();
+    return s.length > 50 && !s.startsWith('<') && s.split('\n')[0].includes(',');
+  };
+
+  // Build candidates list
+  const candidates = [];
+  candidates.push({label:'Direct', fn: () => fetchWithTimeout(url)});
+  if (APPS_SCRIPT_URL) {
+    candidates.push({label:'Apps Script', fn: () => fetchWithTimeout(`${APPS_SCRIPT_URL}?url=${encodeURIComponent(url)}`)});
+  }
+  candidates.push({label:'corsproxy.io',  fn: () => fetchWithTimeout(`https://corsproxy.io/?${encodeURIComponent(url)}`)});
+  candidates.push({label:'allorigins',    fn: () => fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`)});
+  candidates.push({label:'codetabs',      fn: () => fetchWithTimeout(`https://api.codetabs.com/v1/proxy?quest=${url}`)});
+  candidates.push({label:'htmldriven',    fn: () => fetchWithTimeout(`https://api.htmldriven.com/v1/proxy?url=${url}`)});
+
+  let text = null;
+  for (const {label, fn} of candidates) {
+    try {
+      showDebugToast(`🔄 Trying ${label}…`);
+      const r = await fn();
+      if (!r.ok) { showDebugToast(`⚠️ ${label}: HTTP ${r.status}`); continue; }
+      const t = await r.text();
+      if (!isValidCsv(t)) { showDebugToast(`⚠️ ${label}: not valid CSV`); continue; }
+      text = t;
+      showDebugToast(`✅ ${label} worked! ${t.length} bytes`);
+      break;
+    } catch(e) {
+      showDebugToast(`⚠️ ${label}: ${e.message}`);
+    }
+  }
+
+  if (!text) {
+    const errMsg = 'All fetch methods failed. Host this file on GitHub Pages for direct access — or deploy a Google Apps Script relay.';
+    showDebugToast('❌ ' + errMsg);
+    showToast('error','Cannot Reach Sheet',errMsg,0,[
+      {label:'How to fix',action:'showCorsHelp()'}
+    ]);
+    dataHealth.sheetOk = false;
+    dataHealth.sheetError = errMsg;
+    updateHealthBtn();
+    return false;
+  }
 
   try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 15000);
-    let r;
-    try { r = await fetch(url, { signal: ctrl.signal }); } finally { clearTimeout(timer); }
-    if (!r.ok) return false;
-    const text = await r.text();
+    const lines = text.trim().split('\n');
+    showDebugToast(`📄 CSV: ${lines.length} lines · ${text.length} bytes`);
+    showDebugToast('📋 Header: ' + lines[0]?.substring(0,80));
+    showDebugToast('📋 Row1: ' + lines[1]?.substring(0,80));
+    showDebugToast('📋 Row2: ' + lines[2]?.substring(0,80));
 
-    const rows = text.trim().split('\n').slice(1); // skip header row
+    const rows = lines.slice(1); // skip header row
     const newPositions = [];
+
+    // Store raw CSV for debug inspection
+    dataHealth.rawCsvPreview = text.split('\n').slice(0, 6).join('\n');
+    dataHealth.rawCsvFull    = text;
+    dataHealth.csvRowCount   = rows.length;
+    console.log('[Sheet] CSV received, rows:', rows.length);
+    console.log('[Sheet] Header:', lines[0]);
+    console.log('[Sheet] Row 1 sample:', rows[0]?.substring(0, 200));
+    console.log('[Sheet] Row 2 sample:', rows[1]?.substring(0, 200));
 
     rows.forEach(row => {
       // Robust CSV parser — handles quoted fields with embedded commas
@@ -1823,7 +1891,23 @@ async function fetchFromGoogleSheet() {
       });
     });
 
+    showDebugToast(`✅ Parsed ${newPositions.length} positions from ${rows.length} rows`);
+    if (newPositions.length > 0) {
+      const p0 = newPositions[0];
+      showDebugToast(`📊 First: ${p0.ticker} val=$${p0.currentValueUSD?.toFixed(0)} inv=$${p0.investment?.toFixed(0)}`);
+    }
+
     if (newPositions.length === 0) {
+      showDebugToast('❌ 0 positions parsed — checking why…');
+      // Show what the first 3 rows look like
+      rows.slice(0,3).forEach((row,i) => {
+        const cols = [];
+        let cur='',inQ=false;
+        for(const ch of row){if(ch==='"'){inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur);cur='';}else cur+=ch;}
+        cols.push(cur);
+        const c = i2 => (cols[i2]||'').replace(/^"|"$/g,'').trim();
+        showDebugToast(`Row${i+1}: col0="${c(0)}" col2="${c(2)}" col7="${c(7)}" col8="${c(8)}" col13="${c(13)}"`);
+      });
       console.warn('[Sheet] No positions parsed — check sheet format/columns');
       dataHealth.sheetOk = false;
       dataHealth.sheetError = 'No positions found — check sheet column order (expected: Portfolio, Sector, Type, Company, Curr, Exch Cost, Current Exch, Ticker, Investment…)';
@@ -1895,7 +1979,8 @@ async function fetchFromGoogleSheet() {
     return true;
 
   } catch(e) {
-    console.warn('[Sheet] Fetch failed:', e.message);
+    showDebugToast('❌ Parse error: ' + e.message);
+    console.warn('[Sheet] Parse failed:', e.message);
     dataHealth.sheetOk    = false;
     dataHealth.sheetError = e.message;
     updateHealthBtn();
@@ -3753,6 +3838,43 @@ function updateHealthBtn() {
   }
 }
 
+// ─── Debug toast (shows on-screen without DevTools) ──────────
+let _debugMode = true; // set to false to hide debug toasts
+function showDebugToast(msg) {
+  if (!_debugMode) return;
+  console.log('[DEBUG]', msg);
+  // Show as a small on-screen toast for 8 seconds
+  const stack = document.getElementById('toastStack');
+  if (!stack) return;
+  const el = document.createElement('div');
+  el.style.cssText = 'background:rgba(0,0,20,0.92);color:#7cf;font-family:DM Mono,monospace;font-size:10.5px;padding:6px 12px;border-radius:7px;pointer-events:all;max-width:500px;word-break:break-all;border:1px solid rgba(100,180,255,0.2)';
+  el.textContent = msg;
+  stack.appendChild(el);
+  setTimeout(() => el.remove(), 12000);
+}
+
+// ─── Boot loading overlay ─────────────────────────────────────
+function showBootLoading() {
+  // Show skeleton KPI values
+  ['kpi-value','kpi-return','kpi-cash','kpi-pos','kpi-health'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = '—'; el.className = 'kpi-val neu'; }
+  });
+  const inv = document.getElementById('kpi-invested');
+  if (inv) inv.textContent = 'Loading from sheet…';
+  const upd = document.getElementById('kpi-lastupdate');
+  if (upd) upd.textContent = 'Connecting…';
+
+  // Show loading card on dashboard
+  const metrics = document.getElementById('dashMetrics');
+  if (metrics) metrics.innerHTML = `
+    <div style="grid-column:1/-1;padding:32px;text-align:center;color:var(--text3);">
+      <div style="font-size:28px;margin-bottom:12px">⏳</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text2);margin-bottom:6px">Loading portfolio from Google Sheet…</div>
+      <div style="font-size:12.5px">Fetching live prices and positions</div>
+    </div>`;
+}
+
 // ═══════════════════════════════════════════════════════════════
 //  TOAST NOTIFICATIONS
 // ═══════════════════════════════════════════════════════════════
@@ -3828,7 +3950,10 @@ function renderHealthPanel() {
       h.sheetError || 'Could not load data from Google Sheet',
       [{label:'Configure Sheet',action:'closeHealthPanel();showSetupModal()'}]);
   } else {
-    body += alertRow('success','✅','Sheet connected',`${h.posCount} positions loaded successfully at ${now}`);
+    const debugInfo = h.csvRowCount ? ` · ${h.csvRowCount} CSV rows received` : '';
+    body += alertRow('success','✅','Sheet connected',
+      `${h.posCount} positions loaded successfully at ${now}${debugInfo}`,
+      [{label:'View Raw CSV',action:'showRawCsvDebug()'},{label:'Re-sync Now',action:'closeHealthPanel();fetchLivePrices()'}]);
   }
 
   // ── FX Rates ─────────────────────────────────────────────────
@@ -3858,6 +3983,15 @@ function renderHealthPanel() {
       '<div class="alert-section-label">FX Rates</div>',
       '<div class="alert-section-label">FX Rates</div>'
     );
+  }
+
+  // ── Parse Stats ──────────────────────────────────────────────
+  if (h.csvRowCount) {
+    body += '<div class="alert-section-label">Parse Statistics</div>';
+    body += alertRow('info','📊','CSV Parse Summary',
+      `${h.csvRowCount} raw CSV rows received → ${h.posCount} positions parsed · ` +
+      `${h.csvRowCount - h.posCount} rows skipped (TOTAL row, zero-investment placeholders, header bleed)`,
+      [{label:'Inspect CSV',action:'showRawCsvDebug()'}]);
   }
 
   // ── Position Issues ───────────────────────────────────────────
@@ -3947,6 +4081,122 @@ function renderHealthPanel() {
   document.getElementById('healthPanelBody').innerHTML = body;
 }
 
+function showRawCsvDebug() {
+  const h = dataHealth;
+  if (!h.rawCsvFull) {
+    showToast('warning','No CSV data','Refresh prices first to capture raw CSV',3000);
+    return;
+  }
+
+  // Parse first 5 data rows and show column mapping
+  const lines = h.rawCsvFull.split('\n');
+  const header = lines[0];
+  const dataRows = lines.slice(1, 7);
+
+  let debugHtml = `<div style="font-family:'DM Mono',monospace;font-size:11px;overflow-x:auto">`;
+  debugHtml += '<div style="font-weight:700;margin-bottom:8px;font-size:12px">Raw CSV Header:</div>';
+  debugHtml += `<div style="background:var(--bg3);padding:8px;border-radius:6px;margin-bottom:12px;word-break:break-all;font-size:10.5px">${header.replace(/,/g,'<span style="color:var(--red)">,</span>')}</div>`;
+
+  debugHtml += '<div style="font-weight:700;margin-bottom:8px;font-size:12px">First 6 data rows (columns 0,1,2,3,4,6,7,8,11,12,13):</div>';
+  debugHtml += '<table style="width:100%;border-collapse:collapse;font-size:10.5px">';
+  debugHtml += '<tr style="background:var(--bg3)">';
+  ['Col0\nPortfolio','Col1\nSector','Col2\nType','Col4\nCurr','Col6\nExch','Col7\nTicker','Col8\nInvest','Col11\nPrice','Col12\nShares','Col13\nUSD Val'].forEach(h =>
+    debugHtml += `<th style="padding:5px 7px;border:1px solid var(--border);white-space:pre;text-align:left">${h}</th>`
+  );
+  debugHtml += '</tr>';
+
+  dataRows.forEach(row => {
+    if (!row.trim()) return;
+    const cols = [];
+    let cur='',inQ=false;
+    for(const ch of row){ if(ch==='"'){inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur);cur='';}else cur+=ch; }
+    cols.push(cur);
+    const c = i => (cols[i]||'').replace(/^"|"$/g,'').trim();
+    const cells = [c(0),c(1),c(2),c(4),c(6),c(7),c(8),c(11),c(12),c(13)];
+    const isProb = !c(0)||c(13)==='0'||c(13)==='';
+    debugHtml += `<tr style="${isProb?'background:rgba(214,60,45,.06)':''}">`;
+    cells.forEach(v => debugHtml += `<td style="padding:5px 7px;border:1px solid var(--border);max-width:100px;overflow:hidden;text-overflow:ellipsis" title="${v}">${v||'<span style=\"color:var(--red)\">EMPTY</span>'}</td>`);
+    debugHtml += '</tr>';
+  });
+  debugHtml += '</table></div>';
+
+  // Show in a modal
+  const existing = document.getElementById('csvDebugModal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'csvDebugModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
+  modal.innerHTML = `
+    <div style="background:var(--bg2);border-radius:16px;width:100%;max-width:900px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.4)">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg3)">
+        <div style="font-weight:700;font-size:15px">🔍 Raw CSV Debug — First 6 rows</div>
+        <button onclick="document.getElementById('csvDebugModal').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2)">✕</button>
+      </div>
+      <div style="overflow-y:auto;padding:16px 20px;flex:1">${debugHtml}</div>
+      <div style="padding:12px 20px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text3);background:var(--bg3)">
+        Col13 (USD Val) must be non-zero for values to display correctly. Col7 is the ticker. Col0 must be "Growth" or "Value".
+      </div>
+    </div>`;
+  modal.onclick = e => { if(e.target===modal) modal.remove(); };
+  document.body.appendChild(modal);
+}
+
+
+function showCorsHelp() {
+  const existing = document.getElementById('corsHelpModal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'corsHelpModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
+  modal.innerHTML = `
+    <div style="background:var(--bg2);border-radius:16px;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.4);">
+      <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border-radius:16px 16px 0 0">
+        <div style="font-weight:700;font-size:16px">🔧 How to Fix: Portfolio Not Loading</div>
+        <button onclick="document.getElementById('corsHelpModal').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2)">✕</button>
+      </div>
+      <div style="padding:20px 22px;font-size:13px;line-height:1.7;color:var(--text2)">
+
+        <div style="background:var(--blue-bg);border-left:3px solid var(--blue);padding:12px 16px;border-radius:8px;margin-bottom:18px;color:var(--text)">
+          <strong>Root cause:</strong> Your browser blocks the dashboard from fetching Google Sheets directly 
+          when the file is opened locally (<code>file://</code>). This is a browser security policy (CORS).
+        </div>
+
+        <div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:10px">✅ Option 1 — GitHub Pages (recommended, free, 5 min)</div>
+        <ol style="margin-left:18px;margin-bottom:16px">
+          <li>Go to <a href="https://github.com" target="_blank" style="color:var(--blue)">github.com</a> → New repository → name it <code>portfolio</code></li>
+          <li>Upload <code>Portfolio_v4.html</code> → rename it to <code>index.html</code></li>
+          <li>Go to Settings → Pages → Source: main branch → Save</li>
+          <li>Your dashboard is now live at <code>https://yourusername.github.io/portfolio</code></li>
+          <li>No proxies needed — direct fetch works perfectly from https://</li>
+        </ol>
+
+        <div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:10px">✅ Option 2 — Google Apps Script relay (1 min)</div>
+        <ol style="margin-left:18px;margin-bottom:16px">
+          <li>Go to <a href="https://script.google.com" target="_blank" style="color:var(--blue)">script.google.com</a> → New project</li>
+          <li>Paste this code and click Deploy → Web app → Anyone:</li>
+        </ol>
+        <pre style="background:var(--bg3);padding:12px;border-radius:8px;font-size:11px;overflow-x:auto;margin-bottom:12px">function doGet(e) {
+  const url = e.parameter.url;
+  const response = UrlFetchApp.fetch(url);
+  return ContentService.createTextOutput(response.getContentText())
+    .setMimeType(ContentService.MimeType.TEXT);
+}</pre>
+        <ol start="3" style="margin-left:18px;margin-bottom:16px">
+          <li>Copy the deployment URL</li>
+          <li>In the dashboard → Sidebar → "Price Source" → paste the Apps Script URL in the field shown</li>
+        </ol>
+
+        <div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:10px">✅ Option 3 — Run a local server (developer option)</div>
+        <div style="margin-bottom:8px">Open Terminal in the folder with the HTML file and run:</div>
+        <pre style="background:var(--bg3);padding:10px;border-radius:8px;font-size:11px">python3 -m http.server 8080</pre>
+        <div>Then open <code>http://localhost:8080/Portfolio_v4.html</code> in your browser.</div>
+
+      </div>
+    </div>`;
+  modal.onclick = e => { if(e.target===modal) modal.remove(); };
+  document.body.appendChild(modal);
+}
+
 function alertRow(type, icon, title, detail, actions=[]) {
   const actionsHtml = actions.length
     ? `<div class="toast-actions" style="margin-top:8px">${actions.map(a=>`<button class="toast-action-btn" onclick="${a.action}">${a.label}</button>`).join('')}</div>`
@@ -3973,10 +4223,10 @@ function alertRow(type, icon, title, detail, actions=[]) {
 })()
 
 renderHoldingsFilters();
-renderAll();
-// Update price source badge on load
+// Show loading state at boot — don't render stale DEFAULT_PORTFOLIO data
+showBootLoading();
 updatePriceSourceBadge();
-fetchLivePrices();
+fetchLivePrices(); // async — will call renderAll() when sheet data arrives
 
 // ═══════════════════════════════════════════════════════════════
 //  MOBILE NAVIGATION
