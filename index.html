@@ -3503,17 +3503,26 @@ function switchChartType(id, newType, btn) {
 // ═══════════════════════════════════════════════════════════════
 
 // ── PRE-LOAD GOOGLE SHEET URL ───────────────────────────────────
-// New portfolio sheet — always overwrite with the latest URL
 (function() {
   const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsSFvbe1a0iVIJ6wdDoKQylXzuUvjkKf67jn_6yKKDlRLgGlTXwASCrReeSkU5Pe52m79oAafWi_bC/pub?gid=600914265&single=true&output=csv';
-  // Always set — ensures the new sheet is used even if a stale URL was cached
   localStorage.setItem('gsheetUrl', SHEET_URL);
-})()
+})();
+
+function updatePriceSourceBadge() {
+  const el = document.getElementById('priceSourceBadge');
+  if (!el) return;
+  const hasSheet = !!getSheetUrl();
+  el.textContent = hasSheet ? 'SHEET ✓' : 'NOT SET';
+  el.style.background = hasSheet ? 'var(--green-bg)' : 'var(--red-bg)';
+  el.style.color = hasSheet ? 'var(--green)' : 'var(--red)';
+}
 
 renderHoldingsFilters();
-renderAll();
 updatePriceSourceBadge();
-fetchLivePrices().then(()=>{ if(typeof updateHealthBtn==='function') updateHealthBtn(); });
+// Show loading state — don't render stale DEFAULT_PORTFOLIO
+const _kpiInv = document.getElementById('kpi-invested');
+if (_kpiInv) _kpiInv.textContent = 'Syncing from sheet…';
+fetchLivePrices().then(() => { updateHealthBtn(); });
 
 // ═══════════════════════════════════════════════════════════════
 //  MOBILE NAVIGATION
