@@ -502,60 +502,6 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
   .dd-summary{gap:12px;padding:10px 14px;}
 }
 
-
-/* ── TOAST NOTIFICATIONS ── */
-#toastStack{position:fixed;bottom:80px;right:20px;z-index:9500;display:flex;flex-direction:column-reverse;gap:8px;pointer-events:none;}
-@media(max-width:768px){#toastStack{bottom:72px;right:10px;left:10px;}}
-.toast{
-  display:flex;align-items:flex-start;gap:10px;
-  padding:12px 16px;border-radius:12px;min-width:280px;max-width:400px;
-  box-shadow:0 4px 24px rgba(8,12,30,.22),0 0 0 1px rgba(0,0,0,.06);
-  font-size:12.5px;line-height:1.5;font-family:'DM Sans',sans-serif;
-  pointer-events:all;cursor:default;
-  animation:toastIn .28s cubic-bezier(.4,0,.2,1);
-  transition:opacity .3s,transform .3s;
-  backdrop-filter:blur(8px);
-}
-@media(max-width:768px){.toast{min-width:0;width:100%;}}
-@keyframes toastIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
-.toast.hiding{opacity:0;transform:translateY(8px) scale(.97);}
-.toast-info   {background:rgba(230,236,255,.97);border-left:3px solid var(--blue);color:#0d1226;}
-.toast-success{background:rgba(225,248,238,.97);border-left:3px solid var(--green);color:#0d1226;}
-.toast-warning{background:rgba(255,247,224,.97);border-left:3px solid #f59e0b;color:#0d1226;}
-.toast-error  {background:rgba(255,235,232,.97);border-left:3px solid var(--red);color:#0d1226;}
-.toast-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
-.toast-body{flex:1;}
-.toast-title{font-weight:700;font-size:12.5px;margin-bottom:2px;}
-.toast-msg{color:#4a5270;font-size:12px;}
-.toast-close{background:none;border:none;cursor:pointer;color:#8b93af;font-size:14px;padding:0;flex-shrink:0;line-height:1;margin-top:1px;}
-.toast-close:hover{color:var(--text);}
-.toast-actions{display:flex;gap:6px;margin-top:8px;}
-.toast-action-btn{
-  padding:4px 10px;border-radius:5px;border:1px solid rgba(30,69,184,.3);
-  background:transparent;color:var(--blue);font-size:11px;font-weight:600;
-  cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;
-}
-.toast-action-btn:hover{background:var(--blue);color:#fff;}
-
-/* ── DATA HEALTH PANEL ── */
-.health-panel-overlay{position:fixed;inset:0;background:rgba(8,12,30,.55);z-index:8500;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(5px);animation:ddFadeIn .18s ease;}
-.health-panel{background:var(--bg2);border-radius:18px;width:100%;max-width:720px;max-height:84vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(8,12,30,.32),0 0 0 1px var(--border);}
-.health-panel-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg3);flex-shrink:0;}
-.health-panel-title{font-size:17px;font-weight:700;font-family:'Playfair Display',serif;}
-.health-panel-body{overflow-y:auto;flex:1;padding:18px 22px;}
-.alert-row{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;border-radius:10px;margin-bottom:8px;border:1px solid transparent;}
-.alert-row.error  {background:rgba(214,60,45,.07);border-color:rgba(214,60,45,.18);}
-.alert-row.warning{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.18);}
-.alert-row.info   {background:rgba(30,69,184,.06);border-color:rgba(30,69,184,.15);}
-.alert-row.success{background:rgba(10,138,92,.07);border-color:rgba(10,138,92,.18);}
-.alert-row-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
-.alert-row-body{flex:1;}
-.alert-row-title{font-weight:700;font-size:13px;color:var(--text);margin-bottom:2px;}
-.alert-row-detail{font-size:12px;color:var(--text2);line-height:1.55;}
-.alert-row-code{font-family:'DM Mono',monospace;background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:11px;color:var(--blue);}
-.alert-section-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin:14px 0 6px;padding-left:2px;}
-@media(max-width:768px){.health-panel{border-radius:18px 18px 0 0;max-height:90vh;}.health-panel-overlay{align-items:flex-end;padding:0;}}
-
 /* ── COUNTER ── */
 .animated-counter{transition:all .3s;}
 
@@ -834,24 +780,6 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
   </div>
 </div>
 
-
-<!-- ── TOAST STACK ── -->
-<div id="toastStack"></div>
-
-<!-- ── DATA HEALTH PANEL ── -->
-<div class="health-panel-overlay" id="healthPanelOverlay" style="display:none" onclick="if(event.target===this)closeHealthPanel()">
-  <div class="health-panel">
-    <div class="health-panel-header">
-      <div>
-        <div class="health-panel-title">📋 Data Health &amp; Diagnostics</div>
-        <div style="font-size:11.5px;color:var(--text3);margin-top:2px" id="healthPanelSub">Checking…</div>
-      </div>
-      <button class="dd-close" onclick="closeHealthPanel()" style="flex-shrink:0">✕</button>
-    </div>
-    <div class="health-panel-body" id="healthPanelBody"></div>
-  </div>
-</div>
-
 <!-- ── DRILL-DOWN MODAL ── -->
 <div class="dd-overlay" id="ddOverlay" style="display:none" onclick="if(event.target===this)closeDrillDown()">
   <div class="dd-modal">
@@ -1015,11 +943,14 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
         <span id="statusText" style="font-size:11px;">Loading…</span>
       </div>
       <div class="countdown-text" id="countdown"></div>
-      <button onclick="openHealthPanel()" style="margin-top:8px;width:100%;padding:7px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid var(--sb-border);color:var(--sb-text);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:background .15s;font-family:'DM Sans',sans-serif;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">
-        <span id="healthBtnDot" style="width:7px;height:7px;border-radius:50%;background:#0a8a5c;flex-shrink:0"></span>
-        <span id="healthBtnLabel">Data Health</span>
-        <span id="healthBtnBadge" style="margin-left:auto;display:none;background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700"></span>
-      </button>
+      <div style="display:flex;gap:5px;margin-top:8px">
+        <button onclick="openHealthPanel()" style="flex:1;padding:6px 8px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid var(--sb-border);color:var(--sb-text);font-size:10.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">
+          <span id="healthBtnDot" style="width:7px;height:7px;border-radius:50%;background:#0a8a5c;flex-shrink:0"></span>
+          <span id="healthBtnLabel">Data Health</span>
+          <span id="healthBtnBadge" style="display:none;margin-left:auto;background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700"></span>
+        </button>
+        <button onclick="showSetupModal()" title="Change Sheet URL" style="padding:6px 10px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid var(--sb-border);color:var(--sb-text2);font-size:13px;cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">🔗</button>
+      </div>
     </div>
   </nav>
 
@@ -1497,6 +1428,12 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
     });
   } catch(e){}
 })();
+// ── Data health ──────────────────────────────────────────────
+const dataHealth = {
+  sheetOk:null, sheetError:null, posCount:0,
+  rawCsvFull:null, csvRowCount:0, lastFetch:null,
+  zeroValue:[], stalePrices:[], duplicates:[],
+};
 // ═══════════════════════════════════════════════════════════════
 //  DATA — positions are loaded dynamically from Google Sheet
 //  DEFAULT_PORTFOLIO is kept only as an empty fallback
@@ -1739,395 +1676,127 @@ function normaliseTicker(raw) {
 // ═══════════════════════════════════════════════════════════════
 async function fetchFromGoogleSheet() {
   const url = getSheetUrl();
-  if (!url) {
-    showDebugToast('❌ No sheet URL in localStorage');
-    return false;
-  }
-
-  // Direct fetch — simple, like v3. Works when sheet is publicly published.
-  // Uses Promise.race for timeout to avoid AbortController iframe cloning issues.
-  let text = null;
+  if (!url) return false;
   try {
-    const r = await Promise.race([
-      fetch(url, {cache: 'no-store'}),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout')), 15000))
-    ]);
-    if (r.ok) {
-      const t = await r.text();
-      if (t.trim().length > 50 && t.trim()[0] !== '<') {
-        text = t;
-      }
-    }
-  } catch(e) {
-    // direct failed — try one reliable proxy
-    try {
-      const r2 = await Promise.race([
-        fetch('https://corsproxy.io/?' + encodeURIComponent(url)),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout')), 12000))
-      ]);
-      if (r2.ok) {
-        const t2 = await r2.text();
-        if (t2.trim().length > 50 && t2.trim()[0] !== '<') text = t2;
-      }
-    } catch(e2) {}
-  }
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000);
+    let r;
+    try { r = await fetch(url, { signal: ctrl.signal, cache: 'no-store' }); } finally { clearTimeout(timer); }
+    if (!r.ok) return false;
+    const text = await r.text();
 
-  if (!text) {
-    const errMsg = 'Could not fetch sheet. Make sure it is published: File → Share → Publish to web → CSV.';
-    showToast('error', 'Cannot Reach Sheet', errMsg, 0, [{label:'Configure', action:'showSetupModal()'}]);
-    dataHealth.sheetOk = false;
-    dataHealth.sheetError = errMsg;
-    updateHealthBtn();
-    return false;
-  }
+    dataHealth.rawCsvFull  = text;
+    dataHealth.csvRowCount = text.split('\n').length - 1;
 
-  // NO outer try — catch each stage individually for precise error reporting
-  {
-    let lines;
-    try { lines = text.trim().split('\n'); } catch(e) { showDebugToast('❌ Split failed: '+e.message); return false; }
+    const lines = text.trim().split('\n');
 
-    showDebugToast(`📄 ${lines.length} lines, ${text.length} bytes`);
-    showDebugToast('H: ' + lines[0]?.substring(0,80));
-    showDebugToast('R1: ' + lines[1]?.substring(0,80));
-
-    dataHealth.rawCsvPreview = text.split('\n').slice(0, 6).join('\n');
-    dataHealth.rawCsvFull    = text;
-    dataHealth.csvRowCount   = lines.length - 1;
-
-    // ── Parse a single CSV row into an array of strings ──────────
-    function parseCSVRow(row) {
-      const cols = [];
-      let cur = '', inQ = false;
-      for (let ci = 0; ci < row.length; ci++) {
-        const ch = row[ci];
+    function parseRow(row) {
+      const cols = []; let cur = '', inQ = false;
+      for (let i = 0; i < row.length; i++) {
+        const ch = row[i];
         if (ch === '"') { inQ = !inQ; }
-        else if (ch === ',' && !inQ) { cols.push(cur.replace(/^"|"$/g,'').trim()); cur = ''; }
-        else { cur += ch; }
+        else if (ch === ',' && !inQ) { cols.push(cur.replace(/^"|"$/g,'').trim()); cur=''; }
+        else cur += ch;
       }
       cols.push(cur.replace(/^"|"$/g,'').trim());
       return cols;
     }
 
-    // ── Detect columns by header name (robust to reordering) ─────
-    const headerRow = parseCSVRow(lines[0] || '');
-    showDebugToast(`Cols(${headerRow.length}): ${headerRow.slice(0,8).join(' | ')}`);
-
-    // Map header names → column indices (case-insensitive, partial match)
-    function findCol(headers, ...names) {
-      for (const name of names) {
-        const idx = headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
-        if (idx >= 0) return idx;
+    const headers = parseRow(lines[0] || '');
+    const fi = (...names) => {
+      for (const n of names) {
+        const i = headers.findIndex(h => h.toLowerCase().includes(n.toLowerCase()));
+        if (i >= 0) return i;
       }
       return -1;
-    }
-
+    };
     const COL = {
-      portfolio:   findCol(headerRow, 'portfolio'),
-      sector:      findCol(headerRow, 'sector'),
-      type:        findCol(headerRow, 'type'),
-      company:     findCol(headerRow, 'company'),
-      currency:    findCol(headerRow, 'curr'),
-      exchCurrent: findCol(headerRow, 'current exch', 'current exchange', 'exch.'),
-      ticker:      findCol(headerRow, 'ticker'),
-      investment:  findCol(headerRow, 'investment'),
-      startPrice:  findCol(headerRow, 'start price', 'cost'),
-      curPrice:    findCol(headerRow, 'current price'),
-      shares:      findCol(headerRow, 'shares'),
-      curValue:    findCol(headerRow, 'current value'),
+      portfolio:  fi('portfolio')       >= 0 ? fi('portfolio')       : 0,
+      sector:     fi('sector')          >= 0 ? fi('sector')          : 1,
+      type:       fi('type')            >= 0 ? fi('type')            : 2,
+      company:    fi('company')         >= 0 ? fi('company')         : 3,
+      currency:   fi('curr')            >= 0 ? fi('curr')            : 4,
+      exchCur:    fi('current exch','exch.') >= 0 ? fi('current exch','exch.') : 6,
+      ticker:     fi('ticker')          >= 0 ? fi('ticker')          : 7,
+      investment: fi('investment')      >= 0 ? fi('investment')      : 8,
+      curPrice:   fi('current price')   >= 0 ? fi('current price')   : 11,
+      shares:     fi('shares')          >= 0 ? fi('shares')          : 12,
+      curValue:   fi('current value')   >= 0 ? fi('current value')   : 13,
     };
 
-    showDebugToast(`COL: port=${COL.portfolio} tick=${COL.ticker} inv=${COL.investment} val=${COL.curValue} shr=${COL.shares}`);
-
-    // If header detection failed, fall back to hardcoded indices
-    if (COL.portfolio < 0) { COL.portfolio = 0; showDebugToast('⚠️ portfolio col not found, using 0'); }
-    if (COL.ticker    < 0) { COL.ticker    = 7; showDebugToast('⚠️ ticker col not found, using 7'); }
-    if (COL.investment< 0) { COL.investment= 8; showDebugToast('⚠️ investment col not found, using 8'); }
-    if (COL.shares    < 0) { COL.shares    = 12; showDebugToast('⚠️ shares col not found, using 12'); }
-    if (COL.curValue  < 0) { COL.curValue  = 13; showDebugToast('⚠️ curValue col not found, using 13'); }
-    if (COL.curPrice  < 0) { COL.curPrice  = 11; }
-    if (COL.exchCurrent<0) { COL.exchCurrent= 6; }
-    if (COL.sector    < 0) { COL.sector    = 1; }
-    if (COL.type      < 0) { COL.type      = 2; }
-    if (COL.company   < 0) { COL.company   = 3; }
-    if (COL.currency  < 0) { COL.currency  = 4; }
-
-    const rows = lines.slice(1).filter(r => r.trim());
     const newPositions = [];
-    let parseErrors = 0;
-
-    rows.forEach((row, rowIdx) => {
-      try {
-      const cols = parseCSVRow(row);
+    lines.slice(1).forEach(row => {
+      if (!row.trim()) return;
+      const cols = parseRow(row);
       const c = i => (i >= 0 && i < cols.length) ? cols[i] : '';
+      const portfolio   = c(COL.portfolio);
+      const sector      = c(COL.sector);
+      const type        = c(COL.type);
+      const company     = c(COL.company);
+      const localCcy    = (c(COL.currency) || 'USD').toUpperCase();
+      const exchCurrent = cleanNum(c(COL.exchCur));
+      const rawTicker   = c(COL.ticker);
+      const investment  = cleanNum(c(COL.investment));
+      const localPrice  = cleanNum(c(COL.curPrice));
+      const shares      = cleanNum(c(COL.shares));
+      const curValUSD   = cleanNum(c(COL.curValue));
 
-      const portfolio    = c(COL.portfolio);
-      const sector       = c(COL.sector);
-      const type         = c(COL.type);
-      const company      = c(COL.company);
-      const localCcy     = (c(COL.currency) || 'USD').toUpperCase();
-      const exchCurrent  = cleanNum(c(COL.exchCurrent));
-      const rawTicker    = c(COL.ticker);
-      const investment   = cleanNum(c(COL.investment));
-      const localPrice   = cleanNum(c(COL.curPrice));
-      const shares       = cleanNum(c(COL.shares));
-      const currentValUSD= cleanNum(c(COL.curValue));
-
-      // Debug first 3 data rows
-      if (rowIdx < 3) {
-        showDebugToast(`R${rowIdx+1}: port="${portfolio}" tick="${rawTicker}" val="${c(COL.curValue)}" shr="${c(COL.shares)}"`);
-      }
-
-      // Skip TOTAL row, empty rows
       if (!rawTicker || rawTicker.toUpperCase() === 'TOTAL') return;
-      // Accept any portfolio value — don't filter on Growth/Value strictly
       if (!portfolio) return;
-      // Skip zero-investment AND zero-value placeholder rows
-      if (shares === 0 && investment === 0 && currentValUSD === 0) return;
+      if (shares === 0 && investment === 0 && curValUSD === 0) return;
 
-      // ── Update FX table from this row's current exchange rate ──
       if (exchCurrent > 0) {
-        if      (localCcy === 'EUR') { FX.EUR = exchCurrent;        fxLive.EUR = true; }
-        else if (localCcy === 'HKD') { FX.HKD = exchCurrent;        fxLive.HKD = true; }
-        else if (localCcy === 'NOK') { FX.NOK = exchCurrent;        fxLive.NOK = true; }
-        else if (localCcy === 'MYR') { FX.MYR = exchCurrent;        fxLive.MYR = true; }
-        else if (localCcy === 'GBX') { FX.GBX = exchCurrent / 100;  fxLive.GBX = true; }
+        if      (localCcy==='EUR') { FX.EUR=exchCurrent;       fxLive.EUR=true; }
+        else if (localCcy==='HKD') { FX.HKD=exchCurrent;       fxLive.HKD=true; }
+        else if (localCcy==='NOK') { FX.NOK=exchCurrent;       fxLive.NOK=true; }
+        else if (localCcy==='MYR') { FX.MYR=exchCurrent;       fxLive.MYR=true; }
+        else if (localCcy==='GBX') { FX.GBX=exchCurrent/100;   fxLive.GBX=true; }
       }
 
       const ticker = normaliseTicker(rawTicker);
-
-      // ── Derive USD price-per-share (for display only) ───────────
-      // currentValueUSD (col13) is the AUTHORITATIVE value — computeDerived uses it directly.
-      // usdPricePerShare is only used for the price column display.
       const effectiveShares = shares > 0 ? shares : 1;
-      const usdPricePerShare = currentValUSD > 0 ? currentValUSD / effectiveShares : 0;
-
-      // USD cost basis per share
-      const usdCostBasis = effectiveShares > 0 ? investment / effectiveShares : investment;
+      const usdPricePerShare = curValUSD > 0 ? curValUSD / effectiveShares : 0;
 
       newPositions.push({
-        ticker,
-        company,
-        type,
-        sector,
-        portfolio,
-        currency:        'USD',
-        localCurrency:   localCcy,
-        localPrice,
-        shares:          effectiveShares,
-        costBasis:       usdCostBasis,
+        ticker, company, type, sector, portfolio,
+        currency: 'USD', localCurrency: localCcy, localPrice,
+        shares: effectiveShares,
+        costBasis: investment / effectiveShares,
         investment,
-        currentValueUSD: currentValUSD,
-        snapshotPrice:   usdPricePerShare,
-        manualPrice:     null,
-        currentPrice:    usdPricePerShare,
-        priceLoaded:     usdPricePerShare > 0,
+        currentValueUSD: curValUSD,
+        snapshotPrice: usdPricePerShare,
+        manualPrice: null,
+        currentPrice: usdPricePerShare,
+        priceLoaded: curValUSD > 0,
       });
-      } catch(rowErr) {
-        parseErrors++;
-        if (parseErrors <= 3) showDebugToast(`⚠️ Row ${rowIdx} parse error: ${rowErr.message}`);
-      }
     });
-    if (parseErrors > 0) showDebugToast(`⚠️ ${parseErrors} rows had parse errors`);
-
-    showDebugToast(`✅ Parsed: ${newPositions.length} from ${rows.length} rows`);
-    if (newPositions.length > 0) {
-      const p0 = newPositions[0];
-      showDebugToast(`P0: ${p0.ticker} val=${p0.currentValueUSD?.toFixed(0)} inv=${p0.investment?.toFixed(0)} shr=${p0.shares?.toFixed(3)}`);
-    }
 
     if (newPositions.length === 0) {
-      showDebugToast('❌ 0 positions — portfolio col=' + COL.portfolio + ' ticker col=' + COL.ticker);
-      console.warn('[Sheet] No positions parsed — check sheet format/columns');
-      dataHealth.sheetOk = false;
-      dataHealth.sheetError = 'No positions found — check sheet column order (expected: Portfolio, Sector, Type, Company, Curr, Exch Cost, Current Exch, Ticker, Investment…)';
+      dataHealth.sheetOk=false; dataHealth.sheetError='0 positions parsed';
       return false;
     }
 
-    // ── Diagnostic: check for suspicious prices ──────────────────
-    dataHealth.zeroPrice    = [];
-    dataHealth.zeroValue    = [];
-    dataHealth.stalePrices  = [];
-    dataHealth.tickerIssues = [];
-    dataHealth.posCount     = newPositions.length;
-    dataHealth.sheetOk      = true;
-    dataHealth.sheetError   = null;
-    dataHealth.lastFetch    = new Date();
-
-    // Known tickers that are legitimately $0 (delisted)
-    const DELISTED = new Set(['BBBY','BNGO']);
-
-    newPositions.forEach(p => {
-      // Zero current value (non-Cash, non-delisted)
-      if (p.currentValueUSD === 0 && p.type !== 'Cash' && !DELISTED.has(p.ticker)) {
-        dataHealth.zeroValue.push(p.ticker);
-      }
-      // Zero local price shown (non-Cash/People)
-      if (p.localPrice === 0 && p.type !== 'Cash' && p.type !== 'People' && !DELISTED.has(p.ticker)) {
-        dataHealth.zeroPrice.push(p.ticker);
-      }
-      // Suspiciously low value vs investment (>95% loss, non-crypto, non-delisted)
-      if (p.currentValueUSD > 0 && p.investment > 50 && p.currentValueUSD < p.investment * 0.05
-          && p.type !== 'Crypto' && !DELISTED.has(p.ticker)) {
-        dataHealth.stalePrices.push({
-          ticker: p.ticker,
-          issue: `Current value ${fmtUSD(p.currentValueUSD)} is <5% of invested ${fmtUSD(p.investment)} — price may be stale or ticker mismatch`
-        });
-      }
-      // Ticker normalisation differences (raw vs normalised)
-      // Already handled by normaliseTicker — flag if ticker looks unusual
-      if (p.ticker !== p.ticker.toUpperCase() && p.type !== 'Cash' && p.type !== 'People') {
-        dataHealth.tickerIssues.push({ticker:p.ticker, issue:'Ticker contains lowercase — may not match exchange format'});
-      }
-    });
-
-    // Check for duplicate tickers
-    const seen = {}, dupes = [];
-    newPositions.forEach(p => { if (seen[p.ticker]) dupes.push(p.ticker); seen[p.ticker]=true; });
-    dataHealth.duplicates = dupes;
-
-    // ── Rebuild liveData, preserving any existing manual overrides ──
     const existingManual = {};
-    liveData.forEach(p => {
-      if (p.manualPrice !== null && p.manualPrice !== undefined) existingManual[p.ticker] = p.manualPrice;
-    });
-
+    liveData.forEach(p => { if (p.manualPrice != null) existingManual[p.ticker] = p.manualPrice; });
     liveData = newPositions.map(p => ({
       ...p,
-      manualPrice:  existingManual[p.ticker] ?? p.manualPrice,
+      manualPrice:  existingManual[p.ticker] ?? null,
       currentPrice: existingManual[p.ticker] ?? p.snapshotPrice,
     }));
 
-    // Persist to localStorage — next page load renders instantly from cache
     savePortfolio(liveData);
     localStorage.setItem('pfFX', JSON.stringify({ FX, fxLive }));
-
-    console.log(`[Sheet] Loaded ${liveData.length} positions · FX: EUR=${FX.EUR.toFixed(4)} HKD=${FX.HKD.toFixed(4)} NOK=${FX.NOK.toFixed(4)}`);
-
-    // Update health button after parse
-    updateHealthBtn();
+    dataHealth.sheetOk=true; dataHealth.sheetError=null;
+    dataHealth.posCount=liveData.length; dataHealth.lastFetch=new Date();
+    console.log('[Sheet]', liveData.length, 'positions loaded');
     return true;
-
-    showDebugToast(`🏁 Parse done: ${newPositions.length} positions`);
-  } // end parse block
-}
-
-// ── Setup modal (Google Sheet URL entry) ─────────────────────
-function showSetupModal(msg) {
-  document.getElementById('setupModal')?.remove();
-  const modal = document.createElement('div');
-  modal.id = 'setupModal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)';
-
-  const scriptCode = [
-    'function doGet(e) {',
-    '  var url = e.parameter.url;',
-    '  var res = UrlFetchApp.fetch(url, {muteHttpExceptions: true});',
-    '  return ContentService',
-    '    .createTextOutput(res.getContentText())',
-    '    .setMimeType(ContentService.MimeType.TEXT);',
-    '}'
-  ].join('\n');
-
-  const hasRelay = !!localStorage.getItem('appsScriptUrl');
-  const sheetUrl = getSheetUrl();
-  const relayUrl = localStorage.getItem('appsScriptUrl') || '';
-
-  const relayBadge = hasRelay
-    ? '<span style="color:#0a8a5c;font-size:11px;margin-left:6px">&#10003; configured</span>'
-    : '<span style="color:#f59e0b;font-size:11px;margin-left:6px">not set yet</span>';
-  const sheetBadge = sheetUrl
-    ? '<span style="color:#0a8a5c;font-size:11px;margin-left:6px">&#10003; set</span>' : '';
-  const relayBorder = hasRelay ? '#86efac' : '#e5e7eb';
-  const sheetBorder = sheetUrl ? '#86efac' : '#e5e7eb';
-
-  modal.innerHTML = '<div style="background:#fff;border-radius:18px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;box-shadow:0 28px 72px rgba(0,0,0,.4);font-family:DM Sans,sans-serif">'
-    + '<div style="padding:22px 24px 16px;border-bottom:1px solid #e8eaf2">'
-    + '<div style="font-size:19px;font-weight:700;color:#0d1226;margin-bottom:4px">&#128202; Portfolio Data Source</div>'
-    + '<div style="font-size:12.5px;color:#6b7280">Google blocks direct CSV access from browsers &#8212; a 2-minute relay fix is needed</div>'
-    + '</div>'
-    + '<div style="padding:20px 24px">'
-    + '<div style="background:#f0f7ff;border:1.5px solid #bfd7ff;border-radius:12px;padding:16px 18px;margin-bottom:16px">'
-    + '<div style="font-size:13px;font-weight:700;color:#1a3fa6;margin-bottom:10px">&#9889; Step 1 &#8212; Create a free Google Apps Script relay (one-time, ~2 min)</div>'
-    + '<ol style="margin:0 0 12px 16px;font-size:12.5px;color:#374151;line-height:2.1">'
-    + '<li>Open <a href="https://script.google.com" target="_blank" style="color:#1a3fa6;font-weight:600">script.google.com</a> &#8594; click <strong>New project</strong></li>'
-    + '<li>Delete all existing code, paste the code below</li>'
-    + '<li>Click <strong>Deploy &#8594; New deployment &#8594; Web app</strong></li>'
-    + '<li>Set <em>Execute as: Me</em> &nbsp;&#183;&nbsp; <em>Who has access: Anyone</em></li>'
-    + '<li>Click <strong>Deploy</strong> &#8594; copy the <strong>Web app URL</strong></li>'
-    + '<li>Paste it in the Apps Script URL field below &#8595;</li>'
-    + '</ol>'
-    + '<div style="position:relative">'
-    + '<pre id="scriptCodePre" style="background:#0d1226;color:#7cf;padding:12px 14px;border-radius:8px;font-size:11px;margin:0;line-height:1.6;white-space:pre-wrap;word-break:break-all">' + scriptCode.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>'
-    + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'scriptCodePre\').textContent).then(function(){var b=this;b.textContent=\'Copied!\';setTimeout(function(){b.textContent=\'Copy\'},2000)}.bind(this)).catch(function(){alert(document.getElementById(\'scriptCodePre\').textContent)})" '
-    + 'style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:11px;padding:4px 10px;border-radius:5px;cursor:pointer">Copy</button>'
-    + '</div></div>'
-
-    + '<label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:5px">Apps Script Web App URL: ' + relayBadge + '</label>'
-    + '<input id="relayUrlInput" type="url" placeholder="https://script.google.com/macros/s/AKfy.../exec" value="' + relayUrl + '" '
-    + 'style="width:100%;padding:10px 13px;border:1.5px solid ' + relayBorder + ';border-radius:9px;font-size:11.5px;outline:none;color:#0d1226;margin-bottom:16px;font-family:monospace;box-sizing:border-box">'
-
-    + '<div style="border-top:1px solid #f0f2f7;padding-top:14px;margin-bottom:14px">'
-    + '<label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:5px">&#128203; Step 2 &#8212; Published Google Sheet CSV URL: ' + sheetBadge + '</label>'
-    + '<input id="sheetUrlInput" type="url" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" value="' + sheetUrl + '" '
-    + 'style="width:100%;padding:10px 13px;border:1.5px solid ' + sheetBorder + ';border-radius:9px;font-size:11.5px;outline:none;color:#0d1226;font-family:monospace;box-sizing:border-box">'
-    + '</div>'
-
-    + '<div style="display:flex;gap:10px;margin-top:6px">'
-    + '<button onclick="saveSetup()" style="flex:1;padding:12px;border-radius:10px;background:linear-gradient(135deg,#1a3fa6,#3060e8);color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 3px 10px rgba(26,63,166,.3)">&#128190; Save &amp; Connect</button>'
-    + '<button onclick="document.getElementById(\'setupModal\').remove()" style="padding:12px 16px;border-radius:10px;background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb;font-size:13px;cursor:pointer">Later</button>'
-    + '</div>'
-    + '<div style="margin-top:12px;font-size:11px;color:#9ca3af;text-align:center">The relay fetches your sheet server-side. Your data stays in your own Google account.</div>'
-    + '</div></div>';
-
-  document.body.appendChild(modal);
-}
-
-
-function saveSetup() {
-  const relayUrl  = document.getElementById('relayUrlInput')?.value?.trim();
-  const sheetUrl  = document.getElementById('sheetUrlInput')?.value?.trim();
-
-  if (relayUrl && relayUrl.includes('script.google.com')) {
-    localStorage.setItem('appsScriptUrl', relayUrl);
-    showToast('success','Relay Saved','Apps Script relay configured',3000);
-  } else if (relayUrl) {
-    showToast('warning','Invalid URL','Relay URL should start with https://script.google.com',4000);
-    return;
-  }
-
-  if (sheetUrl && sheetUrl.includes('docs.google.com')) {
-    localStorage.setItem('gsheetUrl', sheetUrl);
-  }
-
-  document.getElementById('setupModal')?.remove();
-  updatePriceSourceBadge();
-  fetchLivePrices();
-}
-
-function saveSheetUrl() {
-  // Legacy — now handled by saveSetup()
-  saveSetup();
-}
-
-function updatePriceSourceBadge() {
-  const el = document.getElementById('priceSourceBadge');
-  if (!el) return;
-  const hasSheet = !!getSheetUrl();
-  const hasRelay = !!localStorage.getItem('appsScriptUrl');
-  if (!hasSheet) {
-    el.textContent = 'NO SOURCE'; el.style.background='var(--red-bg)'; el.style.color='var(--red)';
-  } else if (!hasRelay) {
-    el.textContent = 'NO RELAY ⚠'; el.style.background='var(--amber-bg)'; el.style.color='var(--amber)';
-  } else {
-    el.textContent = 'RELAY ✓'; el.style.background='var(--green-bg)'; el.style.color='var(--green)';
+  } catch(e) {
+    console.warn('[Sheet] failed:', e.message);
+    dataHealth.sheetOk=false; dataHealth.sheetError=e.message;
+    return false;
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  MAIN FETCH
-// ═══════════════════════════════════════════════════════════════
-
-// ── Crypto prices via Binance public API (no key, CORS-enabled) ──
 async function fetchCryptoPrices() {
   const BINANCE = {
     'BTC':'BTCUSDT','ETH':'ETHUSDT','XRP':'XRPUSDT',
@@ -2209,36 +1878,8 @@ async function fetchLivePrices() {
     const src = ok ? `📊 Sheet` : `🔄 Fallback`;
     setStatus('ok', `${src}: ${sheetLoaded} positions loaded · ${timeStr}`);
     startCountdown();
-
-    // Toast on first successful load
-    if (!dataHealth._notifiedOk) {
-      dataHealth._notifiedOk = true;
-      showToast('success','Portfolio Synced',`${sheetLoaded} positions loaded from sheet · ${timeStr}`,4000);
-    }
-
-    // Toast for any data issues found
-    const issues = (dataHealth.zeroValue||[]).length + (dataHealth.zeroPrice||[]).length
-                 + (dataHealth.stalePrices||[]).length + (dataHealth.duplicates||[]).length
-                 + (dataHealth.tickerIssues||[]).length;
-    if (issues > 0) {
-      showToast('warning','Data Issues Detected',
-        `${issues} issue${issues!==1?'s':''} found — click "Data Health" in sidebar for details`,
-        7000,
-        [{label:'View Issues',action:'openHealthPanel()'}]
-      );
-    }
-
-    // FX loaded?
-    const fxMissing = Object.entries(fxLive).filter(([,v])=>!v).map(([k])=>k);
-    if (fxMissing.length > 0) {
-      showToast('info','FX Rates Using Snapshot',`No live rate for: ${fxMissing.join(', ')} — using cached values`,5000);
-    }
-
   } else {
-    const errMsg = getSheetUrl() ? 'Sheet fetch failed — check URL or publish settings' : 'No sheet connected — add your portfolio sheet URL';
-    setStatus('error', errMsg);
-    showToast('error', 'Sheet Load Failed', errMsg, 0,
-      [{label:'Configure Sheet', action:'showSetupModal()'}]);
+    setStatus('error', getSheetUrl() ? 'Sheet fetch failed — check URL or publish settings' : 'No sheet connected — add your portfolio sheet URL');
     if (!getSheetUrl()) showSetupModal();
   }
 
@@ -3857,426 +3498,6 @@ function switchChartType(id, newType, btn) {
   }
 }
 
-
-// ═══════════════════════════════════════════════════════════════
-//  DATA HEALTH STATE
-// ═══════════════════════════════════════════════════════════════
-const dataHealth = {
-  sheetOk:     null,
-  sheetError:  null,
-  posCount:    0,
-  zeroPrice:   [],
-  zeroValue:   [],
-  stalePrices: [],
-  tickerIssues:[],
-  duplicates:  [],
-  lastFetch:   null,
-  _notifiedOk: false,
-};
-
-function updateHealthBtn() {
-  const dot   = document.getElementById('healthBtnDot');
-  const label = document.getElementById('healthBtnLabel');
-  const badge = document.getElementById('healthBtnBadge');
-  if (!dot) return;
-
-  const issues = (dataHealth.zeroValue||[]).length + (dataHealth.zeroPrice||[]).length
-               + (dataHealth.stalePrices||[]).length + (dataHealth.duplicates||[]).length
-               + (dataHealth.tickerIssues||[]).length;
-  const hasError = !dataHealth.sheetOk && dataHealth.sheetOk !== null;
-
-  if (hasError) {
-    dot.style.background = '#d63c2d';
-    label.textContent    = 'Sheet Error';
-    badge.style.display  = 'inline';
-    badge.textContent    = '!';
-    badge.style.background = '#d63c2d';
-  } else if (issues > 0) {
-    dot.style.background = '#f59e0b';
-    label.textContent    = `Data Health`;
-    badge.style.display  = 'inline';
-    badge.textContent    = issues;
-    badge.style.background = '#f59e0b';
-    badge.style.color    = '#0d1226';
-  } else {
-    dot.style.background = '#0a8a5c';
-    label.textContent    = 'Data Health';
-    badge.style.display  = 'none';
-  }
-}
-
-// ─── Debug toast (shows on-screen without DevTools) ──────────
-let _debugMode = true; // set to false to hide debug toasts
-function showDebugToast(msg) {
-  if (!_debugMode) return;
-  console.log('[DEBUG]', msg);
-  // Show as a small on-screen toast for 8 seconds
-  const stack = document.getElementById('toastStack');
-  if (!stack) return;
-  const el = document.createElement('div');
-  el.style.cssText = 'background:rgba(0,0,20,0.92);color:#7cf;font-family:DM Mono,monospace;font-size:10.5px;padding:6px 12px;border-radius:7px;pointer-events:all;max-width:500px;word-break:break-all;border:1px solid rgba(100,180,255,0.2)';
-  el.textContent = msg;
-  stack.appendChild(el);
-  setTimeout(() => el.remove(), 12000);
-}
-
-// ─── Boot loading overlay ─────────────────────────────────────
-function showBootLoading() {
-  // Show skeleton KPI values
-  ['kpi-value','kpi-return','kpi-cash','kpi-pos','kpi-health'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.textContent = '—'; el.className = 'kpi-val neu'; }
-  });
-  const inv = document.getElementById('kpi-invested');
-  if (inv) inv.textContent = 'Loading from sheet…';
-  const upd = document.getElementById('kpi-lastupdate');
-  if (upd) upd.textContent = 'Connecting…';
-
-  // Show loading card on dashboard
-  const metrics = document.getElementById('dashMetrics');
-  if (metrics) metrics.innerHTML = `
-    <div style="grid-column:1/-1;padding:32px;text-align:center;color:var(--text3);">
-      <div style="font-size:28px;margin-bottom:12px">⏳</div>
-      <div style="font-size:15px;font-weight:600;color:var(--text2);margin-bottom:6px">Loading portfolio from Google Sheet…</div>
-      <div style="font-size:12.5px">Fetching live prices and positions</div>
-    </div>`;
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  TOAST NOTIFICATIONS
-// ═══════════════════════════════════════════════════════════════
-const TOAST_ICONS = {success:'✅',error:'❌',warning:'⚠️',info:'ℹ️'};
-const _activeToasts = new Set();
-
-function showToast(type='info', title='', msg='', duration=5000, actions=[]) {
-  const stack = document.getElementById('toastStack');
-  if (!stack) return;
-
-  // Dedupe: don't show same title+type twice within 30s
-  const key = type + title;
-  if (_activeToasts.has(key)) return;
-  _activeToasts.add(key);
-  setTimeout(() => _activeToasts.delete(key), 30000);
-
-  const el = document.createElement('div');
-  el.className = `toast toast-${type}`;
-  el.innerHTML = `
-    <div class="toast-icon">${TOAST_ICONS[type]||'ℹ️'}</div>
-    <div class="toast-body">
-      <div class="toast-title">${title}</div>
-      ${msg ? `<div class="toast-msg">${msg}</div>` : ''}
-      ${actions.length ? `<div class="toast-actions">${actions.map(a=>`<button class="toast-action-btn" onclick="${a.action}">${a.label}</button>`).join('')}</div>` : ''}
-    </div>
-    <button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>
-  `;
-  stack.appendChild(el);
-
-  if (duration > 0) {
-    setTimeout(() => dismissToast(el), duration);
-  }
-  return el;
-}
-
-function dismissToast(el) {
-  if (!el || el.classList.contains('hiding')) return;
-  el.classList.add('hiding');
-  setTimeout(() => el.remove(), 300);
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  DATA HEALTH PANEL
-// ═══════════════════════════════════════════════════════════════
-function openHealthPanel() {
-  renderHealthPanel();
-  document.getElementById('healthPanelOverlay').style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-function closeHealthPanel() {
-  document.getElementById('healthPanelOverlay').style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-function renderHealthPanel() {
-  const h = dataHealth;
-  const now = h.lastFetch ? h.lastFetch.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : 'Never';
-  const totalIssues = (h.zeroValue||[]).length + (h.zeroPrice||[]).length
-                    + (h.stalePrices||[]).length + (h.duplicates||[]).length
-                    + (h.tickerIssues||[]).length + (!h.sheetOk && h.sheetOk!==null ? 1 : 0);
-
-  document.getElementById('healthPanelSub').textContent =
-    `Last checked: ${now} · ${totalIssues} issue${totalIssues!==1?'s':''} found · ${h.posCount} positions`;
-
-  let body = '';
-
-  // ── Sheet connection ──────────────────────────────────────────
-  body += '<div class="alert-section-label">Sheet Connection</div>';
-  if (h.sheetOk === null) {
-    body += alertRow('info','⏳','Not checked yet','Refresh prices to run diagnostics');
-  } else if (!h.sheetOk) {
-    body += alertRow('error','❌','Sheet fetch failed',
-      h.sheetError || 'Could not load data from Google Sheet',
-      [{label:'Configure Sheet',action:'closeHealthPanel();showSetupModal()'}]);
-  } else {
-    const debugInfo = h.csvRowCount ? ` · ${h.csvRowCount} CSV rows received` : '';
-    body += alertRow('success','✅','Sheet connected',
-      `${h.posCount} positions loaded successfully at ${now}${debugInfo}`,
-      [{label:'View Raw CSV',action:'showRawCsvDebug()'},{label:'Re-sync Now',action:'closeHealthPanel();fetchLivePrices()'}]);
-  }
-
-  // ── FX Rates ─────────────────────────────────────────────────
-  body += '<div class="alert-section-label">FX Rates</div>';
-  const FX_META_FULL = {
-    EUR:{name:'Euro',        usedFor:'DTE, VOW3, RUI, ACOMO'},
-    HKD:{name:'Hong Kong Dollar', usedFor:'9618, 0001, 0823, 1883'},
-    NOK:{name:'Norwegian Krone',  usedFor:'AKRBP.OL, DNQ'},
-    MYR:{name:'Malaysian Ringgit',usedFor:'KLSE1163'},
-    GBX:{name:'British Pence',    usedFor:'DOM'},
-  };
-  let anyFxIssue = false;
-  Object.entries(FX_META_FULL).forEach(([ccy, meta]) => {
-    const live = fxLive[ccy];
-    const rate = FX[ccy];
-    if (!live) {
-      anyFxIssue = true;
-      body += alertRow('warning','⚡',`${ccy} rate is snapshot (not live)`,
-        `Using cached rate ${rate ? rate.toFixed(6) : 'N/A'} — affects: ${meta.usedFor}`);
-    } else {
-      body += alertRow('success','✅',`${ccy} live rate: ${rate.toFixed(6)}`,
-        `1 ${ccy} = $${rate.toFixed(4)} USD — used for: ${meta.usedFor}`);
-    }
-  });
-  if (!anyFxIssue) {
-    body = body.replace(
-      '<div class="alert-section-label">FX Rates</div>',
-      '<div class="alert-section-label">FX Rates</div>'
-    );
-  }
-
-  // ── Parse Stats ──────────────────────────────────────────────
-  if (h.csvRowCount) {
-    body += '<div class="alert-section-label">Parse Statistics</div>';
-    body += alertRow('info','📊','CSV Parse Summary',
-      `${h.csvRowCount} raw CSV rows received → ${h.posCount} positions parsed · ` +
-      `${h.csvRowCount - h.posCount} rows skipped (TOTAL row, zero-investment placeholders, header bleed)`,
-      [{label:'Inspect CSV',action:'showRawCsvDebug()'}]);
-  }
-
-  // ── Position Issues ───────────────────────────────────────────
-  body += '<div class="alert-section-label">Position Data</div>';
-
-  let posIssues = 0;
-
-  if ((h.zeroValue||[]).length > 0) {
-    posIssues++;
-    body += alertRow('error','❌','Zero-value positions detected',
-      `These positions have $0 current value — check if the ticker is correct in your sheet or if the position is delisted:<br>` +
-      h.zeroValue.map(t=>`<span class="alert-row-code">${t}</span>`).join(' '));
-  }
-
-  if ((h.zeroPrice||[]).length > 0) {
-    posIssues++;
-    body += alertRow('warning','⚠️','Zero local price (col 11)',
-      `Current Price column shows 0 for these tickers — GOOGLEFINANCE may have failed or the ticker format is wrong:<br>` +
-      h.zeroPrice.map(t=>`<span class="alert-row-code">${t}</span>`).join(' ') +
-      '<br><small style="color:var(--text3)">Tip: check GOOGLEFINANCE formula in your sheet for these tickers</small>');
-  }
-
-  if ((h.stalePrices||[]).length > 0) {
-    posIssues++;
-    body += alertRow('warning','⚠️','Possibly stale or mismatched prices',
-      h.stalePrices.map(p=>`<strong>${p.ticker}:</strong> ${p.issue}`).join('<br>'));
-  }
-
-  if ((h.duplicates||[]).length > 0) {
-    posIssues++;
-    body += alertRow('error','❌','Duplicate tickers in sheet',
-      `These tickers appear more than once — remove duplicates from your sheet:<br>` +
-      h.duplicates.map(t=>`<span class="alert-row-code">${t}</span>`).join(' '));
-  }
-
-  if ((h.tickerIssues||[]).length > 0) {
-    posIssues++;
-    body += alertRow('info','ℹ️','Ticker format notes',
-      h.tickerIssues.map(p=>`<strong>${p.ticker}:</strong> ${p.issue}`).join('<br>'));
-  }
-
-  if (posIssues === 0 && h.sheetOk) {
-    body += alertRow('success','✅','All position data looks clean',`${h.posCount} positions parsed with no issues`);
-  }
-
-  // ── Ticker Reference ─────────────────────────────────────────
-  body += '<div class="alert-section-label">Ticker Normalisations Applied</div>';
-  body += alertRow('info','🔄','Automatic ticker fixes',
-    `These conversions are applied when parsing your sheet:<br>
-    <span class="alert-row-code">BRK.B</span> → <span class="alert-row-code">BRK-B</span> &nbsp;
-    <span class="alert-row-code">AKRBF</span> → <span class="alert-row-code">AKRBP.OL</span> &nbsp;
-    <span class="alert-row-code">KLSE:1163</span> → <span class="alert-row-code">KLSE1163</span> &nbsp;
-    <span class="alert-row-code">$SPXS</span> → <span class="alert-row-code">SPXS</span> &nbsp;
-    <span class="alert-row-code">$UVXY</span> → <span class="alert-row-code">UVXY</span> &nbsp;
-    <span class="alert-row-code">1</span> → <span class="alert-row-code">0001</span> &nbsp;
-    <span class="alert-row-code">823</span> → <span class="alert-row-code">0823</span>`);
-
-  // ── Positions quick view ──────────────────────────────────────
-  if (liveData.length > 0) {
-    const notLoaded = liveData.filter(p => !p.priceLoaded && p.type !== 'Cash' && p.type !== 'People');
-    if (notLoaded.length > 0) {
-      body += '<div class="alert-section-label">Prices Not Loaded</div>';
-      body += alertRow('warning','⚡','These positions have no live price',
-        `Using snapshot values for:<br>` +
-        notLoaded.map(p=>`<span class="alert-row-code">${p.ticker}</span>`).join(' '));
-    }
-  }
-
-  // ── Enhancement Suggestions ──────────────────────────────────
-  body += '<div class="alert-section-label">💡 Suggested Enhancements</div>';
-  const suggestions = [
-    {icon:'📊',title:'Add Benchmark Comparison',detail:'Compare portfolio performance vs S&P 500 (VOO) and MSCI World over time to see true alpha generated.'},
-    {icon:'🗓',title:'Trade History Log',detail:'Add a "Trades" sheet tab to track buy/sell history. Enables FIFO/LIFO P&L, average cost tracking, and wash-sale alerts.'},
-    {icon:'📱',title:'PWA / Offline Mode',detail:'Package this as a Progressive Web App so it installs on your phone home screen and loads instantly without internet.'},
-    {icon:'🔔',title:'Price Alerts',detail:'Set target prices for your positions — get a browser notification when a stock crosses your threshold (requires the tab to be open).'},
-    {icon:'💹',title:'Position Sizing Calculator',detail:'Add a tool to calculate optimal position size based on your risk tolerance, account size, and stop-loss level (Kelly Criterion / fixed %).'},
-    {icon:'📰',title:'News Feed per Ticker',detail:'Embed a news widget (via RSS or free API) showing latest headlines for each position in the Notes page.'},
-    {icon:'🧾',title:'Tax Report Export',detail:'Generate a year-end CSV with realised gains/losses, holding periods, and cost basis — ready to hand to your accountant.'},
-    {icon:'📈',title:'Sparkline Price Charts',detail:'Add mini sparkline charts (last 30 days) to the Holdings table price column for at-a-glance price trend per position.'},
-    {icon:'🔁',title:'Auto-Rebalance Suggestions',detail:'In Target Builder, add a "Buy X / Sell Y" action table showing exact $ amounts to trade to reach target allocations.'},
-    {icon:'🌍',title:'Geographic Exposure Map',detail:'Visual world map with countries shaded by exposure weight — US, EU, HK/China, Norway, Malaysia, UK.'},
-  ];
-  suggestions.forEach(s => {
-    body += alertRow('info', s.icon, s.title, s.detail);
-  });
-
-  document.getElementById('healthPanelBody').innerHTML = body;
-}
-
-function showRawCsvDebug() {
-  const h = dataHealth;
-  if (!h.rawCsvFull) {
-    showToast('warning','No CSV data','Refresh prices first to capture raw CSV',3000);
-    return;
-  }
-
-  // Parse first 5 data rows and show column mapping
-  const lines = h.rawCsvFull.split('\n');
-  const header = lines[0];
-  const dataRows = lines.slice(1, 7);
-
-  let debugHtml = `<div style="font-family:'DM Mono',monospace;font-size:11px;overflow-x:auto">`;
-  debugHtml += '<div style="font-weight:700;margin-bottom:8px;font-size:12px">Raw CSV Header:</div>';
-  debugHtml += `<div style="background:var(--bg3);padding:8px;border-radius:6px;margin-bottom:12px;word-break:break-all;font-size:10.5px">${header.replace(/,/g,'<span style="color:var(--red)">,</span>')}</div>`;
-
-  debugHtml += '<div style="font-weight:700;margin-bottom:8px;font-size:12px">First 6 data rows (columns 0,1,2,3,4,6,7,8,11,12,13):</div>';
-  debugHtml += '<table style="width:100%;border-collapse:collapse;font-size:10.5px">';
-  debugHtml += '<tr style="background:var(--bg3)">';
-  ['Col0\nPortfolio','Col1\nSector','Col2\nType','Col4\nCurr','Col6\nExch','Col7\nTicker','Col8\nInvest','Col11\nPrice','Col12\nShares','Col13\nUSD Val'].forEach(h =>
-    debugHtml += `<th style="padding:5px 7px;border:1px solid var(--border);white-space:pre;text-align:left">${h}</th>`
-  );
-  debugHtml += '</tr>';
-
-  dataRows.forEach(row => {
-    if (!row.trim()) return;
-    const cols = [];
-    let cur='',inQ=false;
-    for(const ch of row){ if(ch==='"'){inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur);cur='';}else cur+=ch; }
-    cols.push(cur);
-    const c = i => (cols[i]||'').replace(/^"|"$/g,'').trim();
-    const cells = [c(0),c(1),c(2),c(4),c(6),c(7),c(8),c(11),c(12),c(13)];
-    const isProb = !c(0)||c(13)==='0'||c(13)==='';
-    debugHtml += `<tr style="${isProb?'background:rgba(214,60,45,.06)':''}">`;
-    cells.forEach(v => debugHtml += `<td style="padding:5px 7px;border:1px solid var(--border);max-width:100px;overflow:hidden;text-overflow:ellipsis" title="${v}">${v||'<span style=\"color:var(--red)\">EMPTY</span>'}</td>`);
-    debugHtml += '</tr>';
-  });
-  debugHtml += '</table></div>';
-
-  // Show in a modal
-  const existing = document.getElementById('csvDebugModal');
-  if (existing) existing.remove();
-  const modal = document.createElement('div');
-  modal.id = 'csvDebugModal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
-  modal.innerHTML = `
-    <div style="background:var(--bg2);border-radius:16px;width:100%;max-width:900px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.4)">
-      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg3)">
-        <div style="font-weight:700;font-size:15px">🔍 Raw CSV Debug — First 6 rows</div>
-        <button onclick="document.getElementById('csvDebugModal').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2)">✕</button>
-      </div>
-      <div style="overflow-y:auto;padding:16px 20px;flex:1">${debugHtml}</div>
-      <div style="padding:12px 20px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text3);background:var(--bg3)">
-        Col13 (USD Val) must be non-zero for values to display correctly. Col7 is the ticker. Col0 must be "Growth" or "Value".
-      </div>
-    </div>`;
-  modal.onclick = e => { if(e.target===modal) modal.remove(); };
-  document.body.appendChild(modal);
-}
-
-
-function showCorsHelp() {
-  const existing = document.getElementById('corsHelpModal');
-  if (existing) existing.remove();
-  const modal = document.createElement('div');
-  modal.id = 'corsHelpModal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
-  modal.innerHTML = `
-    <div style="background:var(--bg2);border-radius:16px;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.4);">
-      <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border-radius:16px 16px 0 0">
-        <div style="font-weight:700;font-size:16px">🔧 How to Fix: Portfolio Not Loading</div>
-        <button onclick="document.getElementById('corsHelpModal').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2)">✕</button>
-      </div>
-      <div style="padding:20px 22px;font-size:13px;line-height:1.7;color:var(--text2)">
-
-        <div style="background:var(--blue-bg);border-left:3px solid var(--blue);padding:12px 16px;border-radius:8px;margin-bottom:18px;color:var(--text)">
-          <strong>Root cause:</strong> Your browser blocks the dashboard from fetching Google Sheets directly 
-          when the file is opened locally (<code>file://</code>). This is a browser security policy (CORS).
-        </div>
-
-        <div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:10px">✅ Option 1 — GitHub Pages (recommended, free, 5 min)</div>
-        <ol style="margin-left:18px;margin-bottom:16px">
-          <li>Go to <a href="https://github.com" target="_blank" style="color:var(--blue)">github.com</a> → New repository → name it <code>portfolio</code></li>
-          <li>Upload <code>Portfolio_v4.html</code> → rename it to <code>index.html</code></li>
-          <li>Go to Settings → Pages → Source: main branch → Save</li>
-          <li>Your dashboard is now live at <code>https://yourusername.github.io/portfolio</code></li>
-          <li>No proxies needed — direct fetch works perfectly from https://</li>
-        </ol>
-
-        <div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:10px">✅ Option 2 — Google Apps Script relay (1 min)</div>
-        <ol style="margin-left:18px;margin-bottom:16px">
-          <li>Go to <a href="https://script.google.com" target="_blank" style="color:var(--blue)">script.google.com</a> → New project</li>
-          <li>Paste this code and click Deploy → Web app → Anyone:</li>
-        </ol>
-        <pre style="background:var(--bg3);padding:12px;border-radius:8px;font-size:11px;overflow-x:auto;margin-bottom:12px">function doGet(e) {
-  const url = e.parameter.url;
-  const response = UrlFetchApp.fetch(url);
-  return ContentService.createTextOutput(response.getContentText())
-    .setMimeType(ContentService.MimeType.TEXT);
-}</pre>
-        <ol start="3" style="margin-left:18px;margin-bottom:16px">
-          <li>Copy the deployment URL</li>
-          <li>In the dashboard → Sidebar → "Price Source" → paste the Apps Script URL in the field shown</li>
-        </ol>
-
-        <div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:10px">✅ Option 3 — Run a local server (developer option)</div>
-        <div style="margin-bottom:8px">Open Terminal in the folder with the HTML file and run:</div>
-        <pre style="background:var(--bg3);padding:10px;border-radius:8px;font-size:11px">python3 -m http.server 8080</pre>
-        <div>Then open <code>http://localhost:8080/Portfolio_v4.html</code> in your browser.</div>
-
-      </div>
-    </div>`;
-  modal.onclick = e => { if(e.target===modal) modal.remove(); };
-  document.body.appendChild(modal);
-}
-
-function alertRow(type, icon, title, detail, actions=[]) {
-  const actionsHtml = actions.length
-    ? `<div class="toast-actions" style="margin-top:8px">${actions.map(a=>`<button class="toast-action-btn" onclick="${a.action}">${a.label}</button>`).join('')}</div>`
-    : '';
-  return `<div class="alert-row ${type}">
-    <div class="alert-row-icon">${icon}</div>
-    <div class="alert-row-body">
-      <div class="alert-row-title">${title}</div>
-      <div class="alert-row-detail">${detail}${actionsHtml}</div>
-    </div>
-  </div>`;
-}
-
 // ═══════════════════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════════════════
@@ -4290,10 +3511,9 @@ function alertRow(type, icon, title, detail, actions=[]) {
 })()
 
 renderHoldingsFilters();
-// Show loading state at boot — don't render stale DEFAULT_PORTFOLIO data
-showBootLoading();
+renderAll();
 updatePriceSourceBadge();
-fetchLivePrices();
+fetchLivePrices().then(()=>{ if(typeof updateHealthBtn==='function') updateHealthBtn(); });
 
 // ═══════════════════════════════════════════════════════════════
 //  MOBILE NAVIGATION
@@ -4401,5 +3621,15 @@ document.addEventListener('touchend', e => {
   if (dx < -60 && document.getElementById('sidebar').classList.contains('open')) closeSidebar();
 }, { passive: true });
 </script>
+
+<div id="healthPanelOverlay" onclick="if(event.target===this)closeHealthPanel()" style="display:none;position:fixed;inset:0;background:rgba(8,12,30,.6);z-index:8500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(5px)">
+  <div style="background:var(--bg2);border-radius:18px;width:100%;max-width:640px;max-height:84vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(8,12,30,.3),0 0 0 1px var(--border)">
+    <div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg3);flex-shrink:0">
+      <div style="font-size:17px;font-weight:700;font-family:'Playfair Display',serif">📋 Data Health</div>
+      <button onclick="closeHealthPanel()" style="background:none;border:1px solid var(--border2);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--text2)">✕</button>
+    </div>
+    <div id="healthPanelBody" style="overflow-y:auto;flex:1;padding:18px 22px;font-size:13px"></div>
+  </div>
+</div>
 </body>
 </html>
