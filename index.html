@@ -3100,6 +3100,7 @@ let dcfSuggestIdx = -1;
 let dcfLastFcfHist = [];     // newest→oldest, $ millions
 
 function getFmpKey(){ return localStorage.getItem('fmpKey') || ''; }
+function getAvKey(){ return localStorage.getItem('avKey') || ''; }
 
 function updateDcfKeyBadge(){
   const el = document.getElementById('dcfKeyBadge'); if(!el) return;
@@ -3111,29 +3112,40 @@ function updateDcfKeyBadge(){
 
 function showDcfKeyModal(){
   const cur = getFmpKey();
+  const av = getAvKey();
   const wrap = document.createElement('div');
   wrap.className = 'modal-overlay';
   wrap.id = 'dcfKeyOverlay';
   wrap.onclick = e => { if(e.target===wrap) wrap.remove(); };
   wrap.innerHTML = `
-    <div class="modal-box" style="max-width:460px">
-      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:6px">Financial Modeling Prep API Key</div>
-      <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px">
-        The DCF calculator pulls cash-flow, balance-sheet and price data from
-        <strong>Financial Modeling Prep</strong>. The free plan allows 250 requests/day —
-        plenty for personal use. Get a key (free, ~1 min):
-        <ol style="margin:10px 0 0 18px;padding:0;line-height:1.7">
+    <div class="modal-box" style="max-width:480px">
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:6px">Data API Keys</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px">
+        <strong>Financial Modeling Prep</strong> (free, 250/day) provides price, shares, beta, debt &amp; cash.
+        <ol style="margin:8px 0 0 18px;padding:0;line-height:1.7">
           <li>Go to <a href="https://site.financialmodelingprep.com/developer/docs" target="_blank" rel="noopener" style="color:var(--blue)">financialmodelingprep.com</a> → sign up</li>
-          <li>Open your Dashboard → copy the API key</li>
-          <li>Paste it below — it's saved only in this browser</li>
+          <li>Copy your API key, paste below</li>
         </ol>
       </div>
+      <label style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">FMP Key</label>
       <input id="dcfKeyInput" type="text" value="${cur.replace(/"/g,'&quot;')}" placeholder="Paste FMP API key"
-        style="width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:9px;font-size:13px;font-family:'DM Mono',monospace;outline:none;margin-bottom:14px">
+        style="width:100%;margin-top:4px;padding:10px 12px;border:1px solid var(--border2);border-radius:9px;font-size:13px;font-family:'DM Mono',monospace;outline:none;margin-bottom:16px">
+
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:8px;padding-top:12px;border-top:1px dashed var(--border2)">
+        <strong>Alpha Vantage</strong> (free, 25/day) — <em>optional</em>, used only to fill <strong>Free Cash Flow</strong>, which FMP no longer serves on its free plan.
+        <ol style="margin:8px 0 0 18px;padding:0;line-height:1.7">
+          <li>Get a free key at <a href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noopener" style="color:var(--blue)">alphavantage.co</a> (instant, just an email)</li>
+          <li>Paste it below — FCF will then auto-fill too</li>
+        </ol>
+      </div>
+      <label style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Alpha Vantage Key (optional)</label>
+      <input id="avKeyInput" type="text" value="${av.replace(/"/g,'&quot;')}" placeholder="Paste Alpha Vantage key (for FCF)"
+        style="width:100%;margin-top:4px;padding:10px 12px;border:1px solid var(--border2);border-radius:9px;font-size:13px;font-family:'DM Mono',monospace;outline:none;margin-bottom:14px">
+
       <div style="display:flex;gap:8px;justify-content:flex-end">
-        ${cur?`<button class="btn btn-danger" style="margin-right:auto;padding:8px 14px" onclick="localStorage.removeItem('fmpKey');updateDcfKeyBadge();document.getElementById('dcfKeyOverlay').remove()">Remove</button>`:''}
+        ${(cur||av)?`<button class="btn btn-danger" style="margin-right:auto;padding:8px 14px" onclick="localStorage.removeItem('fmpKey');localStorage.removeItem('avKey');updateDcfKeyBadge();document.getElementById('dcfKeyOverlay').remove()">Remove all</button>`:''}
         <button class="btn btn-secondary" onclick="document.getElementById('dcfKeyOverlay').remove()">Cancel</button>
-        <button class="btn btn-primary" onclick="dcfSaveKey()">Save Key</button>
+        <button class="btn btn-primary" onclick="dcfSaveKey()">Save Keys</button>
       </div>
     </div>`;
   document.body.appendChild(wrap);
@@ -3142,9 +3154,37 @@ function showDcfKeyModal(){
 function dcfSaveKey(){
   const v = document.getElementById('dcfKeyInput').value.trim();
   if(v) localStorage.setItem('fmpKey', v); else localStorage.removeItem('fmpKey');
+  const a = document.getElementById('avKeyInput').value.trim();
+  if(a) localStorage.setItem('avKey', a); else localStorage.removeItem('avKey');
   updateDcfKeyBadge();
   document.getElementById('dcfKeyOverlay')?.remove();
-  dcfSetStatus('ok', 'API key saved. Pick a ticker and hit Fetch & Build.');
+  dcfSetStatus('ok', 'Keys saved. Pick a ticker and hit Fetch & Build.' + (a?' FCF will fill from Alpha Vantage.':''));
+}
+
+// ── Alpha Vantage FCF fallback (free CASH_FLOW endpoint) ──────────
+// Returns array of annual FCF in $millions (newest first), or throws with a clear reason.
+async function avFetchFcf(symbol){
+  const key = getAvKey();
+  if(!key) return null;                       // no AV key → caller falls back to manual
+  const url = `https://www.alphavantage.co/query?function=CASH_FLOW&symbol=${encodeURIComponent(symbol)}&apikey=${key}`;
+  let data;
+  try { const res = await fetchWithTimeout(url, 12000); data = await res.json(); }
+  catch(e){ throw new Error('Alpha Vantage unreachable ('+(e.name==='AbortError'?'timed out':e.message)+')'); }
+  // AV signals problems via Note / Information / Error Message keys
+  if(data && data['Note']) throw new Error('Alpha Vantage rate limit hit (25/day or 5/min) — try later');
+  if(data && data['Information']) throw new Error('Alpha Vantage: '+String(data['Information']).slice(0,80));
+  if(data && data['Error Message']) throw new Error('Alpha Vantage didn\'t recognise "'+symbol+'"');
+  const rows = data && data.annualReports;
+  if(!Array.isArray(rows) || !rows.length) return [];
+  const M = 1e6;
+  return rows.map(r=>{
+    const ocf = parseFloat(r.operatingCashflow);
+    const capex = parseFloat(r.capitalExpenditures);
+    if(!Number.isFinite(ocf)) return null;
+    // AV reports capex as a positive outflow → FCF = OCF − capex
+    const fcf = Number.isFinite(capex) ? (ocf - capex) : ocf;
+    return fcf / M;
+  }).filter(v=>v!=null && Number.isFinite(v));
 }
 
 function dcfSetStatus(kind, msg){
@@ -3395,18 +3435,31 @@ async function dcfFetch(){
       }catch(_){}
     }
 
+    // Fallback 2: Alpha Vantage (free CASH_FLOW), used only for FCF when FMP didn't provide it.
+    let fcfSource = 'FMP';
+    let avErr = null;
+    if(!dcfLastFcfHist.length && getAvKey()){
+      try{
+        const avHist = await avFetchFcf(symbol);
+        if(avHist && avHist.length){ dcfLastFcfHist = avHist; fcfSource = 'Alpha Vantage'; }
+        else if(avHist && avHist.length===0){ avErr = 'Alpha Vantage returned no cash-flow rows for this symbol'; }
+      }catch(e){ avErr = e.message; }
+    }
+
     if(dcfLastFcfHist.length){
       dcfSetAuto('fcf', +dcfLastFcfHist[0].toFixed(1)); got.push('FCF');
       // derive a sensible stage-1 growth from FCF CAGR (clamped)
       const g = dcfImpliedFcfCagr(dcfLastFcfHist);
       if(g!=null){ dcfSetDerived('g1', +g.toFixed(1)); }
       else { dcfSetDerived('g1', 8); }
-      document.getElementById('dcfFcfSrc').textContent = `${dcfLastFcfHist.length}y FCF history`;
+      document.getElementById('dcfFcfSrc').textContent = `${dcfLastFcfHist.length}y FCF · ${fcfSource}`;
     } else {
       miss.push('FCF'); dcfSetDerived('g1', 8);
-      // record why, to show the user
-      if(cfErr) dcfFcfMissReason = cfErr.message;
-      else if(!cf.length) dcfFcfMissReason = 'cash-flow statement endpoint returned no rows (the free plan may not include statements for this symbol)';
+      // record why, to show the user — prefer the AV reason if we tried it
+      if(avErr) dcfFcfMissReason = avErr;
+      else if(getAvKey()) dcfFcfMissReason = 'neither FMP nor Alpha Vantage returned cash-flow data';
+      else if(cfErr) dcfFcfMissReason = cfErr.message + ' — add a free Alpha Vantage key (FMP Key button) to auto-fill FCF';
+      else if(!cf.length) dcfFcfMissReason = 'FMP free plan no longer serves statements — add a free Alpha Vantage key (FMP Key button) to auto-fill FCF';
       else dcfFcfMissReason = 'cash-flow rows had no usable free-cash-flow field';
     }
 
