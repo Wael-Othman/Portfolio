@@ -485,6 +485,40 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
 .dcf-sens-cell{font-weight:600;}
 
 .dcf-disclaimer{font-size:11px;color:var(--text3);line-height:1.55;margin-top:14px;padding:11px 14px;background:var(--bg3);border-radius:var(--radius-sm);border-left:3px solid var(--amber);}
+
+/* ── VALUATION METHODS SUITE ── */
+.vm-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:980px){.vm-grid{grid-template-columns:1fr;}}
+.vm-card{border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg2);overflow:hidden;}
+.vm-card-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg3);}
+.vm-card-title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px;}
+.vm-card-body{padding:14px 16px;}
+.vm-row{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.vm-row-label{font-size:11px;color:var(--text2);font-weight:600;display:flex;align-items:center;gap:5px;}
+.vm-in-wrap{position:relative;display:flex;align-items:center;}
+.vm-in{width:100%;padding:8px 11px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-size:13px;font-family:'DM Mono',monospace;outline:none;transition:border-color .15s;}
+.vm-in:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(30,69,184,0.07);}
+.vm-in.autofilled{background:var(--green-bg);border-color:rgba(10,138,92,.25);}
+.vm-in-suffix{position:absolute;right:11px;font-size:11px;color:var(--text3);pointer-events:none;}
+.vm-twocol{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.vm-result{text-align:center;padding:14px;border-radius:var(--radius-sm);background:var(--bg3);margin-top:10px;}
+.vm-result .val{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;line-height:1;letter-spacing:-.02em;}
+.vm-result .verdict{display:inline-block;margin-top:7px;padding:3px 12px;border-radius:14px;font-size:11.5px;font-weight:700;}
+.vm-result .sub{font-size:11px;color:var(--text3);margin-top:6px;line-height:1.4;}
+.vm-na{color:var(--text3);font-size:12px;text-align:center;padding:8px;}
+
+.vm-summary{margin-top:16px;}
+.vm-sum-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.vm-sum-table th,.vm-sum-table td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--border);}
+.vm-sum-table th{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;background:var(--bg3);}
+.vm-sum-table td.method{font-weight:600;color:var(--text);}
+.vm-sum-table td.fv{font-family:'DM Mono',monospace;font-weight:700;text-align:right;}
+.vm-sum-table td.up{font-family:'DM Mono',monospace;text-align:right;}
+.vm-sum-bar-wrap{position:relative;height:30px;margin:18px 0 8px;}
+.vm-sum-bar-axis{position:absolute;top:0;bottom:0;border-left:1px dashed var(--border2);}
+.vm-sum-dot{position:absolute;width:11px;height:11px;border-radius:50%;transform:translate(-50%,-50%);top:50%;border:2px solid var(--bg2);}
+.vm-sum-price-line{position:absolute;top:-4px;bottom:-4px;border-left:2px solid var(--text);}
+.vm-help-num{font-family:'DM Mono',monospace;}
 .dcf-fcf-spark{display:flex;align-items:flex-end;gap:3px;height:38px;margin-top:6px;}
 .dcf-fcf-bar{flex:1;background:var(--blue-mid);border-radius:2px 2px 0 0;min-height:2px;opacity:.85;transition:height .4s;}
 .dcf-mini-reset{background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;text-decoration:underline;padding:0;font-family:'DM Sans',sans-serif;}
@@ -1619,6 +1653,142 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
             </div>
           </div>
         </div>
+
+        <!-- ── VALUATION METHODS SUITE ─────────────────────────── -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <span class="card-title">🧮 More Valuation Methods — DDM · Multiples · Graham</span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input class="dcf-ticker-input" id="vmTicker" placeholder="ticker" autocomplete="off"
+                style="width:120px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+              <button class="btn btn-primary" id="vmFetchBtn" onclick="vmFetchAll()" style="font-size:12px;padding:7px 14px"><span id="vmFetchIcon">↻</span> Value It</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="help-box" id="vmHelpMain">
+              <div class="help-box-head" onclick="document.getElementById('vmHelpMain').classList.toggle('open')">
+                💡 Four ways to value a stock — which to trust for which business
+                <span class="chev">▶</span>
+              </div>
+              <div class="help-box-body">
+                <h5>Why more than one method?</h5>
+                No single model fits every company. A cash-rich tech firm, a dividend utility, and an asset-heavy bank each reveal their value through a different lens. Running several and seeing where they agree (or clash) is how you triangulate a sensible range instead of trusting one number.
+                <h5>The four lenses</h5>
+                <ul>
+                  <li><strong>DCF</strong> (above) — present value of future free cash flow. Best for profitable, predictable cash generators. Struggles with hypergrowth and financials.</li>
+                  <li><strong>DDM</strong> — values the stream of dividends. Best for stable, reliable <em>dividend payers</em>: utilities, consumer staples, REITs, telecoms. Useless for non-payers.</li>
+                  <li><strong>Multiples</strong> — what the stock is worth at a "fair" P/E (or other ratio). Best for companies with profitable peers to compare against; fast reality-check on any profitable firm.</li>
+                  <li><strong>Graham Number</strong> — a conservative floor from earnings &amp; book value. Best for established <em>value</em> stocks with real assets and steady profits. Built for old-economy businesses, not asset-light tech.</li>
+                </ul>
+                <h5>How to use this panel</h5>
+                Type a ticker and hit <strong>Value It</strong>. Each method auto-fills what it can (some from the data already on this page) and leaves the rest editable. The <strong>Summary</strong> at the bottom lines up every method's fair value against the current price so you can see the spread at a glance. Each method has its own ▶ help box explaining its inputs and when to believe it.
+                <div style="margin-top:8px;font-size:11px;color:var(--text3)">Tip: when methods cluster tightly, you can be more confident. When they're scattered, the business is hard to value — treat any single number with caution.</div>
+              </div>
+            </div>
+
+            <div class="dcf-status" id="vmStatus"><span id="vmStatusMsg"></span></div>
+
+            <div class="vm-grid">
+              <!-- DDM -->
+              <div class="vm-card">
+                <div class="vm-card-head">
+                  <span class="vm-card-title">💵 Dividend Discount Model</span>
+                  <span class="dcf-mini-reset" onclick="document.getElementById('ddmHelp').classList.toggle('open')">how &amp; when ▶</span>
+                </div>
+                <div class="vm-card-body">
+                  <div class="help-box" id="ddmHelp" style="margin-bottom:12px">
+                    <div class="help-box-head" onclick="document.getElementById('ddmHelp').classList.toggle('open')">About DDM<span class="chev">▶</span></div>
+                    <div class="help-box-body">
+                      <h5>What it does</h5>The Gordon Growth DDM values a share as next year's dividend ÷ (required return − dividend growth). It assumes dividends grow forever at a steady rate.
+                      <h5>Best for</h5>Mature, stable <strong>dividend payers</strong> — utilities, consumer staples, telecoms, REITs, big banks. Companies with a long, reliable payout history.
+                      <h5>Don't use for</h5>Non-dividend payers (most tech/growth), or firms with erratic or newly-started dividends — the answer will be meaningless or zero.
+                      <h5>Inputs</h5><span class="vm-help-num">Annual dividend/share</span> (auto from price × yield), a <span class="vm-help-num">growth rate</span> (keep below your discount rate, e.g. 2–6%), and a <span class="vm-help-num">required return</span> (your target, e.g. 8–10%). Growth must be &lt; required return or the math breaks.
+                    </div>
+                  </div>
+                  <div class="vm-twocol">
+                    <div class="vm-row"><span class="vm-row-label">Dividend / share</span><div class="vm-in-wrap"><input class="vm-in" id="ddm-div" type="number" step="any" oninput="vmMark('ddm-div');vmComputeDDM()"><span class="vm-in-suffix">$</span></div></div>
+                    <div class="vm-row"><span class="vm-row-label">Div. growth</span><div class="vm-in-wrap"><input class="vm-in" id="ddm-g" type="number" step="any" value="3" oninput="vmComputeDDM()"><span class="vm-in-suffix">%/yr</span></div></div>
+                    <div class="vm-row"><span class="vm-row-label">Required return</span><div class="vm-in-wrap"><input class="vm-in" id="ddm-r" type="number" step="any" value="9" oninput="vmComputeDDM()"><span class="vm-in-suffix">%</span></div></div>
+                    <div class="vm-row"><span class="vm-row-label">Current price</span><div class="vm-in-wrap"><input class="vm-in" id="ddm-price" type="number" step="any" oninput="vmComputeDDM()"><span class="vm-in-suffix">$</span></div></div>
+                  </div>
+                  <div class="vm-result" id="ddmResult"><div class="vm-na">Enter a dividend to value</div></div>
+                </div>
+              </div>
+
+              <!-- MULTIPLES -->
+              <div class="vm-card">
+                <div class="vm-card-head">
+                  <span class="vm-card-title">📊 Relative Multiples</span>
+                  <span class="dcf-mini-reset" onclick="document.getElementById('multHelp').classList.toggle('open')">how &amp; when ▶</span>
+                </div>
+                <div class="vm-card-body">
+                  <div class="help-box" id="multHelp" style="margin-bottom:12px">
+                    <div class="help-box-head" onclick="document.getElementById('multHelp').classList.toggle('open')">About Multiples<span class="chev">▶</span></div>
+                    <div class="help-box-body">
+                      <h5>What it does</h5>Values the stock by applying a "fair" multiple to its earnings: fair price = target P/E × EPS. You can also sanity-check against P/B and P/S.
+                      <h5>Best for</h5>Any <strong>profitable</strong> company that has comparable peers or a stable own-history multiple. The quickest reality-check in valuation, and how most analysts actually anchor a price.
+                      <h5>Don't use for</h5>Unprofitable firms (no meaningful P/E), or one-off distorted earnings years. Garbage EPS in → garbage out.
+                      <h5>Inputs</h5><span class="vm-help-num">EPS</span> (auto = price ÷ P/E) and a <span class="vm-help-num">target P/E</span> you consider fair — its historical average, or a peer's. Implied price = EPS × target P/E.
+                    </div>
+                  </div>
+                  <div class="vm-twocol">
+                    <div class="vm-row"><span class="vm-row-label">EPS (TTM)</span><div class="vm-in-wrap"><input class="vm-in" id="mult-eps" type="number" step="any" oninput="vmMark('mult-eps');vmComputeMult()"><span class="vm-in-suffix">$</span></div></div>
+                    <div class="vm-row"><span class="vm-row-label">Target P/E</span><div class="vm-in-wrap"><input class="vm-in" id="mult-pe" type="number" step="any" oninput="vmComputeMult()"><span class="vm-in-suffix">×</span></div></div>
+                    <div class="vm-row"><span class="vm-row-label">Current P/E</span><div class="vm-in-wrap"><input class="vm-in" id="mult-curpe" type="number" step="any" oninput="vmComputeMult()"><span class="vm-in-suffix">×</span></div></div>
+                    <div class="vm-row"><span class="vm-row-label">Current price</span><div class="vm-in-wrap"><input class="vm-in" id="mult-price" type="number" step="any" oninput="vmComputeMult()"><span class="vm-in-suffix">$</span></div></div>
+                  </div>
+                  <div class="vm-result" id="multResult"><div class="vm-na">Enter EPS and a target P/E</div></div>
+                </div>
+              </div>
+
+              <!-- GRAHAM -->
+              <div class="vm-card">
+                <div class="vm-card-head">
+                  <span class="vm-card-title">🏛 Graham Number</span>
+                  <span class="dcf-mini-reset" onclick="document.getElementById('grahamHelp').classList.toggle('open')">how &amp; when ▶</span>
+                </div>
+                <div class="vm-card-body">
+                  <div class="help-box" id="grahamHelp" style="margin-bottom:12px">
+                    <div class="help-box-head" onclick="document.getElementById('grahamHelp').classList.toggle('open')">About the Graham Number<span class="chev">▶</span></div>
+                    <div class="help-box-body">
+                      <h5>What it does</h5>Benjamin Graham's conservative fair-value formula: √(22.5 × EPS × book value/share). The 22.5 reflects his rule that P/E × P/B shouldn't exceed 22.5 (15 × 1.5).
+                      <h5>Best for</h5>Established <strong>value stocks</strong> with real earnings and tangible assets — industrials, financials, mature manufacturers. A quick "floor" value for defensive investing.
+                      <h5>Don't use for</h5>Asset-light or high-growth companies (tech, software) — it will wildly understate them. Also meaningless if EPS or book value is negative.
+                      <h5>Inputs</h5><span class="vm-help-num">EPS</span> (auto = price ÷ P/E) and <span class="vm-help-num">book value/share</span> (auto = price ÷ P/B). Both must be positive.
+                    </div>
+                  </div>
+                  <div class="vm-twocol">
+                    <div class="vm-row"><span class="vm-row-label">EPS (TTM)</span><div class="vm-in-wrap"><input class="vm-in" id="grah-eps" type="number" step="any" oninput="vmMark('grah-eps');vmComputeGraham()"><span class="vm-in-suffix">$</span></div></div>
+                    <div class="vm-row"><span class="vm-row-label">Book value / share</span><div class="vm-in-wrap"><input class="vm-in" id="grah-bvps" type="number" step="any" oninput="vmMark('grah-bvps');vmComputeGraham()"><span class="vm-in-suffix">$</span></div></div>
+                    <div class="vm-row" style="grid-column:1/-1"><span class="vm-row-label">Current price</span><div class="vm-in-wrap"><input class="vm-in" id="grah-price" type="number" step="any" oninput="vmComputeGraham()"><span class="vm-in-suffix">$</span></div></div>
+                  </div>
+                  <div class="vm-result" id="grahamResult"><div class="vm-na">Enter EPS and book value</div></div>
+                </div>
+              </div>
+
+              <!-- SUMMARY -->
+              <div class="vm-card">
+                <div class="vm-card-head">
+                  <span class="vm-card-title">🎯 Valuation Summary</span>
+                  <span class="dcf-mini-reset" onclick="document.getElementById('sumHelp').classList.toggle('open')">how to read ▶</span>
+                </div>
+                <div class="vm-card-body">
+                  <div class="help-box" id="sumHelp" style="margin-bottom:12px">
+                    <div class="help-box-head" onclick="document.getElementById('sumHelp').classList.toggle('open')">Reading the summary<span class="chev">▶</span></div>
+                    <div class="help-box-body">
+                      Each method's fair value is listed with its upside/downside vs. the current price, and plotted on the line below (the vertical black line is today's price). <strong>Tight cluster</strong> = methods agree, higher confidence. <strong>Wide scatter</strong> = the business is hard to value; lean on the method that fits it best (see each card's help). Methods that don't apply (e.g. DDM for a non-payer) are shown as n/a and excluded from the average.
+                    </div>
+                  </div>
+                  <div id="vmSummaryBody"><div class="vm-na">Run a valuation to see all methods side by side</div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="dcf-disclaimer">
+              These are simplified textbook models for triangulation, not precision instruments — each rests on assumptions you control. They complement, not replace, reading the actual financials. Not investment advice.
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2083,8 +2253,44 @@ function normaliseTicker(raw) {
   return t;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  GOOGLE SHEET PARSER
+// Convert a holding (or raw ticker) into the exchange-suffixed symbol FMP/Alpha Vantage expect.
+// FMP uses suffixes like .HK (Hong Kong), .KL (Malaysia/Bursa), .OL (Oslo), .DE (Xetra),
+// .L (London). We infer the exchange from the holding's local currency, which the sheet gives us.
+// US tickers and anything already suffixed pass through unchanged.
+function fmpSymbol(rawOrHolding){
+  let raw, ccy;
+  if(rawOrHolding && typeof rawOrHolding==='object'){
+    raw = (rawOrHolding.sheetTicker || rawOrHolding.ticker || '').toString();
+    ccy = (rawOrHolding.localCurrency || rawOrHolding.currency || '').toUpperCase();
+  } else {
+    raw = (rawOrHolding||'').toString();
+    ccy = '';
+    // if no holding context, try to find a matching holding for its currency
+    const up = raw.toUpperCase();
+    const h = (typeof liveData!=='undefined') ? liveData.find(p=>(p.ticker||'').toUpperCase()===up || (p.sheetTicker||'').toUpperCase()===up) : null;
+    if(h) ccy = (h.localCurrency||h.currency||'').toUpperCase();
+  }
+  let t = raw.trim().replace(/^\$/, '');
+  if(!t) return t;
+  // already has an exchange suffix (e.g. AKRBP.OL, VOW3.DE) → leave it
+  if(/\.[A-Z]{1,4}$/i.test(t)) return t.toUpperCase();
+
+  // Hong Kong: pad numeric code to 4 digits + .HK  (823 → 0823.HK)
+  if(ccy==='HKD'){
+    if(/^\d+$/.test(t)) t = String(parseInt(t,10)).padStart(4,'0');
+    return t + '.HK';
+  }
+  // Malaysia (Bursa): numeric or KLSE-prefixed → .KL  (1155 → 1155.KL, KLSE1155 → 1155.KL)
+  if(ccy==='MYR'){
+    t = t.replace(/^KLSE:?/i,'');
+    return t + '.KL';
+  }
+  if(ccy==='NOK' && !/\.OL$/i.test(t)) return t + '.OL';
+  if(ccy==='GBX' || ccy==='GBP'){ if(!/\.L$/i.test(t)) return t + '.L'; }
+  // EUR is ambiguous (many exchanges); the sheet's tickers like VOW3/DTE are usually used
+  // bare or with .DE — leave EUR names as-is so the user can suffix if needed.
+  return t.toUpperCase();
+}
 //
 //  New sheet columns (0-indexed):
 //   0  Portfolio      1  Sector         2  Type
@@ -2474,8 +2680,8 @@ function renderHoldingsTable(){
     return true;
   }).sort((a,b)=>{
     if(sortKey==='dayChangePct'){
-      const av=dayChangeCache[(a.sheetTicker||a.ticker||'').toUpperCase()],
-            bv=dayChangeCache[(b.sheetTicker||b.ticker||'').toUpperCase()];
+      const av=dayChangeCache[fmpSymbol(a).toUpperCase()],
+            bv=dayChangeCache[fmpSymbol(b).toUpperCase()];
       // push missing (undefined) values to the bottom regardless of direction
       const an=(av===undefined||av===null)?null:av, bn=(bv===undefined||bv===null)?null:bv;
       if(an===null&&bn===null)return 0;
@@ -2490,7 +2696,7 @@ function renderHoldingsTable(){
   // Day-change cell from session cache (populated by fetchDayChange)
   const dayCell=d=>{
     if(d.type==='Cash'||d.type==='People') return '<span style="color:var(--text3)">—</span>';
-    const v=dayChangeCache[(d.sheetTicker||d.ticker||'').toUpperCase()];
+    const v=dayChangeCache[fmpSymbol(d).toUpperCase()];
     if(v===undefined||v===null) return '<span style="color:var(--text3)">—</span>';
     const cls=v>0?'pos':v<0?'neg':'neu';
     return `<span class="cbadge ${cls}">${v>=0?'▲':'▼'}${Math.abs(v).toFixed(2)}%</span>`;
@@ -2525,7 +2731,7 @@ async function fetchDayChange(){
   // Unique FMP symbols for stock/ETF holdings (skip cash/people/crypto — /quote is equities)
   const syms = [...new Set(liveData
     .filter(p=>p.type==='Stock'||p.type==='ETF')
-    .map(p=>(p.sheetTicker||p.ticker||'').toUpperCase())
+    .map(p=>fmpSymbol(p).toUpperCase())
     .filter(Boolean))];
   if(!syms.length){ return; }
 
@@ -2795,7 +3001,7 @@ async function buildCorrelation(){
   const d=getFilteredData().filter(p=>p.type==='Stock'||p.type==='ETF');
   // unique by FMP symbol, keep a display label
   const map=new Map();
-  d.forEach(p=>{ const s=(p.sheetTicker||p.ticker||'').toUpperCase(); if(s&&!map.has(s)) map.set(s,p.ticker); });
+  d.forEach(p=>{ const s=fmpSymbol(p).toUpperCase(); if(s&&!map.has(s)) map.set(s,p.ticker); });
   const syms=[...map.keys()];
   if(syms.length<2){ document.getElementById('corrMatrixWrap').innerHTML='<span style="font-size:12px;color:var(--text3)">Need at least 2 stock/ETF holdings.</span>'; return; }
   if(!confirm(`Build correlation matrix for ${syms.length} holdings?\n\nFetches ~1 year of daily prices each (~${syms.length} of your 250 free daily lookups). Cached for this session.`)) return;
@@ -3026,7 +3232,7 @@ function renderValuationTable(){
   document.getElementById('valTbody').innerHTML=d.map(p=>{
     const v=valuations[p.ticker]||{};
     const signal=getSignal(v.pe,v.pb,v.divYield,v.target,p.currentPrice);
-    const fv=fairValueCache[(p.sheetTicker||p.ticker||'').toUpperCase()];
+    const fv=fairValueCache[fmpSymbol(p).toUpperCase()];
     let fvCell='<span style="color:var(--text3)">—</span>', upCell='<span style="color:var(--text3)">—</span>';
     if(fv && fv.dcf>0){
       fvCell=`<span style="font-family:'DM Mono',monospace">$${fv.dcf.toFixed(2)}</span>`;
@@ -3063,7 +3269,7 @@ async function buildFairValues(){
   const key=getFmpKey();
   if(!key){ alert('Fair values use your free Financial Modeling Prep key.\nAdd it via the DCF card → "FMP Key", then try again.'); return; }
   const d=getFilteredData().filter(p=>p.type==='Stock'||p.type==='ETF');
-  const syms=[...new Set(d.map(p=>(p.sheetTicker||p.ticker||'').toUpperCase()).filter(Boolean))];
+  const syms=[...new Set(d.map(p=>fmpSymbol(p).toUpperCase()).filter(Boolean))];
   if(!syms.length) return;
   if(!confirm(`Fetch FMP's prebuilt DCF fair value for ${syms.length} holdings?\n\nThis uses ~${syms.length} of your 250 free daily lookups. Results are cached for this session.\n\nNote: these use FMP's own assumptions, not the ones in your calculator.`)) return;
 
@@ -3370,9 +3576,9 @@ async function dcfFetch(){
   const key = getFmpKey();
   if(!key){ dcfSetStatus('warn','Add a free FMP API key first (FMP Key button).'); showDcfKeyModal(); return; }
 
-  // Map portfolio internal tickers to the symbol FMP expects where we know it.
+  // Map portfolio internal tickers to the exchange-suffixed symbol FMP expects.
   const held = liveData.find(p=>(p.ticker||'').toUpperCase()===raw || (p.sheetTicker||'').toUpperCase()===raw);
-  const symbol = (held && held.sheetTicker) ? held.sheetTicker : raw;
+  const symbol = held ? fmpSymbol(held) : fmpSymbol(raw);
 
   const btn = document.getElementById('dcfFetchBtn');
   const icon = document.getElementById('dcfFetchIcon');
@@ -3746,6 +3952,203 @@ function dcfReverse(){
   else if(solved>=0){ note='A low bar — the market expects little growth. Could be cheap if the business does better than that.'; col='var(--green)'; }
   else { note='The price implies shrinking cash flow. The market is pricing in decline — contrarian upside if you disagree.'; col='var(--blue)'; }
   vEl.innerHTML=`<span style="color:${col};font-weight:600">${note}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  VALUATION METHODS SUITE — DDM · Multiples · Graham · Summary
+//  Auto-fills from FMP (price, P/E, P/B, dividend) + the dashboard's
+//  own valuation table; everything stays editable. No hard API deps.
+// ═══════════════════════════════════════════════════════════════
+let vmEdited = {};
+function vmMark(id){ const el=document.getElementById(id); if(el){ el.classList.remove('autofilled'); } vmEdited[id]=true; }
+function vmSetAuto(id, val){
+  const el=document.getElementById(id); if(!el || val==null || !Number.isFinite(val)) return;
+  if(vmEdited[id]) return;                 // don't clobber a manual edit
+  el.value = (Math.abs(val)>=100? val.toFixed(2) : val.toFixed(4).replace(/\.?0+$/,''));
+  el.classList.add('autofilled');
+}
+function vmStatus(kind,msg){
+  const el=document.getElementById('vmStatus'), m=document.getElementById('vmStatusMsg');
+  if(!el) return; if(!msg){el.classList.remove('show');return;}
+  el.className='dcf-status show '+kind; m.textContent=msg;
+}
+
+async function vmFetchAll(){
+  const sym=(document.getElementById('vmTicker').value||'').trim().toUpperCase();
+  if(!sym){ vmStatus('warn','Type a ticker first.'); return; }
+  vmEdited={};  // fresh fetch resets manual flags
+  const btn=document.getElementById('vmFetchBtn'), icon=document.getElementById('vmFetchIcon');
+  btn.disabled=true; icon.textContent='⟳'; icon.className='spin';
+  vmStatus('info',`Gathering data for ${sym}…`);
+
+  // 1) Seed from the dashboard's own valuation table + holdings (no API needed)
+  let price=null, pe=null, pb=null, divYield=null;
+  const held = liveData.find(p=>(p.ticker||'').toUpperCase()===sym || (p.sheetTicker||'').toUpperCase()===sym);
+  if(held){ price = held.currentPrice||null; }
+  const v = (typeof valuations!=='undefined') ? (valuations[sym]||valuations[held&&held.ticker]) : null;
+  if(v){ pe=v.pe||null; pb=v.pb||null; divYield=v.divYield||null; }
+
+  // exchange-suffixed symbol for the API (e.g. 0823 → 0823.HK)
+  const apiSym = held ? fmpSymbol(held) : fmpSymbol(sym);
+
+  // 2) Try FMP for anything missing (profile gives price/pe; ratios give eps/bvps/div)
+  const key=getFmpKey();
+  let eps=null, bvps=null, dps=null, note=[];
+  if(key){
+    try{
+      const prof = await dcfFetchJson(`${FMP_BASE}/profile?symbol=${encodeURIComponent(apiSym)}&apikey=${key}`).catch(()=>null);
+      const p = Array.isArray(prof)&&prof[0]?prof[0]:null;
+      if(p){
+        if(price==null && p.price!=null) price=+p.price;
+        if(p.lastDividend!=null && +p.lastDividend>0) dps=+p.lastDividend;
+        if(p.beta!=null) {}
+      }
+      // ratios-ttm (may be free) for pe, pb, eps, bvps, dividend
+      await new Promise(r=>setTimeout(r,180));
+      const rat = await dcfFetchJson(`${FMP_BASE}/ratios-ttm?symbol=${encodeURIComponent(apiSym)}&apikey=${key}`).catch(()=>null);
+      const r0 = Array.isArray(rat)&&rat[0]?rat[0]:(rat&&typeof rat==='object'?rat:null);
+      if(r0){
+        if(pe==null && (r0.priceToEarningsRatioTTM||r0.peRatioTTM)) pe=+(r0.priceToEarningsRatioTTM||r0.peRatioTTM);
+        if(pb==null && (r0.priceToBookRatioTTM||r0.pbRatioTTM)) pb=+(r0.priceToBookRatioTTM||r0.pbRatioTTM);
+        if(r0.bookValuePerShareTTM) bvps=+r0.bookValuePerShareTTM;
+        if(r0.netIncomePerShareTTM) eps=+r0.netIncomePerShareTTM;
+        if(dps==null && r0.dividendPerShareTTM) dps=+r0.dividendPerShareTTM;
+      }
+    }catch(e){ note.push('FMP: '+e.message.slice(0,40)); }
+  } else {
+    note.push('no FMP key — using on-page data only');
+  }
+
+  // 3) Derive what we still don't have, from price + multiples
+  if(eps==null && price!=null && pe>0) eps = price/pe;
+  if(bvps==null && price!=null && pb>0) bvps = price/pb;
+  if(dps==null && price!=null && divYield>0) dps = price*(divYield/100);
+  // current P/E for the multiples card
+  let curpe = pe;
+  if(curpe==null && price!=null && eps>0) curpe = price/eps;
+
+  // 4) Fill the inputs (only where we have values; don't overwrite manual edits)
+  if(price!=null){ vmSetAuto('ddm-price',price); vmSetAuto('mult-price',price); vmSetAuto('grah-price',price); }
+  if(dps!=null)  vmSetAuto('ddm-div',dps);
+  if(eps!=null){ vmSetAuto('mult-eps',eps); vmSetAuto('grah-eps',eps); }
+  if(bvps!=null) vmSetAuto('grah-bvps',bvps);
+  if(curpe!=null) vmSetAuto('mult-curpe',+curpe.toFixed(2));
+  // a reasonable default target P/E = current (user adjusts)
+  if(curpe!=null && !vmEdited['mult-pe']) vmSetAuto('mult-pe',+curpe.toFixed(2));
+
+  vmComputeDDM(); vmComputeMult(); vmComputeGraham(); vmRenderSummary(price);
+
+  const got=[]; if(price!=null)got.push('price'); if(dps!=null)got.push('dividend'); if(eps!=null)got.push('EPS'); if(bvps!=null)got.push('book value');
+  let msg = got.length? `✓ ${sym}: ${got.join(', ')} loaded. Adjust assumptions; blanks need manual entry.` : `Couldn't auto-load much for ${sym} — enter values manually.`;
+  if(note.length) msg += ' ('+note.join('; ')+')';
+  vmStatus(got.length?'ok':'warn', msg);
+  btn.disabled=false; icon.textContent='↻'; icon.className='';
+}
+
+function vmNum(id){ return parseFloat(document.getElementById(id).value); }
+function vmVerdict(fair, price){
+  if(!Number.isFinite(fair)||!Number.isFinite(price)||price<=0) return null;
+  const up=(fair/price-1)*100;
+  let label,bg,fg;
+  if(up>=15){label='⬆ Undervalued';bg='var(--green-bg)';fg='var(--green)';}
+  else if(up<=-15){label='⬇ Overvalued';bg='var(--red-bg)';fg='var(--red)';}
+  else {label='→ Roughly fair';bg='var(--blue-bg)';fg='var(--blue)';}
+  return {up,label,bg,fg};
+}
+
+let vmFair = {ddm:null, mult:null, graham:null};
+
+function vmComputeDDM(){
+  const d=vmNum('ddm-div'), g=vmNum('ddm-g'), r=vmNum('ddm-r'), price=vmNum('ddm-price');
+  const el=document.getElementById('ddmResult');
+  if(!Number.isFinite(d)||d<=0){ el.innerHTML='<div class="vm-na">Needs a positive dividend — this stock may not pay one (DDM doesn\'t apply)</div>'; vmFair.ddm=null; vmRenderSummary(price); return; }
+  if(!Number.isFinite(g)||!Number.isFinite(r)){ el.innerHTML='<div class="vm-na">Enter growth and required return</div>'; vmFair.ddm=null; return; }
+  if(r<=g){ el.innerHTML='<div class="vm-na">Required return must exceed dividend growth (Gordon model breaks otherwise)</div>'; vmFair.ddm=null; vmRenderSummary(price); return; }
+  const fair = d*(1+g/100)/((r-g)/100);
+  vmFair.ddm=fair;
+  const vd=vmVerdict(fair,price);
+  el.innerHTML=`<div class="val">$${fair.toFixed(2)}</div>${vd?`<div class="verdict" style="background:${vd.bg};color:${vd.fg}">${vd.label} · ${vd.up>=0?'+':''}${vd.up.toFixed(0)}%</div>`:''}<div class="sub">Next div $${(d*(1+g/100)).toFixed(2)} ÷ (${r}%−${g}%)</div>`;
+  vmRenderSummary(price);
+}
+
+function vmComputeMult(){
+  const eps=vmNum('mult-eps'), tpe=vmNum('mult-pe'), curpe=vmNum('mult-curpe'), price=vmNum('mult-price');
+  const el=document.getElementById('multResult');
+  if(!Number.isFinite(eps)||!Number.isFinite(tpe)){ el.innerHTML='<div class="vm-na">Enter EPS and a target P/E</div>'; vmFair.mult=null; vmRenderSummary(price); return; }
+  if(eps<=0){ el.innerHTML='<div class="vm-na">EPS is negative — multiples valuation doesn\'t apply to unprofitable firms</div>'; vmFair.mult=null; vmRenderSummary(price); return; }
+  const fair=eps*tpe;
+  vmFair.mult=fair;
+  const vd=vmVerdict(fair,price);
+  let cmp='';
+  if(Number.isFinite(curpe)&&curpe>0) cmp=`Current P/E ${curpe.toFixed(1)}× vs target ${tpe.toFixed(1)}×`;
+  el.innerHTML=`<div class="val">$${fair.toFixed(2)}</div>${vd?`<div class="verdict" style="background:${vd.bg};color:${vd.fg}">${vd.label} · ${vd.up>=0?'+':''}${vd.up.toFixed(0)}%</div>`:''}<div class="sub">${eps.toFixed(2)} EPS × ${tpe.toFixed(1)}×${cmp?'<br>'+cmp:''}</div>`;
+  vmRenderSummary(price);
+}
+
+function vmComputeGraham(){
+  const eps=vmNum('grah-eps'), bvps=vmNum('grah-bvps'), price=vmNum('grah-price');
+  const el=document.getElementById('grahamResult');
+  if(!Number.isFinite(eps)||!Number.isFinite(bvps)){ el.innerHTML='<div class="vm-na">Enter EPS and book value/share</div>'; vmFair.graham=null; vmRenderSummary(price); return; }
+  if(eps<=0||bvps<=0){ el.innerHTML='<div class="vm-na">Both EPS and book value must be positive — Graham doesn\'t apply (typical for asset-light or loss-making firms)</div>'; vmFair.graham=null; vmRenderSummary(price); return; }
+  const fair=Math.sqrt(22.5*eps*bvps);
+  vmFair.graham=fair;
+  const vd=vmVerdict(fair,price);
+  el.innerHTML=`<div class="val">$${fair.toFixed(2)}</div>${vd?`<div class="verdict" style="background:${vd.bg};color:${vd.fg}">${vd.label} · ${vd.up>=0?'+':''}${vd.up.toFixed(0)}%</div>`:''}<div class="sub">√(22.5 × ${eps.toFixed(2)} × ${bvps.toFixed(2)})</div>`;
+  vmRenderSummary(price);
+}
+
+function vmRenderSummary(price){
+  // also pull DCF fair value if it's been computed on this page
+  let dcfFair=null;
+  const dcfEl=document.getElementById('dcfFairVal');
+  if(dcfEl){ const m=(dcfEl.textContent||'').replace(/[$,]/g,''); const n=parseFloat(m); if(Number.isFinite(n)&&n>0) dcfFair=n; }
+  if(!Number.isFinite(price)||price<=0){ price = vmNum('mult-price'); }
+
+  const rows=[
+    {name:'DCF (above)', fv:dcfFair},
+    {name:'DDM', fv:vmFair.ddm},
+    {name:'Multiples', fv:vmFair.mult},
+    {name:'Graham', fv:vmFair.graham},
+  ];
+  const valid=rows.filter(r=>Number.isFinite(r.fv)&&r.fv>0);
+  const body=document.getElementById('vmSummaryBody');
+  if(!valid.length){ body.innerHTML='<div class="vm-na">Run a valuation to see all methods side by side</div>'; return; }
+
+  const avg = valid.reduce((a,b)=>a+b.fv,0)/valid.length;
+  let html='<table class="vm-sum-table"><thead><tr><th>Method</th><th style="text-align:right">Fair Value</th><th style="text-align:right">vs Price</th></tr></thead><tbody>';
+  rows.forEach(r=>{
+    if(!Number.isFinite(r.fv)||r.fv<=0){ html+=`<tr><td class="method">${r.name}</td><td class="fv" style="color:var(--text3)">n/a</td><td class="up" style="color:var(--text3)">—</td></tr>`; return; }
+    const up = (Number.isFinite(price)&&price>0)?(r.fv/price-1)*100:null;
+    const cls = up==null?'':(up>=15?'pos':up<=-15?'neg':'neu');
+    html+=`<tr><td class="method">${r.name}</td><td class="fv">$${r.fv.toFixed(2)}</td><td class="up ${cls}">${up==null?'—':(up>=0?'+':'')+up.toFixed(0)+'%'}</td></tr>`;
+  });
+  // average row
+  const avgUp=(Number.isFinite(price)&&price>0)?(avg/price-1)*100:null;
+  html+=`<tr style="border-top:2px solid var(--border2)"><td class="method">Average (${valid.length})</td><td class="fv">$${avg.toFixed(2)}</td><td class="up ${avgUp==null?'':(avgUp>=15?'pos':avgUp<=-15?'neg':'neu')}">${avgUp==null?'—':(avgUp>=0?'+':'')+avgUp.toFixed(0)+'%'}</td></tr>`;
+  html+='</tbody></table>';
+
+  // spread plot
+  if(Number.isFinite(price)&&price>0){
+    const allVals=valid.map(r=>r.fv).concat([price]);
+    const lo=Math.min(...allVals), hi=Math.max(...allVals), range=(hi-lo)||1;
+    const pad=range*0.12;
+    const min=lo-pad, max=hi+pad, span=max-min;
+    const pos=x=>((x-min)/span*100);
+    const palette={'DCF (above)':'#7c3aed','DDM':'#0a8a5c','Multiples':'#1e45b8','Graham':'#b45309'};
+    let dots='';
+    valid.forEach(r=>{ dots+=`<div class="vm-sum-dot" title="${r.name}: $${r.fv.toFixed(2)}" style="left:${pos(r.fv).toFixed(1)}%;background:${palette[r.name]||'#888'}"></div>`; });
+    html+=`<div class="vm-sum-bar-wrap" style="background:linear-gradient(var(--bg3),var(--bg3)) center/100% 3px no-repeat;">
+      <div class="vm-sum-price-line" title="Current price $${price.toFixed(2)}" style="left:${pos(price).toFixed(1)}%"></div>${dots}
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace"><span>$${min.toFixed(0)}</span><span>▮ = price $${price.toFixed(2)}</span><span>$${max.toFixed(0)}</span></div>`;
+    // agreement note
+    const spreadPct=(hi-lo)/avg*100;
+    let agree = spreadPct<25 ? ['Tight cluster — methods broadly agree, higher confidence.','var(--green)']
+              : spreadPct<60 ? ['Moderate spread — some disagreement; weigh the method that best fits this business.','var(--amber)']
+              : ['Wide scatter — this business is hard to value; treat any single number with caution.','var(--red)'];
+    html+=`<div style="font-size:11.5px;margin-top:8px;color:${agree[1]};font-weight:600">${agree[0]}</div>`;
+  }
+  body.innerHTML=html;
 }
 
 function dcfResetInputs(){
