@@ -412,6 +412,114 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
 /* ── VALUATION EXTRA ── */
 .val-Unknown{background:var(--bg4);color:var(--text3);}
 
+/* ── DCF CALCULATOR ── */
+.dcf-picker-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:4px;}
+.dcf-field{display:flex;flex-direction:column;gap:5px;}
+.dcf-field-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;}
+.dcf-ticker-wrap{position:relative;}
+.dcf-ticker-input{
+  width:190px;padding:9px 13px;border-radius:var(--radius-sm);border:1px solid var(--border2);
+  background:var(--bg2);color:var(--text);font-size:13px;font-family:'DM Mono',monospace;
+  font-weight:600;letter-spacing:.04em;outline:none;transition:border-color .15s;text-transform:uppercase;
+}
+.dcf-ticker-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,69,184,0.07);}
+.dcf-suggest{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg2);
+  border:1px solid var(--border2);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);
+  z-index:50;max-height:230px;overflow-y:auto;display:none;
+}
+.dcf-suggest.open{display:block;}
+.dcf-suggest-item{padding:8px 12px;cursor:pointer;font-size:12.5px;display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--border);transition:background .1s;}
+.dcf-suggest-item:last-child{border-bottom:none;}
+.dcf-suggest-item:hover,.dcf-suggest-item.kbd{background:var(--blue-bg);}
+.dcf-suggest-tkr{font-family:'DM Mono',monospace;font-weight:700;color:var(--text);}
+.dcf-suggest-name{color:var(--text3);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;flex:1;}
+.dcf-suggest-grp{padding:5px 12px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);background:var(--bg3);}
+
+.dcf-status{display:none;margin:0 0 14px;padding:9px 14px;font-size:12px;border-radius:var(--radius-sm);align-items:center;gap:8px;}
+.dcf-status.show{display:flex;}
+.dcf-status.info{background:var(--blue-bg);color:var(--blue);}
+.dcf-status.ok{background:var(--green-bg);color:var(--green);}
+.dcf-status.warn{background:var(--amber-bg);color:var(--amber);}
+.dcf-status.err{background:var(--red-bg);color:var(--red);}
+
+.dcf-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
+@media(max-width:980px){.dcf-layout{grid-template-columns:1fr;}}
+
+.dcf-inputs-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;}
+.dcf-in-field{display:flex;flex-direction:column;gap:4px;}
+.dcf-in-label{font-size:11px;color:var(--text2);font-weight:600;display:flex;align-items:center;gap:5px;}
+.dcf-in-wrap{position:relative;display:flex;align-items:center;}
+.dcf-in{
+  width:100%;padding:8px 11px;border-radius:var(--radius-sm);border:1px solid var(--border2);
+  background:var(--bg2);color:var(--text);font-size:13px;font-family:'DM Mono',monospace;
+  outline:none;transition:border-color .15s;
+}
+.dcf-in:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(30,69,184,0.07);}
+.dcf-in.autofilled{background:var(--green-bg);border-color:rgba(10,138,92,.25);}
+.dcf-in.edited{background:var(--amber-bg);border-color:rgba(180,83,9,.25);}
+.dcf-in-suffix{position:absolute;right:11px;font-size:11px;color:var(--text3);pointer-events:none;font-family:'DM Sans',sans-serif;}
+.dcf-src-tag{font-size:8.5px;padding:1px 5px;border-radius:3px;font-weight:700;letter-spacing:.03em;}
+.dcf-src-auto{background:var(--green-bg);color:var(--green);}
+.dcf-src-manual{background:var(--amber-bg);color:var(--amber);}
+.dcf-src-derived{background:var(--purple-bg);color:var(--purple);}
+
+.dcf-section-divider{grid-column:1/-1;font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-top:6px;padding-top:10px;border-top:1px dashed var(--border2);}
+.dcf-section-divider:first-child{margin-top:0;padding-top:0;border-top:none;}
+
+.dcf-result-hero{text-align:center;padding:20px 16px 16px;border-radius:var(--radius);background:var(--bg3);margin-bottom:14px;}
+.dcf-fair-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;}
+.dcf-fair-val{font-family:'Playfair Display',serif;font-size:42px;font-weight:700;line-height:1.05;letter-spacing:-.02em;margin:6px 0 2px;}
+.dcf-verdict{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:12.5px;font-weight:700;margin-top:6px;}
+.dcf-vs-row{display:flex;justify-content:space-around;margin-top:14px;gap:10px;}
+.dcf-vs-cell{flex:1;}
+.dcf-vs-cell .v{font-size:18px;font-weight:700;font-family:'DM Mono',monospace;}
+.dcf-vs-cell .l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+.dcf-mos-bar{height:9px;border-radius:5px;background:var(--bg4);overflow:hidden;margin-top:14px;position:relative;}
+.dcf-mos-fill{height:100%;border-radius:5px;transition:width .6s cubic-bezier(.4,0,.2,1);}
+
+.dcf-sens-table{width:100%;border-collapse:collapse;font-size:11.5px;font-family:'DM Mono',monospace;}
+.dcf-sens-table th,.dcf-sens-table td{padding:6px 8px;text-align:center;border:1px solid var(--border);}
+.dcf-sens-table th{background:var(--bg3);font-size:10px;color:var(--text3);font-weight:700;}
+.dcf-sens-table td.axis{background:var(--bg3);font-weight:700;color:var(--text2);}
+.dcf-sens-cell{font-weight:600;}
+
+.dcf-disclaimer{font-size:11px;color:var(--text3);line-height:1.55;margin-top:14px;padding:11px 14px;background:var(--bg3);border-radius:var(--radius-sm);border-left:3px solid var(--amber);}
+.dcf-fcf-spark{display:flex;align-items:flex-end;gap:3px;height:38px;margin-top:6px;}
+.dcf-fcf-bar{flex:1;background:var(--blue-mid);border-radius:2px 2px 0 0;min-height:2px;opacity:.85;transition:height .4s;}
+.dcf-mini-reset{background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;text-decoration:underline;padding:0;font-family:'DM Sans',sans-serif;}
+.dcf-mini-reset:hover{color:var(--blue);}
+
+/* ── DCF HELP PANEL (reusable: .dcf-help / .help-box) ── */
+.dcf-help,.help-box{border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg3);margin-bottom:14px;overflow:hidden;}
+.dcf-help-head,.help-box-head{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;user-select:none;font-size:12.5px;font-weight:700;color:var(--text2);transition:background .15s;}
+.dcf-help-head:hover,.help-box-head:hover{background:var(--bg4);}
+.dcf-help-head .chev,.help-box-head .chev{margin-left:auto;transition:transform .2s;font-size:11px;color:var(--text3);}
+.dcf-help.open .dcf-help-head .chev,.help-box.open .help-box-head .chev{transform:rotate(90deg);}
+.dcf-help-body,.help-box-body{display:none;padding:4px 16px 16px;font-size:12.5px;color:var(--text2);line-height:1.6;}
+.dcf-help.open .dcf-help-body,.help-box.open .help-box-body{display:block;}
+.dcf-help-body h5,.help-box-body h5{font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 5px;}
+.dcf-help-body h5:first-child,.help-box-body h5:first-child{margin-top:4px;}
+.dcf-help-body ol,.help-box-body ol{margin:0 0 0 18px;padding:0;}
+.dcf-help-body ul,.help-box-body ul{margin:4px 0 0 18px;padding:0;}
+.dcf-help-body li,.help-box-body li{margin-bottom:5px;}
+.dcf-help-body code,.help-box-body code{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-family:'DM Mono',monospace;font-size:11px;color:var(--blue);}
+.dcf-help-body strong,.help-box-body strong{color:var(--text);}
+.dcf-help-tips{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-top:6px;}
+@media(max-width:640px){.dcf-help-tips{grid-template-columns:1fr;}}
+.dcf-help-tip{display:flex;gap:7px;font-size:12px;}
+.dcf-help-tip .k{font-weight:700;color:var(--text);min-width:fit-content;}
+.dcf-in-info{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:var(--border2);color:var(--bg2);font-size:9px;font-weight:700;cursor:help;flex-shrink:0;font-family:'DM Sans',sans-serif;}
+
+/* ── CORRELATION MATRIX ── */
+.corr-table{border-collapse:collapse;font-family:'DM Mono',monospace;font-size:10.5px;}
+.corr-table th,.corr-table td{padding:5px 6px;text-align:center;border:1px solid var(--border);white-space:nowrap;min-width:42px;}
+.corr-table th{background:var(--bg3);font-size:9.5px;font-weight:700;color:var(--text2);position:sticky;}
+.corr-table th.corner{background:var(--bg3);}
+.corr-table td.rowhead{background:var(--bg3);font-weight:700;color:var(--text2);text-align:left;position:sticky;left:0;z-index:1;}
+.corr-table th.colhead{writing-mode:vertical-rl;transform:rotate(180deg);max-height:64px;}
+.corr-cell{font-weight:600;color:var(--text);}
+
 /* ── SKELETON ── */
 .skel{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:skel .8s infinite;border-radius:4px;}
 @keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -1017,9 +1125,20 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
           <div class="page-title">Holdings</div>
           <div class="page-sub" id="holdingsSubtitle">All positions across Growth & Value portfolios</div>
         </div>
+        <div style="font-size:11.5px;color:var(--text2);line-height:1.5;margin-bottom:12px">
+          Click any column header to sort. The <strong>Day Δ</strong> button fetches today's % move per holding.
+          <a onclick="this.parentNode.querySelector('.hold-more').style.display=this.parentNode.querySelector('.hold-more').style.display==='block'?'none':'block'" style="color:var(--blue);cursor:pointer;font-weight:600;white-space:nowrap"> About Day % ▾</a>
+          <span class="hold-more" style="display:none;margin-top:8px">
+            <strong>Day %</strong> is each holding's price change <em>so far today</em>, pulled on demand from Financial Modeling Prep (needs your free key, set in the DCF card). It's a <strong>manual refresh</strong> — it does <em>not</em> auto-update with the 60-second price sync, so it won't drain your daily quota. One click batches every ticker into 1–2 lookups; the timestamp next to the button shows when it last ran and how many returned data. Cash, "People," and crypto rows show <code>—</code>, and foreign tickers without intraday data on the free tier also show <code>—</code> rather than a wrong number.
+          </span>
+        </div>
         <div class="toolbar">
           <input class="search-input" type="text" placeholder="Search ticker or company…" id="searchInput" oninput="renderHoldingsTable()">
           <div class="filter-pills" id="filterPills"></div>
+          <button class="btn btn-secondary" id="dayChangeBtn" onclick="fetchDayChange()" style="white-space:nowrap" title="Fetch today's % move per holding from Financial Modeling Prep">
+            <span id="dayChangeIcon">↻</span> Day Δ
+          </button>
+          <span id="dayChangeStamp" style="font-size:10.5px;color:var(--text3);white-space:nowrap"></span>
         </div>
         <div class="table-wrap">
           <table class="data-table">
@@ -1033,6 +1152,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
               <th onclick="sortBy('currentValue')" style="text-align:right">Value (USD)</th>
               <th onclick="sortBy('gainLoss')" style="text-align:right">Gain/Loss $</th>
               <th onclick="sortBy('gainLossPct')" style="text-align:right">Return %</th>
+              <th onclick="sortBy('dayChangePct')" style="text-align:right">Day % ↕</th>
               <th onclick="sortBy('allocationPct')" style="text-align:right">Alloc %</th>
             </tr></thead>
             <tbody id="holdingsTbody"></tbody>
@@ -1144,6 +1264,63 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
             </div>
           <div class="card-body" style="position:relative;height:340px"><canvas id="riskScatterChart"></canvas></div>
         </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-header">
+            <span class="card-title">Correlation Matrix — true diversification</span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span id="corrStamp" style="font-size:10.5px;color:var(--text3)"></span>
+              <button class="btn btn-secondary" id="corrBtn" onclick="buildCorrelation()" style="font-size:11px;padding:5px 12px">
+                <span id="corrIcon">▦</span> Build Matrix
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="help-box" id="corrHelp">
+              <div class="help-box-head" onclick="document.getElementById('corrHelp').classList.toggle('open')">
+                💡 How to use this — and what it tells you
+                <span class="chev">▶</span>
+              </div>
+              <div class="help-box-body">
+                <h5>What it does</h5>
+                Measures how your holdings move <strong>relative to each other</strong>, using about a year of daily price returns. Diversification isn't about owning many stocks — it's about owning stocks that <em>don't</em> all fall on the same day. This shows whether you actually have that.
+
+                <h5>How to use it</h5>
+                <ol>
+                  <li>Make sure your free FMP key is set (Valuation → DCF → <strong>FMP Key</strong>).</li>
+                  <li>Click <strong>Build Matrix</strong>. It fetches ~1 year of prices per stock/ETF holding (one lookup each) and confirms before spending quota.</li>
+                  <li>Read across any row to see how that holding relates to every other.</li>
+                </ol>
+
+                <h5>Reading the colors</h5>
+                <ul>
+                  <li><code>+1.0</code> (deep <span style="color:var(--red);font-weight:600">red</span>) = move in lockstep — owning both adds little diversification.</li>
+                  <li><code>0</code> (pale) = unrelated — good, they cushion each other.</li>
+                  <li><code>−1.0</code> (deep <span style="color:var(--green);font-weight:600">green</span>) = move oppositely — a natural hedge.</li>
+                  <li>The diagonal is always <code>1.00</code> (each stock vs. itself).</li>
+                </ul>
+
+                <h5>What to look for</h5>
+                <ul>
+                  <li><strong>Lots of red?</strong> Your portfolio is more concentrated than the number of tickers suggests — a single shock could hit many positions at once.</li>
+                  <li><strong>Clusters of red</strong> usually map to a sector (e.g. your tech names). Genuine diversification means greens and pales <em>across</em> clusters.</li>
+                </ul>
+
+                <h5>Good to know</h5>
+                <ul>
+                  <li>Run it occasionally, not every visit — it uses one FMP lookup per holding.</li>
+                  <li>Free daily history is US-strongest; foreign tickers without data are dropped and listed below the matrix.</li>
+                  <li>Correlations shift over time (especially in a crash, when many things converge toward +1) — treat it as a recent snapshot, not a constant.</li>
+                </ul>
+              </div>
+            </div>
+            <div style="font-size:11.5px;color:var(--text2);line-height:1.5;margin-bottom:12px">
+              <span style="color:var(--green);font-weight:600">Green</span> = low / negative correlation (diversifying);
+              <span style="color:var(--red);font-weight:600">red</span> = moves together (concentrated). One FMP lookup per holding.
+            </div>
+            <div id="corrMatrixWrap" style="overflow:auto"><span style="font-size:12px;color:var(--text3)">Click "Build Matrix" to compute.</span></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1179,10 +1356,44 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
           <div class="page-title">Valuation Dashboard</div>
           <div class="page-sub">P/E, P/B, dividend yield, payout ratio — auto-populated via AI or edit manually</div>
         </div>
+        <div class="help-box" id="valHelp">
+          <div class="help-box-head" onclick="document.getElementById('valHelp').classList.toggle('open')">
+            💡 How this page works — metrics table, Fair Values &amp; the DCF tools
+            <span class="chev">▶</span>
+          </div>
+          <div class="help-box-body">
+            <h5>The metrics table</h5>
+            Enter or auto-fill <strong>P/E, P/B, dividend yield, payout, and a target price</strong> per holding. The <strong>Signal</strong> column combines them into a quick Under / Fair / Over read. <strong>Auto-Fill via AI</strong> populates them using your saved key; <strong>Save Changes</strong> stores edits in this browser.
+
+            <h5>FV (DCF) &amp; Upside columns</h5>
+            Click <strong>Fair Values</strong> to fetch FMP's <em>prebuilt</em> DCF intrinsic value for each stock/ETF holding. <strong>FV (DCF)</strong> is that estimated worth per share; <strong>Upside %</strong> is how far today's price sits below it (green) or above it (red). 
+            <ul>
+              <li>Uses one FMP lookup per holding — it confirms before spending quota, and caches for the session.</li>
+              <li>These use <strong>FMP's own assumptions</strong>, not yours — handy for a fast screen across everything you own.</li>
+              <li>For a real teardown of any single name with <em>your</em> growth and discount-rate assumptions, use the DCF Calculator below.</li>
+            </ul>
+
+            <h5>The two DCF tools below</h5>
+            <ul>
+              <li><strong>DCF Calculator</strong> — pick a ticker, auto-fill the inputs, and get an intrinsic value you fully control. It has its own "How to use" panel.</li>
+              <li><strong>Reverse DCF</strong> — flips the question: at today's price, what growth is the market assuming? Good for sanity-checking whether a price is realistic.</li>
+            </ul>
+
+            <h5>Good to know</h5>
+            <ul>
+              <li>All the fetch buttons need your free FMP key (set it once in the DCF card).</li>
+              <li>DCF fits cash-generative, predictable businesses; it's a poor fit for banks, unprofitable companies, and crypto.</li>
+              <li>Foreign tickers may return partial or no data on the free tier — they'll show "—" or "n/a".</li>
+            </ul>
+          </div>
+        </div>
         <div class="card" style="margin-bottom:16px">
           <div class="card-header">
             <span class="card-title">Valuation Metrics per Position</span>
             <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn btn-secondary" id="fvBtn" onclick="buildFairValues()" style="font-size:11px;padding:5px 12px" title="Fetch FMP's prebuilt DCF fair value for each stock holding">
+                <span id="fvIcon">⚖︎</span> Fair Values
+              </button>
               <button class="btn btn-primary" id="autoFillBtn" onclick="autoFillValuations()" style="font-size:11px;padding:5px 14px;display:flex;align-items:center;gap:5px">
                 <span id="autoFillIcon">✦</span> Auto-Fill via AI
               </button>
@@ -1196,10 +1407,216 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
             <table class="data-table" id="valTable">
               <thead><tr>
                 <th>Ticker</th><th>Company</th><th>P/E Ratio</th><th>P/B Ratio</th>
-                <th>Div Yield %</th><th>Payout Ratio %</th><th>Target Price</th><th>Signal</th>
+                <th>Div Yield %</th><th>Payout Ratio %</th><th>Target Price</th>
+                <th style="text-align:right">FV (DCF)</th><th style="text-align:right">Upside %</th><th>Signal</th>
               </tr></thead>
               <tbody id="valTbody"></tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- ── DCF CALCULATOR ──────────────────────────────────── -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <span class="card-title">⚖︎ Discounted Cash Flow (DCF) Calculator</span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span id="dcfKeyBadge" style="font-size:9px;padding:2px 7px;border-radius:4px;background:var(--red-bg);color:var(--red);font-weight:700">NO KEY</span>
+              <button class="btn btn-secondary" onclick="showDcfKeyModal()" style="font-size:11px;padding:5px 12px">FMP Key</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="dcf-picker-row">
+              <div class="dcf-field">
+                <span class="dcf-field-label">Stock / Ticker</span>
+                <div class="dcf-ticker-wrap">
+                  <input class="dcf-ticker-input" id="dcfTicker" placeholder="e.g. AAPL" autocomplete="off"
+                    oninput="dcfOnTickerInput(this.value)" onkeydown="dcfSuggestKey(event)"
+                    onfocus="dcfOnTickerInput(this.value)" onblur="setTimeout(dcfCloseSuggest,180)">
+                  <div class="dcf-suggest" id="dcfSuggest"></div>
+                </div>
+              </div>
+              <div class="dcf-field" style="align-self:flex-end">
+                <button class="btn btn-primary" id="dcfFetchBtn" onclick="dcfFetch()" style="padding:9px 18px">
+                  <span id="dcfFetchIcon">⤓</span> Fetch &amp; Build
+                </button>
+              </div>
+              <div class="dcf-field" style="align-self:flex-end">
+                <button class="btn btn-secondary" onclick="dcfResetInputs()" style="padding:9px 14px">Clear</button>
+              </div>
+            </div>
+            <div class="page-sub" style="margin:8px 0 14px;font-size:11.5px">
+              Pick a holding or type any ticker. Inputs auto-fill from Financial Modeling Prep (free).
+              <span style="color:var(--green);font-weight:600">Green</span> = auto-fetched,
+              <span style="color:var(--amber);font-weight:600">amber</span> = your manual edit. Every field is editable.
+            </div>
+
+            <!-- ── HELP / HOW-TO ── -->
+            <div class="dcf-help" id="dcfHelp">
+              <div class="dcf-help-head" onclick="document.getElementById('dcfHelp').classList.toggle('open')">
+                💡 How to use this — and what a DCF actually tells you
+                <span class="chev">▶</span>
+              </div>
+              <div class="dcf-help-body">
+                <h5>The 30-second version</h5>
+                <ol>
+                  <li>Click <strong>FMP Key</strong> once, paste a free key (financialmodelingprep.com → sign up → copy key).</li>
+                  <li>Type a ticker or pick one of your holdings, hit <strong>Fetch &amp; Build</strong>.</li>
+                  <li>The numbers fill in. Adjust the <strong>growth</strong> and <strong>discount rate</strong> assumptions to match your own view.</li>
+                  <li>Read the <strong>Intrinsic Value / Share</strong> and how it compares to today's price. Use the <strong>sensitivity grid</strong> to see how fragile that number is.</li>
+                </ol>
+
+                <h5>What it's doing</h5>
+                A DCF estimates what a business is worth today by projecting its future free cash flow and discounting it back to present value. This one uses a <strong>two-stage model</strong>: a high-growth period (Stage 1), a fade period (Stage 2), then a perpetual <strong>terminal</strong> growth rate. It adds cash, subtracts debt, and divides by shares to get value per share.
+
+                <h5>The inputs that matter most</h5>
+                <div class="dcf-help-tips">
+                  <div class="dcf-help-tip"><span class="k">Base FCF</span><span>Latest annual free cash flow. The starting point everything grows from.</span></div>
+                  <div class="dcf-help-tip"><span class="k">Stage 1 Growth</span><span>How fast FCF grows in the near term. Auto-derived from history — sanity-check it.</span></div>
+                  <div class="dcf-help-tip"><span class="k">Terminal Growth</span><span>Forever-growth after the forecast. Keep it low — <code>2–3%</code> (≈ long-run GDP). Never above your discount rate.</span></div>
+                  <div class="dcf-help-tip"><span class="k">Discount Rate (WACC)</span><span>Your required return / risk. Higher = more cautious = lower value. <code>8–10%</code> is typical for large caps.</span></div>
+                </div>
+
+                <h5>Reading the result</h5>
+                <ul>
+                  <li><strong>Upside / (Down)</strong> = how far today's price sits below (or above) your fair value. A positive number means the model sees it as cheap.</li>
+                  <li>Roughly <code>±20%</code> is treated as "fair" — DCFs aren't precise enough to act on small gaps.</li>
+                  <li>The <strong>sensitivity matrix</strong> shifts WACC and terminal growth a notch each way. If fair value swings wildly across the grid, the model is fragile — lean on your assumptions, not the headline.</li>
+                </ul>
+
+                <h5>Good to know</h5>
+                <ul>
+                  <li>DCF fits <strong>cash-generative, predictable</strong> businesses best. It's a poor fit for banks, early-stage / unprofitable companies, and most crypto.</li>
+                  <li>Free data is strongest for <strong>US tickers</strong>. Foreign listings (e.g. <code>VOW3.DE</code>, <code>9618.HK</code>) may return partial data — fill the amber gaps by hand.</li>
+                  <li>Free FMP allows <strong>250 lookups/day</strong> — far more than you'll need.</li>
+                  <li>This is a thinking tool, not advice. Garbage in, garbage out — always pressure-test the growth rate.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="dcf-status" id="dcfStatus"><span id="dcfStatusMsg"></span></div>
+
+            <div class="dcf-layout">
+              <!-- INPUTS -->
+              <div class="card" style="box-shadow:none;border-color:var(--border2)">
+                <div class="card-header" style="padding:12px 16px 10px">
+                  <span class="card-title" id="dcfInputsTitle">Model Inputs</span>
+                  <span id="dcfFcfSrc" style="font-size:10px;color:var(--text3)"></span>
+                </div>
+                <div class="card-body" style="padding:14px 16px">
+                  <div class="dcf-inputs-grid">
+                    <div class="dcf-section-divider">Base Cash Flow</div>
+                    <div class="dcf-in-field">
+                      <span class="dcf-in-label">Base FCF <span class="dcf-in-info" data-tip="Latest annual free cash flow, in $ millions">i</span><span class="dcf-src-tag dcf-src-auto" id="src-fcf">—</span></span>
+                      <div class="dcf-in-wrap"><input class="dcf-in" id="dcf-fcf" type="number" step="any" oninput="dcfMarkEdited('fcf');dcfCompute()"><span class="dcf-in-suffix">$M</span></div>
+                    </div>
+                    <div class="dcf-in-field">
+                      <span class="dcf-in-label">Shares Out. <span class="dcf-src-tag dcf-src-auto" id="src-shares">—</span></span>
+                      <div class="dcf-in-wrap"><input class="dcf-in" id="dcf-shares" type="number" step="any" oninput="dcfMarkEdited('shares');dcfCompute()"><span class="dcf-in-suffix">M</span></div>
+                    </div>
+
+                    <div class="dcf-section-divider">Growth Assumptions</div>
+                    <div class="dcf-in-field">
+                      <span class="dcf-in-label">Stage 1 Growth <span class="dcf-in-info" data-tip="Near-term FCF growth; auto-derived from history">i</span><span class="dcf-src-tag dcf-src-derived" id="src-g1">—</span></span>
+                      <div class="dcf-in-wrap"><input class="dcf-in" id="dcf-g1" type="number" step="any" oninput="dcfMarkEdited('g1');dcfCompute()"><span class="dcf-in-suffix">%/yr</span></div>
+                    </div>
+                    <div class="dcf-in-field">
+                      <span class="dcf-in-label">Stage 1 Years</span>
+                      <div class="dcf-in-wrap"><input class="dcf-in" id="dcf-yr1" type="number" step="1" value="5" oninput="dcfMarkEdited('yr1');dcfCompute()"><span class="dcf-in-suffix">yrs</span></div>
+                    </div>
+                    <div class="dcf-in-field">
+                      <span class="dcf-in-label">Stage 2 Growth</span>
+                      <div class="dcf-in-wrap"><input class="dcf-in" id="dcf-g2" type="number" step="any" value="5" oninput="dcfMarkEdited('g2');dcfCompute()"><span class="dcf-in-suffix">%/yr</span></div>
+                    </div>
+                    <div class="dcf-in-field">
+                      <span class="dcf-in-label">Stage 2 Years</span>
+                      <div class="dcf-in-wrap"><input class="dcf-in" id="dcf-yr2" type="number" step="1" value="5" oninput="dcfMarkEdited('yr2');dcfCompute()"><span class="dcf-in-suffix">yrs</span></div>
+                    </div>
+                    <div class="dcf-in-field">
+                      <span class="dcf-in-label">Terminal Growth <span class="dcf-in-info" data-tip="Perpetual growth after forecast; keep ~2-3%, below WACC">i</span></span>
+                      <div class="dcf-in-wrap"><input class="dcf-in" id="dcf-tg" type="number" step="any" value="2.5" oninput="dcfMarkEdited('tg');dcfCompute()"><span class="dcf-in-suffix">%/yr</span></div>
+                    </div>
+
+                    <div class="dcf-section-divider">Discount &amp; Balance Sheet</div>
+                    <div class="dcf-in-field">
+                      <span class="dcf-in-label">Discount Rate (WACC) <span class="dcf-in-info" data-tip="Required return / risk; higher = lower value. ~8-10% typical">i</span><span class="dcf-src-tag dcf-src-derived" id="src-wacc">—</span></span>
+                      <div class="dcf-in-wrap"><input class="dcf-in" id="dcf-wacc" type="number" step="any" value="9" oninput="dcfMarkEdited('wacc');dcfCompute()"><span class="dcf-in-suffix">%</span></div>
+                    </div>
+                    <div class="dcf-in-field">
+                      <span class="dcf-in-label">Beta <span class="dcf-src-tag dcf-src-auto" id="src-beta">—</span></span>
+                      <div class="dcf-in-wrap"><input class="dcf-in" id="dcf-beta" type="number" step="any" oninput="dcfMarkEdited('beta');dcfDeriveWacc();dcfCompute()"></div>
+                    </div>
+                    <div class="dcf-in-field">
+                      <span class="dcf-in-label">Total Debt <span class="dcf-src-tag dcf-src-auto" id="src-debt">—</span></span>
+                      <div class="dcf-in-wrap"><input class="dcf-in" id="dcf-debt" type="number" step="any" value="0" oninput="dcfMarkEdited('debt');dcfCompute()"><span class="dcf-in-suffix">$M</span></div>
+                    </div>
+                    <div class="dcf-in-field">
+                      <span class="dcf-in-label">Cash &amp; Equiv. <span class="dcf-src-tag dcf-src-auto" id="src-cashbs">—</span></span>
+                      <div class="dcf-in-wrap"><input class="dcf-in" id="dcf-cashbs" type="number" step="any" value="0" oninput="dcfMarkEdited('cashbs');dcfCompute()"><span class="dcf-in-suffix">$M</span></div>
+                    </div>
+                    <div class="dcf-in-field">
+                      <span class="dcf-in-label">Current Price <span class="dcf-src-tag dcf-src-auto" id="src-price">—</span></span>
+                      <div class="dcf-in-wrap"><input class="dcf-in" id="dcf-price" type="number" step="any" oninput="dcfMarkEdited('price');dcfCompute()"><span class="dcf-in-suffix">$</span></div>
+                    </div>
+                  </div>
+                  <div style="margin-top:12px">
+                    <div class="dcf-in-label" style="margin-bottom:2px">Historical FCF (last reported → oldest)</div>
+                    <div class="dcf-fcf-spark" id="dcfFcfSpark"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RESULTS -->
+              <div>
+                <div class="dcf-result-hero">
+                  <div class="dcf-fair-label">Intrinsic Value / Share</div>
+                  <div class="dcf-fair-val" id="dcfFairVal">$—</div>
+                  <div class="dcf-verdict" id="dcfVerdict" style="background:var(--bg4);color:var(--text2)">Enter inputs</div>
+                  <div class="dcf-vs-row">
+                    <div class="dcf-vs-cell"><div class="v" id="dcfVsPrice">$—</div><div class="l">Market Price</div></div>
+                    <div class="dcf-vs-cell"><div class="v" id="dcfVsMos">—</div><div class="l">Upside / (Down)</div></div>
+                    <div class="dcf-vs-cell"><div class="v" id="dcfVsEv">$—</div><div class="l">Enterprise Val</div></div>
+                  </div>
+                  <div class="dcf-mos-bar"><div class="dcf-mos-fill" id="dcfMosFill" style="width:0%"></div></div>
+                </div>
+
+                <div class="card" style="box-shadow:none;border-color:var(--border2);margin-bottom:14px">
+                  <div class="card-header" style="padding:12px 16px 10px">
+                    <span class="card-title">↺ Reverse DCF — what is the price implying?</span>
+                    <button class="btn btn-secondary" onclick="dcfReverse()" style="font-size:11px;padding:4px 12px">Solve</button>
+                  </div>
+                  <div class="card-body" style="padding:12px 16px">
+                    <div style="font-size:11.5px;color:var(--text2);line-height:1.5;margin-bottom:10px">
+                      Holds today's price as fair value and solves for the Stage-1 FCF growth the market is baking in — using your current WACC, terminal growth, Stage-1 years, debt, cash and shares. Compare it to the growth a company can realistically deliver.
+                      <a onclick="this.parentNode.querySelector('.rev-more').style.display=this.parentNode.querySelector('.rev-more').style.display==='block'?'none':'block'" style="color:var(--blue);cursor:pointer;font-weight:600;white-space:nowrap"> How to read it ▾</a>
+                      <span class="rev-more" style="display:none;margin-top:8px">
+                        <strong>The idea:</strong> a normal DCF asks "given growth X, what's it worth?" Reverse DCF flips it: "at today's price, what growth must be true?" That turns a fuzzy valuation into a single yes/no question you can judge — <em>can this company actually grow that fast?</em><br>
+                        <strong>Reading it:</strong> if the implied rate is <em>below</em> what the business has historically delivered, the market may be too pessimistic (potential upside). If it's <em>above</em> what's realistic, the price needs heroics to justify. Roughly: <code>&lt;5%</code> = low bar, <code>5–15%</code> = reasonable, <code>15–25%</code> = demanding, <code>&gt;25%</code> = very aggressive. The colored note below updates automatically.
+                      </span>
+                    </div>
+                    <div id="dcfRevResult" style="display:none">
+                      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+                        <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Implied Stage-1 Growth</span>
+                        <span id="dcfRevGrowth" style="font-family:'DM Mono',monospace;font-size:24px;font-weight:700;color:var(--blue)">—</span>
+                        <span id="dcfRevYears" style="font-size:11.5px;color:var(--text3)"></span>
+                      </div>
+                      <div id="dcfRevVerdict" style="font-size:12px;margin-top:8px;line-height:1.5"></div>
+                    </div>
+                    <div id="dcfRevHint" style="font-size:11.5px;color:var(--text3)">Fetch a stock and set a current price, then hit Solve.</div>
+                  </div>
+                </div>
+
+                <div class="card" style="box-shadow:none;border-color:var(--border2)">
+                  <div class="card-header" style="padding:12px 16px 10px"><span class="card-title">Sensitivity — WACC × Terminal Growth</span></div>
+                  <div class="card-body" style="padding:12px 14px;overflow-x:auto">
+                    <table class="dcf-sens-table" id="dcfSensTable"><tbody><tr><td style="color:var(--text3)">Fetch a stock to build the matrix</td></tr></tbody></table>
+                  </div>
+                </div>
+
+                <div class="dcf-disclaimer" id="dcfDisclaimer">
+                  A DCF is only as good as its assumptions — small changes in growth or discount rate move fair value a lot (see the matrix). Treat this as one input, not a verdict. Figures may be delayed or incomplete for non-US tickers; verify anything that looks off. Not investment advice.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1788,6 +2205,17 @@ async function fetchFromGoogleSheet() {
     localStorage.setItem('pfFX', JSON.stringify({ FX, fxLive }));
     dataHealth.sheetOk=true; dataHealth.sheetError=null;
     dataHealth.posCount=liveData.length; dataHealth.lastFetch=new Date();
+    // ── data-quality checks for the health panel ──
+    dataHealth.zeroValue = liveData
+      .filter(p => p.type!=='Cash' && p.type!=='People')
+      .filter(p => {
+        const v = (p.currentValueUSD!=null && p.currentValueUSD>0) ? p.currentValueUSD : (p.currentPrice*p.shares);
+        return !(v>0);
+      })
+      .map(p => p.ticker);
+    const seen = {}; const dups = [];
+    liveData.forEach(p => { const k=(p.ticker||'').toUpperCase(); if(seen[k]) { if(!dups.includes(p.ticker)) dups.push(p.ticker); } seen[k]=true; });
+    dataHealth.duplicates = dups;
     console.log('[Sheet]', liveData.length, 'positions loaded');
     return true;
   } catch(e) {
@@ -2035,11 +2463,28 @@ function renderHoldingsTable(){
     if(q&&!d.ticker.toLowerCase().includes(q)&&!d.company.toLowerCase().includes(q))return false;
     return true;
   }).sort((a,b)=>{
+    if(sortKey==='dayChangePct'){
+      const av=dayChangeCache[(a.sheetTicker||a.ticker||'').toUpperCase()],
+            bv=dayChangeCache[(b.sheetTicker||b.ticker||'').toUpperCase()];
+      // push missing (undefined) values to the bottom regardless of direction
+      const an=(av===undefined||av===null)?null:av, bn=(bv===undefined||bv===null)?null:bv;
+      if(an===null&&bn===null)return 0;
+      if(an===null)return 1; if(bn===null)return -1;
+      return sortDir*(an-bn);
+    }
     const av=a[sortKey],bv=b[sortKey];
     return typeof av==='string'?sortDir*av.localeCompare(bv):sortDir*(av-bv);
   });
   const pd=p=>`<span class="pf-dot" style="background:${p==='Growth'?'#1a3fa6':'#0d7a55'}"></span>${p}`;
   const gb=(v,p)=>`<span class="cbadge ${pc(v)}">${v>=0?'▲':'▼'}${Math.abs(p).toFixed(1)}%</span>`;
+  // Day-change cell from session cache (populated by fetchDayChange)
+  const dayCell=d=>{
+    if(d.type==='Cash'||d.type==='People') return '<span style="color:var(--text3)">—</span>';
+    const v=dayChangeCache[(d.sheetTicker||d.ticker||'').toUpperCase()];
+    if(v===undefined||v===null) return '<span style="color:var(--text3)">—</span>';
+    const cls=v>0?'pos':v<0?'neg':'neu';
+    return `<span class="cbadge ${cls}">${v>=0?'▲':'▼'}${Math.abs(v).toFixed(2)}%</span>`;
+  };
   document.getElementById('holdingsTbody').innerHTML=rows.map(d=>`
     <tr>
       <td style="font-weight:700;font-family:'DM Mono',monospace;font-size:12px">${d.ticker}</td>
@@ -2051,9 +2496,63 @@ function renderHoldingsTable(){
       <td style="text-align:right;font-weight:700;font-family:'DM Mono',monospace">${fmtUSD(d.currentValue)}</td>
       <td style="text-align:right;font-family:'DM Mono',monospace" class="${pc(d.gainLoss)}">${d.gainLoss>=0?'+':''}${fmtUSD(d.gainLoss)}</td>
       <td style="text-align:right">${gb(d.gainLoss,d.gainLossPct)}</td>
+      <td style="text-align:right">${dayCell(d)}</td>
       <td style="text-align:right;color:var(--text2);font-family:'DM Mono',monospace">${d.allocationPct.toFixed(1)}%</td>
     </tr>`).join('');
   document.getElementById('holdingsSubtitle').textContent=`${rows.length} positions${activePF!=='All'?' in '+activePF+' Portfolio':''}`;
+}
+
+// ── DAY CHANGE % (FMP /quote, batched, manual, session-cached) ──
+let dayChangeCache = {};       // ticker(UPPER) -> percent (number) | null(no data)
+let dayChangeFetchedAt = null;
+async function fetchDayChange(){
+  const key = getFmpKey();
+  if(!key){
+    if(typeof dcfSetStatus==='function'){}
+    alert('Day change uses your free Financial Modeling Prep key.\nAdd it via Valuation → DCF → "FMP Key", then try again.');
+    return;
+  }
+  // Unique FMP symbols for stock/ETF holdings (skip cash/people/crypto — /quote is equities)
+  const syms = [...new Set(liveData
+    .filter(p=>p.type==='Stock'||p.type==='ETF')
+    .map(p=>(p.sheetTicker||p.ticker||'').toUpperCase())
+    .filter(Boolean))];
+  if(!syms.length){ return; }
+
+  const btn=document.getElementById('dayChangeBtn'), icon=document.getElementById('dayChangeIcon'),
+        stamp=document.getElementById('dayChangeStamp');
+  btn.disabled=true; icon.textContent='⟳'; icon.className='spin'; stamp.textContent='fetching…';
+
+  try{
+    // Batch in chunks of 40 symbols/call (URL length safety) → typically 1-2 calls
+    const groups = chunk(syms, 40);
+    let any=false;
+    for(const g of groups){
+      const url = `https://financialmodelingprep.com/api/v3/quote/${encodeURIComponent(g.join(','))}?apikey=${key}`;
+      const res = await dcfFetchJson(url).catch(()=>null);
+      if(Array.isArray(res)){
+        res.forEach(q=>{
+          if(q && q.symbol && q.changesPercentage!=null){
+            dayChangeCache[q.symbol.toUpperCase()] = +parseFloat(q.changesPercentage);
+            any=true;
+          }
+        });
+      }
+    }
+    // Mark requested-but-missing symbols as null (so they show "—" not stale)
+    syms.forEach(s=>{ if(dayChangeCache[s]===undefined) dayChangeCache[s]=null; });
+
+    dayChangeFetchedAt = new Date();
+    const got = syms.filter(s=>dayChangeCache[s]!=null).length;
+    stamp.textContent = any
+      ? `${got}/${syms.length} @ ${dayChangeFetchedAt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
+      : 'no data returned';
+    renderHoldingsTable();
+  }catch(e){
+    stamp.textContent = 'fetch failed';
+  }finally{
+    btn.disabled=false; icon.textContent='↻'; icon.className='';
+  }
 }
 
 // ── PERFORMANCE ────────────────────────────────────────────────
@@ -2274,6 +2773,102 @@ function renderRisk(){
   });
 }
 
+// ── CORRELATION MATRIX (FMP daily history, button, cached) ───────
+let corrPriceCache = {};   // ticker(UPPER) -> [closes newest..oldest]
+let corrRunning = false;
+async function buildCorrelation(){
+  if(corrRunning) return;
+  const key=getFmpKey();
+  if(!key){ alert('Correlation uses your free Financial Modeling Prep key.\nAdd it via Valuation → DCF → "FMP Key", then try again.'); return; }
+  const d=getFilteredData().filter(p=>p.type==='Stock'||p.type==='ETF');
+  // unique by FMP symbol, keep a display label
+  const map=new Map();
+  d.forEach(p=>{ const s=(p.sheetTicker||p.ticker||'').toUpperCase(); if(s&&!map.has(s)) map.set(s,p.ticker); });
+  const syms=[...map.keys()];
+  if(syms.length<2){ document.getElementById('corrMatrixWrap').innerHTML='<span style="font-size:12px;color:var(--text3)">Need at least 2 stock/ETF holdings.</span>'; return; }
+  if(!confirm(`Build correlation matrix for ${syms.length} holdings?\n\nFetches ~1 year of daily prices each (~${syms.length} of your 250 free daily lookups). Cached for this session.`)) return;
+
+  corrRunning=true;
+  const btn=document.getElementById('corrBtn'), icon=document.getElementById('corrIcon'),
+        stamp=document.getElementById('corrStamp'), wrap=document.getElementById('corrMatrixWrap');
+  btn.disabled=true; icon.textContent='⟳'; icon.className='spin';
+  wrap.innerHTML='<span style="font-size:12px;color:var(--text3)">Fetching price history…</span>';
+
+  const from=new Date(Date.now()-370*864e5).toISOString().slice(0,10);
+  let done=0;
+  for(const s of syms){
+    if(!corrPriceCache[s]){
+      try{
+        const url=`https://financialmodelingprep.com/api/v3/historical-price-full/${encodeURIComponent(s)}?from=${from}&apikey=${key}`;
+        const res=await dcfFetchJson(url);
+        const hist=(res&&res.historical)||[];
+        corrPriceCache[s]= hist.map(r=>r.close).filter(Number.isFinite); // newest→oldest
+      }catch(e){ corrPriceCache[s]=[]; }
+    }
+    done++;
+    stamp.textContent=`${done}/${syms.length}`;
+    if(done%5===0) await new Promise(r=>setTimeout(r,250));
+  }
+
+  // Keep only symbols with enough data
+  const usable=syms.filter(s=>(corrPriceCache[s]||[]).length>=30);
+  const dropped=syms.filter(s=>!usable.includes(s));
+  if(usable.length<2){
+    wrap.innerHTML='<span style="font-size:12px;color:var(--red)">Not enough price history returned (free tier often lacks daily history for non-US tickers).</span>';
+    btn.disabled=false; icon.textContent='▦'; icon.className=''; corrRunning=false; stamp.textContent=''; return;
+  }
+
+  // Daily returns, aligned to the shortest series length
+  const minLen=Math.min(...usable.map(s=>corrPriceCache[s].length));
+  const returns={};
+  usable.forEach(s=>{
+    const px=corrPriceCache[s].slice(0,minLen); // newest→oldest
+    const r=[];
+    for(let i=0;i<px.length-1;i++){ const a=px[i],b=px[i+1]; if(b>0) r.push(a/b-1); }
+    returns[s]=r;
+  });
+
+  const corr=(a,b)=>{
+    const n=Math.min(a.length,b.length);
+    if(n<5) return NaN;
+    let sa=0,sb=0; for(let i=0;i<n;i++){sa+=a[i];sb+=b[i];}
+    const ma=sa/n, mb=sb/n;
+    let cov=0,va=0,vb=0;
+    for(let i=0;i<n;i++){ const da=a[i]-ma, db=b[i]-mb; cov+=da*db; va+=da*da; vb+=db*db; }
+    if(va<=0||vb<=0) return NaN;
+    return cov/Math.sqrt(va*vb);
+  };
+
+  const labelOf=s=>map.get(s)||s;
+  const cell=v=>{
+    if(!Number.isFinite(v)) return {bg:'var(--bg2)',txt:'—'};
+    // green (-1) → white (0) → red (+1)
+    let bg;
+    if(v>=0){ const t=v; bg=`rgba(214,60,45,${(0.12+0.45*t).toFixed(3)})`; }
+    else    { const t=-v; bg=`rgba(10,138,92,${(0.12+0.45*t).toFixed(3)})`; }
+    return {bg, txt:v.toFixed(2)};
+  };
+
+  let html='<table class="corr-table"><thead><tr><th class="corner"></th>';
+  usable.forEach(s=>html+=`<th class="colhead">${labelOf(s)}</th>`);
+  html+='</tr></thead><tbody>';
+  usable.forEach(si=>{
+    html+=`<tr><td class="rowhead">${labelOf(si)}</td>`;
+    usable.forEach(sj=>{
+      if(si===sj){ html+='<td class="corr-cell" style="background:var(--bg4)">1.00</td>'; return; }
+      const c=cell(corr(returns[si],returns[sj]));
+      html+=`<td class="corr-cell" style="background:${c.bg}">${c.txt}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  if(dropped.length) html+=`<div style="font-size:11px;color:var(--text3);margin-top:10px">No daily history for: ${dropped.map(labelOf).join(', ')} (excluded).</div>`;
+  html+=`<div style="font-size:11px;color:var(--text3);margin-top:4px">Based on ${minLen-1} aligned daily returns (~${Math.round((minLen-1)/21)} months). Built ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}.</div>`;
+  wrap.innerHTML=html;
+
+  btn.disabled=false; icon.textContent='▦'; icon.className=''; corrRunning=false;
+}
+
 // ── DIVIDENDS ────────────────────────────────────────────────
 const DIV_DATA={
   // ── Stocks paying dividends ──────────────────────────────────
@@ -2418,6 +3013,19 @@ function renderValuationTable(){
   document.getElementById('valTbody').innerHTML=d.map(p=>{
     const v=valuations[p.ticker]||{};
     const signal=getSignal(v.pe,v.pb,v.divYield,v.target,p.currentPrice);
+    const fv=fairValueCache[(p.sheetTicker||p.ticker||'').toUpperCase()];
+    let fvCell='<span style="color:var(--text3)">—</span>', upCell='<span style="color:var(--text3)">—</span>';
+    if(fv && fv.dcf>0){
+      fvCell=`<span style="font-family:'DM Mono',monospace">$${fv.dcf.toFixed(2)}</span>`;
+      const base = (fv.price>0?fv.price:p.currentPrice);
+      if(base>0){
+        const up=(fv.dcf/base-1)*100;
+        const cls=up>=15?'pos':up<=-15?'neg':'neu';
+        upCell=`<span class="cbadge ${cls}">${up>=0?'+':''}${up.toFixed(0)}%</span>`;
+      }
+    } else if(fv && fv.err){
+      fvCell=`<span style="color:var(--text3)" title="${fv.err}">n/a</span>`;
+    }
     return `<tr>
       <td style="font-weight:700;font-family:'DM Mono',monospace;font-size:12px">${p.ticker}</td>
       <td style="color:var(--text2);font-size:12px">${p.company}</td>
@@ -2426,10 +3034,577 @@ function renderValuationTable(){
       <td><input class="cell-input" type="number" value="${v.divYield||''}" placeholder="—" step="0.01" onchange="valuations['${p.ticker}']={...valuations['${p.ticker}']||{},divYield:parseFloat(this.value)||0}" style="width:70px;text-align:right"></td>
       <td><input class="cell-input" type="number" value="${v.payout||''}" placeholder="—" step="1" onchange="valuations['${p.ticker}']={...valuations['${p.ticker}']||{},payout:parseFloat(this.value)||0}" style="width:70px;text-align:right"></td>
       <td><input class="cell-input" type="number" value="${v.target||''}" placeholder="—" step="0.01" onchange="valuations['${p.ticker}']={...valuations['${p.ticker}']||{},target:parseFloat(this.value)||0}" style="width:80px;text-align:right"></td>
+      <td style="text-align:right">${fvCell}</td>
+      <td style="text-align:right">${upCell}</td>
       <td><span class="val-badge val-${signal}">${signal==='Under'?'↑ Undervalued':signal==='Over'?'↓ Overvalued':'→ Fair Value'}</span></td>
     </tr>`;
   }).join('');
+  populateDcfFromHoldings();
 }
+
+// ── Portfolio-wide fair value via FMP prebuilt DCF (button, cached) ──
+let fairValueCache = {};   // ticker(UPPER) -> {dcf, price} | {err}
+let fairValueRunning = false;
+async function buildFairValues(){
+  if(fairValueRunning) return;
+  const key=getFmpKey();
+  if(!key){ alert('Fair values use your free Financial Modeling Prep key.\nAdd it via the DCF card → "FMP Key", then try again.'); return; }
+  const d=getFilteredData().filter(p=>p.type==='Stock'||p.type==='ETF');
+  const syms=[...new Set(d.map(p=>(p.sheetTicker||p.ticker||'').toUpperCase()).filter(Boolean))];
+  if(!syms.length) return;
+  if(!confirm(`Fetch FMP's prebuilt DCF fair value for ${syms.length} holdings?\n\nThis uses ~${syms.length} of your 250 free daily lookups. Results are cached for this session.\n\nNote: these use FMP's own assumptions, not the ones in your calculator.`)) return;
+
+  fairValueRunning=true;
+  const btn=document.getElementById('fvBtn'), icon=document.getElementById('fvIcon');
+  btn.disabled=true; icon.textContent='⟳'; icon.className='spin';
+  let done=0;
+  for(const s of syms){
+    try{
+      const url=`https://financialmodelingprep.com/api/v3/discounted-cash-flow/${encodeURIComponent(s)}?apikey=${key}`;
+      const res=await dcfFetchJson(url);
+      const row=Array.isArray(res)?res[0]:res;
+      if(row && (row.dcf!=null)){
+        fairValueCache[s]={ dcf:+row.dcf, price:+(row['Stock Price']||row.price||0) };
+      } else {
+        fairValueCache[s]={ err:'no DCF returned (often non-US or insufficient data)' };
+      }
+    }catch(e){
+      fairValueCache[s]={ err:e.message };
+    }
+    done++;
+    icon.textContent='⟳';
+    // light throttle to be polite to the free tier
+    if(done%5===0) await new Promise(r=>setTimeout(r,250));
+    // progressively update the table so user sees it fill in
+    if(done%5===0) renderValuationTable();
+  }
+  renderValuationTable();
+  btn.disabled=false; icon.textContent='⚖︎'; icon.className='';
+  fairValueRunning=false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DCF CALCULATOR
+//  Data: Financial Modeling Prep (free tier, 250 req/day, user key)
+//  Endpoints (v3): profile, cash-flow-statement, balance-sheet-statement, search
+//  Design: auto-fetch what we can, every field stays manually editable.
+// ═══════════════════════════════════════════════════════════════
+
+const DCF_FIELDS = ['fcf','shares','g1','yr1','g2','yr2','tg','wacc','beta','debt','cashbs','price'];
+let dcfEdited = {};          // field -> true if user typed over it
+let dcfSuggestItems = [];    // current autocomplete list
+let dcfSuggestIdx = -1;
+let dcfLastFcfHist = [];     // newest→oldest, $ millions
+
+function getFmpKey(){ return localStorage.getItem('fmpKey') || ''; }
+
+function updateDcfKeyBadge(){
+  const el = document.getElementById('dcfKeyBadge'); if(!el) return;
+  const has = !!getFmpKey();
+  el.textContent = has ? 'KEY ✓' : 'NO KEY';
+  el.style.background = has ? 'var(--green-bg)' : 'var(--red-bg)';
+  el.style.color      = has ? 'var(--green)'   : 'var(--red)';
+}
+
+function showDcfKeyModal(){
+  const cur = getFmpKey();
+  const wrap = document.createElement('div');
+  wrap.className = 'modal-overlay';
+  wrap.id = 'dcfKeyOverlay';
+  wrap.onclick = e => { if(e.target===wrap) wrap.remove(); };
+  wrap.innerHTML = `
+    <div class="modal-box" style="max-width:460px">
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:6px">Financial Modeling Prep API Key</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px">
+        The DCF calculator pulls cash-flow, balance-sheet and price data from
+        <strong>Financial Modeling Prep</strong>. The free plan allows 250 requests/day —
+        plenty for personal use. Get a key (free, ~1 min):
+        <ol style="margin:10px 0 0 18px;padding:0;line-height:1.7">
+          <li>Go to <a href="https://site.financialmodelingprep.com/developer/docs" target="_blank" rel="noopener" style="color:var(--blue)">financialmodelingprep.com</a> → sign up</li>
+          <li>Open your Dashboard → copy the API key</li>
+          <li>Paste it below — it's saved only in this browser</li>
+        </ol>
+      </div>
+      <input id="dcfKeyInput" type="text" value="${cur.replace(/"/g,'&quot;')}" placeholder="Paste FMP API key"
+        style="width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:9px;font-size:13px;font-family:'DM Mono',monospace;outline:none;margin-bottom:14px">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        ${cur?`<button class="btn btn-danger" style="margin-right:auto;padding:8px 14px" onclick="localStorage.removeItem('fmpKey');updateDcfKeyBadge();document.getElementById('dcfKeyOverlay').remove()">Remove</button>`:''}
+        <button class="btn btn-secondary" onclick="document.getElementById('dcfKeyOverlay').remove()">Cancel</button>
+        <button class="btn btn-primary" onclick="dcfSaveKey()">Save Key</button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+  setTimeout(()=>document.getElementById('dcfKeyInput')?.focus(),50);
+}
+function dcfSaveKey(){
+  const v = document.getElementById('dcfKeyInput').value.trim();
+  if(v) localStorage.setItem('fmpKey', v); else localStorage.removeItem('fmpKey');
+  updateDcfKeyBadge();
+  document.getElementById('dcfKeyOverlay')?.remove();
+  dcfSetStatus('ok', 'API key saved. Pick a ticker and hit Fetch & Build.');
+}
+
+function dcfSetStatus(kind, msg){
+  const el = document.getElementById('dcfStatus');
+  const m  = document.getElementById('dcfStatusMsg');
+  if(!el) return;
+  if(!msg){ el.classList.remove('show'); return; }
+  el.className = 'dcf-status show ' + kind;
+  m.textContent = msg;
+}
+
+// ── Autocomplete: portfolio holdings first, then FMP search ──────
+function populateDcfFromHoldings(){ /* holdings used live in dcfOnTickerInput */ }
+
+function dcfHoldingMatches(q){
+  const seen = new Set(); const out = [];
+  liveData.forEach(p=>{
+    if(p.type==='Cash'||p.type==='People') return;
+    const t = (p.sheetTicker||p.ticker||'').toString();
+    const hay = (t+' '+(p.company||'')).toLowerCase();
+    if(!q || hay.includes(q.toLowerCase())){
+      const key = t.toUpperCase();
+      if(!seen.has(key)){ seen.add(key); out.push({symbol:t, name:p.company||'', held:true}); }
+    }
+  });
+  return out.slice(0,6);
+}
+
+let dcfSearchTimer = null;
+function dcfOnTickerInput(val){
+  const q = (val||'').trim();
+  const held = dcfHoldingMatches(q);
+  // Render holdings immediately
+  dcfRenderSuggest(held, q.length>=1 ? '…searching more' : null);
+  if(q.length < 1){ return; }
+  // Debounced FMP symbol search for non-held tickers
+  if(dcfSearchTimer) clearTimeout(dcfSearchTimer);
+  dcfSearchTimer = setTimeout(async ()=>{
+    const key = getFmpKey();
+    if(!key){ dcfRenderSuggest(held, null); return; }
+    try{
+      const url = `https://financialmodelingprep.com/api/v3/search?query=${encodeURIComponent(q)}&limit=8&apikey=${key}`;
+      const res = await dcfFetchJson(url);
+      const remote = Array.isArray(res) ? res
+        .filter(r=>r.symbol)
+        .map(r=>({symbol:r.symbol, name:r.name||'', exch:r.exchangeShortName||r.stockExchange||'', held:false})) : [];
+      // merge, holdings first, dedupe by symbol
+      const seen = new Set(held.map(h=>h.symbol.toUpperCase()));
+      const merged = [...held];
+      remote.forEach(r=>{ if(!seen.has(r.symbol.toUpperCase())){ seen.add(r.symbol.toUpperCase()); merged.push(r);} });
+      dcfRenderSuggest(merged.slice(0,10), null);
+    }catch(e){ dcfRenderSuggest(held, null); }
+  }, 320);
+}
+
+function dcfRenderSuggest(items, footnote){
+  dcfSuggestItems = items; dcfSuggestIdx = -1;
+  const box = document.getElementById('dcfSuggest');
+  if(!box) return;
+  if(!items.length){ box.classList.remove('open'); box.innerHTML=''; return; }
+  let html = '';
+  const heldItems = items.filter(i=>i.held), other = items.filter(i=>!i.held);
+  if(heldItems.length){
+    html += `<div class="dcf-suggest-grp">In your portfolio</div>`;
+    heldItems.forEach((it)=>{ html += dcfSuggestRow(it); });
+  }
+  if(other.length){
+    html += `<div class="dcf-suggest-grp">Search results</div>`;
+    other.forEach((it)=>{ html += dcfSuggestRow(it); });
+  }
+  box.innerHTML = html;
+  box.classList.add('open');
+  // attach indices in DOM order matching dcfSuggestItems order
+  const ordered = [...heldItems, ...other];
+  dcfSuggestItems = ordered;
+  [...box.querySelectorAll('.dcf-suggest-item')].forEach((el,i)=>{
+    el.onclick = ()=>dcfPickSuggest(i);
+  });
+}
+function dcfSuggestRow(it){
+  const ex = it.exch ? ` · ${it.exch}` : '';
+  return `<div class="dcf-suggest-item">
+    <span class="dcf-suggest-tkr">${it.symbol}</span>
+    <span class="dcf-suggest-name">${(it.name||'').replace(/</g,'&lt;')}${ex}</span></div>`;
+}
+function dcfPickSuggest(i){
+  const it = dcfSuggestItems[i]; if(!it) return;
+  document.getElementById('dcfTicker').value = it.symbol;
+  dcfCloseSuggest();
+  dcfFetch();
+}
+function dcfCloseSuggest(){ document.getElementById('dcfSuggest')?.classList.remove('open'); }
+function dcfSuggestKey(e){
+  const box = document.getElementById('dcfSuggest');
+  if(e.key==='Enter'){
+    if(box.classList.contains('open') && dcfSuggestIdx>=0){ e.preventDefault(); dcfPickSuggest(dcfSuggestIdx); }
+    else { e.preventDefault(); dcfCloseSuggest(); dcfFetch(); }
+    return;
+  }
+  if(!box.classList.contains('open')) return;
+  const rows = [...box.querySelectorAll('.dcf-suggest-item')];
+  if(e.key==='ArrowDown'){ e.preventDefault(); dcfSuggestIdx=Math.min(dcfSuggestIdx+1,rows.length-1); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); dcfSuggestIdx=Math.max(dcfSuggestIdx-1,0); }
+  else if(e.key==='Escape'){ dcfCloseSuggest(); return; }
+  else return;
+  rows.forEach((r,i)=>r.classList.toggle('kbd', i===dcfSuggestIdx));
+  rows[dcfSuggestIdx]?.scrollIntoView({block:'nearest'});
+}
+
+// ── Fetch helper with CORS-proxy fallback ───────────────────────
+async function dcfFetchJson(url){
+  // Try direct first (FMP usually allows CORS); fall back to public proxies.
+  const attempts = [
+    url,
+    'https://corsproxy.io/?url=' + encodeURIComponent(url),
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+  ];
+  let lastErr;
+  for(const u of attempts){
+    try{
+      const res = await fetch(u, {headers:{'Accept':'application/json'}});
+      if(!res.ok){ lastErr = new Error('HTTP '+res.status); 
+        if(res.status===401||res.status===403) throw new Error('Invalid or missing API key (HTTP '+res.status+')');
+        continue; }
+      const txt = await res.text();
+      const data = JSON.parse(txt);
+      if(data && data['Error Message']) throw new Error(data['Error Message']);
+      return data;
+    }catch(e){ lastErr = e; if(/API key/i.test(e.message)) throw e; }
+  }
+  throw lastErr || new Error('Network error');
+}
+
+// ── Main fetch + build ──────────────────────────────────────────
+async function dcfFetch(){
+  const raw = (document.getElementById('dcfTicker').value||'').trim().toUpperCase();
+  if(!raw){ dcfSetStatus('warn','Type or pick a ticker first.'); return; }
+  const key = getFmpKey();
+  if(!key){ dcfSetStatus('warn','Add a free FMP API key first (FMP Key button).'); showDcfKeyModal(); return; }
+
+  // Map portfolio internal tickers to the symbol FMP expects where we know it.
+  const held = liveData.find(p=>(p.ticker||'').toUpperCase()===raw || (p.sheetTicker||'').toUpperCase()===raw);
+  const symbol = (held && held.sheetTicker) ? held.sheetTicker : raw;
+
+  const btn = document.getElementById('dcfFetchBtn');
+  const icon = document.getElementById('dcfFetchIcon');
+  btn.classList.add('btn'); btn.disabled = true; icon.textContent='⟳'; icon.className='spin';
+  dcfSetStatus('info', `Fetching fundamentals for ${symbol}…`);
+  document.getElementById('dcfInputsTitle').textContent = `Model Inputs — ${symbol}`;
+
+  try{
+    const base = 'https://financialmodelingprep.com/api/v3';
+    const [profileArr, cfArr, bsArr] = await Promise.all([
+      dcfFetchJson(`${base}/profile/${encodeURIComponent(symbol)}?apikey=${key}`).catch(()=>null),
+      dcfFetchJson(`${base}/cash-flow-statement/${encodeURIComponent(symbol)}?limit=6&apikey=${key}`).catch(()=>null),
+      dcfFetchJson(`${base}/balance-sheet-statement/${encodeURIComponent(symbol)}?limit=1&apikey=${key}`).catch(()=>null),
+    ]);
+
+    const profile = Array.isArray(profileArr)&&profileArr[0] ? profileArr[0] : null;
+    const cf = Array.isArray(cfArr) ? cfArr : [];
+    const bs = Array.isArray(bsArr)&&bsArr[0] ? bsArr[0] : null;
+
+    if(!profile && !cf.length && !bs){
+      dcfSetStatus('err', `No data returned for "${symbol}". Check the ticker (try the exchange-suffixed form, e.g. VOW3.DE) or enter values manually below.`);
+      return;
+    }
+
+    const M = 1e6;
+    let got = [], miss = [];
+
+    // FCF history (newest first). FMP gives freeCashFlow directly.
+    dcfLastFcfHist = cf.map(r=>{
+      const v = (r.freeCashFlow!=null) ? r.freeCashFlow
+              : ((r.operatingCashFlow||0) + (r.capitalExpenditure||0)); // capex is negative
+      return v/M;
+    }).filter(v=>Number.isFinite(v));
+
+    if(dcfLastFcfHist.length){
+      dcfSetAuto('fcf', +dcfLastFcfHist[0].toFixed(1)); got.push('FCF');
+      // derive a sensible stage-1 growth from FCF CAGR (clamped)
+      const g = dcfImpliedFcfCagr(dcfLastFcfHist);
+      if(g!=null){ dcfSetDerived('g1', +g.toFixed(1)); }
+      else { dcfSetDerived('g1', 8); }
+      document.getElementById('dcfFcfSrc').textContent = `${dcfLastFcfHist.length}y FCF history`;
+    } else { miss.push('FCF'); dcfSetDerived('g1', 8); }
+
+    if(profile){
+      if(profile.price!=null){ dcfSetAuto('price', +profile.price); got.push('price'); } else miss.push('price');
+      // shares outstanding: profile.mktCap / price, or use volAvg fallback not reliable → use mktCap/price
+      if(profile.mktCap && profile.price){ dcfSetAuto('shares', +(profile.mktCap/profile.price/M).toFixed(2)); got.push('shares'); }
+      else miss.push('shares');
+      if(profile.beta!=null && profile.beta!==0){ dcfSetAuto('beta', +profile.beta); got.push('beta'); }
+      else dcfSetAuto('beta', 1.0);
+      if(profile.companyName){ document.getElementById('dcfInputsTitle').textContent = `Model Inputs — ${symbol} · ${profile.companyName}`; }
+    } else { miss.push('price','shares'); }
+
+    if(bs){
+      const debt = (bs.totalDebt!=null) ? bs.totalDebt : ((bs.shortTermDebt||0)+(bs.longTermDebt||0));
+      dcfSetAuto('debt', +(debt/M).toFixed(1)); got.push('debt');
+      const cash = (bs.cashAndCashEquivalents!=null) ? bs.cashAndCashEquivalents
+                 : (bs.cashAndShortTermInvestments||0);
+      dcfSetAuto('cashbs', +(cash/M).toFixed(1)); got.push('cash');
+    } else { miss.push('debt/cash'); }
+
+    dcfDeriveWacc();
+    dcfRenderSpark();
+    dcfCompute();
+
+    let msg = `✓ ${symbol}: pulled ${got.join(', ')||'nothing'}.`;
+    if(miss.length) msg += ` Couldn't get ${miss.join(', ')} — fill those manually (amber).`;
+    dcfSetStatus(miss.length?'warn':'ok', msg);
+  }catch(e){
+    dcfSetStatus('err', 'Fetch failed: ' + e.message + '. You can still enter all values manually below.');
+  }finally{
+    btn.disabled = false; icon.textContent='⤓'; icon.className='';
+  }
+}
+
+// implied FCF CAGR from history (newest→oldest), clamp to [-5,25]
+function dcfImpliedFcfCagr(hist){
+  const pts = hist.filter(v=>v>0);
+  if(pts.length<2) return null;
+  const newest = hist[0], oldest = hist[hist.length-1];
+  if(newest<=0 || oldest<=0) return null;
+  const yrs = hist.length-1;
+  let cagr = (Math.pow(newest/oldest, 1/yrs) - 1) * 100;
+  if(!Number.isFinite(cagr)) return null;
+  return Math.max(-5, Math.min(25, cagr));
+}
+
+// CAPM-ish WACC derivation from beta (rf 4.3%, erp 5%), only if user hasn't edited WACC
+function dcfDeriveWacc(){
+  if(dcfEdited.wacc) return;
+  const beta = parseFloat(document.getElementById('dcf-beta').value)||1;
+  const rf = 4.3, erp = 5.0;
+  let wacc = rf + beta*erp;
+  wacc = Math.max(6, Math.min(15, wacc));
+  dcfSetDerived('wacc', +wacc.toFixed(1));
+}
+
+// ── field setters with source tagging ───────────────────────────
+function dcfSetAuto(f, val){
+  const el = document.getElementById('dcf-'+f); if(!el) return;
+  el.value = val; dcfEdited[f]=false;
+  el.classList.remove('edited'); el.classList.add('autofilled');
+  dcfTag(f,'auto');
+}
+function dcfSetDerived(f, val){
+  const el = document.getElementById('dcf-'+f); if(!el) return;
+  el.value = val; dcfEdited[f]=false;
+  el.classList.remove('edited'); el.classList.add('autofilled');
+  dcfTag(f,'derived');
+}
+function dcfMarkEdited(f){
+  dcfEdited[f]=true;
+  const el = document.getElementById('dcf-'+f);
+  if(el){ el.classList.remove('autofilled'); el.classList.add('edited'); }
+  dcfTag(f,'manual');
+}
+function dcfTag(f, kind){
+  const t = document.getElementById('src-'+f); if(!t) return;
+  const map = {auto:['AUTO','dcf-src-auto'], manual:['EDIT','dcf-src-manual'], derived:['CALC','dcf-src-derived']};
+  const [txt,cls] = map[kind]||['',''];
+  t.textContent = txt; t.className = 'dcf-src-tag '+cls;
+}
+
+function dcfRenderSpark(){
+  const wrap = document.getElementById('dcfFcfSpark'); if(!wrap) return;
+  if(!dcfLastFcfHist.length){ wrap.innerHTML=''; return; }
+  const vals = [...dcfLastFcfHist].reverse(); // oldest→newest for left-to-right
+  const max = Math.max(...vals.map(v=>Math.abs(v)),1);
+  wrap.innerHTML = vals.map(v=>{
+    const h = Math.max(2, Math.abs(v)/max*38);
+    const col = v<0 ? 'var(--red)' : 'var(--blue-mid)';
+    return `<div class="dcf-fcf-bar" style="height:${h}px;background:${col}" title="${fmtUSD(v*1e6)}"></div>`;
+  }).join('');
+}
+
+// ── The DCF math (two-stage + Gordon terminal) ──────────────────
+function dcfNum(f){ return parseFloat(document.getElementById('dcf-'+f).value); }
+
+function dcfModel(fcf, g1, yr1, g2, yr2, tg, wacc, shares, debt, cash){
+  const r = wacc/100, tgr = tg/100;
+  if(r<=tgr || r<=0 || !Number.isFinite(fcf) || shares<=0) return null;
+  let pv = 0, cf = fcf;
+  // Stage 1
+  for(let y=1; y<=yr1; y++){ cf = cf*(1+g1/100); pv += cf/Math.pow(1+r, y); }
+  // Stage 2
+  for(let y=1; y<=yr2; y++){ cf = cf*(1+g2/100); pv += cf/Math.pow(1+r, yr1+y); }
+  // Terminal value (Gordon) on last explicit cash flow
+  const tv = cf*(1+tgr)/(r-tgr);
+  pv += tv/Math.pow(1+r, yr1+yr2);
+  const enterprise = pv;                 // $M
+  const equity = enterprise - debt + cash; // $M
+  const perShare = (equity*1e6)/(shares*1e6); // = equity/shares in $
+  return {enterprise, equity, perShare};
+}
+
+function dcfCompute(){
+  const fcf=dcfNum('fcf'), g1=dcfNum('g1'), yr1=Math.round(dcfNum('yr1')),
+        g2=dcfNum('g2'), yr2=Math.round(dcfNum('yr2')), tg=dcfNum('tg'),
+        wacc=dcfNum('wacc'), shares=dcfNum('shares'),
+        debt=dcfNum('debt')||0, cash=dcfNum('cashbs')||0, price=dcfNum('price');
+
+  const fairEl=document.getElementById('dcfFairVal'),
+        verdEl=document.getElementById('dcfVerdict'),
+        vpEl=document.getElementById('dcfVsPrice'),
+        mosEl=document.getElementById('dcfVsMos'),
+        evEl=document.getElementById('dcfVsEv'),
+        fillEl=document.getElementById('dcfMosFill');
+
+  const missing = [fcf,g1,yr1,g2,yr2,tg,wacc,shares].some(v=>!Number.isFinite(v));
+  if(missing){
+    fairEl.textContent='$—'; verdEl.textContent='Enter inputs';
+    verdEl.style.background='var(--bg4)'; verdEl.style.color='var(--text2)';
+    vpEl.textContent = Number.isFinite(price)?('$'+price.toFixed(2)):'$—';
+    mosEl.textContent='—'; evEl.textContent='$—'; fillEl.style.width='0%';
+    document.getElementById('dcfSensTable').innerHTML='<tbody><tr><td style="color:var(--text3)">Complete the inputs to build the matrix</td></tr></tbody>';
+    return;
+  }
+
+  const m = dcfModel(fcf,g1,yr1,g2,yr2,tg,wacc,shares,debt,cash);
+  if(!m){
+    fairEl.textContent='⚠'; verdEl.textContent='WACC must exceed terminal growth';
+    verdEl.style.background='var(--red-bg)'; verdEl.style.color='var(--red)';
+    fillEl.style.width='0%'; return;
+  }
+
+  fairEl.textContent = '$'+m.perShare.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  evEl.textContent = fmtUSD(m.enterprise*1e6);
+
+  if(Number.isFinite(price) && price>0){
+    const upside = (m.perShare/price - 1)*100;
+    vpEl.textContent = '$'+price.toFixed(2);
+    mosEl.textContent = (upside>0?'+':'')+upside.toFixed(1)+'%';
+    mosEl.className = 'v '+(upside>0?'pos':upside<0?'neg':'neu');
+    let label, bg, fg, fillCol, w;
+    if(upside >= 20){ label='⬆ Undervalued'; bg='var(--green-bg)'; fg='var(--green)'; fillCol='var(--green)'; }
+    else if(upside <= -20){ label='⬇ Overvalued'; bg='var(--red-bg)'; fg='var(--red)'; fillCol='var(--red)'; }
+    else { label='→ Roughly Fair'; bg='var(--blue-bg)'; fg='var(--blue)'; fillCol='var(--blue-mid)'; }
+    verdEl.textContent=label; verdEl.style.background=bg; verdEl.style.color=fg;
+    // fill bar: map upside [-50,+50] → [0,100]
+    w = Math.max(0, Math.min(100, (upside+50)));
+    fillEl.style.width=w+'%'; fillEl.style.background=fillCol;
+  } else {
+    vpEl.textContent='$—'; mosEl.textContent='set price'; mosEl.className='v neu';
+    verdEl.textContent='Add current price to compare'; verdEl.style.background='var(--bg4)'; verdEl.style.color='var(--text2)';
+    fillEl.style.width='0%';
+  }
+
+  dcfRenderSensitivity(fcf,g1,yr1,g2,yr2,tg,wacc,shares,debt,cash,price);
+}
+
+// ── Sensitivity matrix: WACC (rows) × terminal growth (cols) ─────
+function dcfRenderSensitivity(fcf,g1,yr1,g2,yr2,tg,wacc,shares,debt,cash,price){
+  const waccs = [-1.5,-0.75,0,0.75,1.5].map(d=>+(wacc+d).toFixed(2));
+  const tgs   = [-1,-0.5,0,0.5,1].map(d=>+(tg+d).toFixed(2));
+  let vals=[];
+  waccs.forEach(w=>tgs.forEach(t=>{ const m=dcfModel(fcf,g1,yr1,g2,yr2,t,w,shares,debt,cash); if(m)vals.push(m.perShare); }));
+  const lo=Math.min(...vals), hi=Math.max(...vals);
+  const colour = v=>{
+    if(!Number.isFinite(price)||price<=0) return 'var(--bg2)';
+    const up=(v/price-1)*100;
+    if(up>=20) return 'rgba(10,138,92,0.16)';
+    if(up<=-20) return 'rgba(214,60,45,0.14)';
+    return 'rgba(30,69,184,0.07)';
+  };
+  let html = '<thead><tr><th class="axis">WACC ↓ / g →</th>';
+  tgs.forEach(t=>html+=`<th>${t.toFixed(2)}%</th>`); html+='</tr></thead><tbody>';
+  waccs.forEach(w=>{
+    html+=`<tr><td class="axis">${w.toFixed(2)}%</td>`;
+    tgs.forEach(t=>{
+      const m=dcfModel(fcf,g1,yr1,g2,yr2,t,w,shares,debt,cash);
+      if(!m){ html+='<td>—</td>'; return; }
+      const isBase = Math.abs(w-wacc)<0.001 && Math.abs(t-tg)<0.001;
+      html+=`<td class="dcf-sens-cell" style="background:${colour(m.perShare)};${isBase?'outline:2px solid var(--blue);outline-offset:-2px;font-weight:800':''}">$${m.perShare.toFixed(0)}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody>';
+  document.getElementById('dcfSensTable').innerHTML=html;
+}
+
+// ── Reverse DCF: solve Stage-1 growth so model price == market price ──
+function dcfReverse(){
+  const fcf=dcfNum('fcf'), yr1=Math.round(dcfNum('yr1')),
+        g2=dcfNum('g2'), yr2=Math.round(dcfNum('yr2')), tg=dcfNum('tg'),
+        wacc=dcfNum('wacc'), shares=dcfNum('shares'),
+        debt=dcfNum('debt')||0, cash=dcfNum('cashbs')||0, price=dcfNum('price');
+  const hint=document.getElementById('dcfRevHint'),
+        res=document.getElementById('dcfRevResult'),
+        gEl=document.getElementById('dcfRevGrowth'),
+        yEl=document.getElementById('dcfRevYears'),
+        vEl=document.getElementById('dcfRevVerdict');
+
+  const ok=[fcf,yr1,g2,yr2,tg,wacc,shares,price].every(Number.isFinite);
+  if(!ok || price<=0 || shares<=0 || fcf<=0){
+    res.style.display='none';
+    hint.style.display='block';
+    hint.textContent = (Number.isFinite(price)&&price>0)
+      ? 'Need positive base FCF, shares and the core assumptions filled in.'
+      : 'Set a current price first — reverse DCF solves against the market price.';
+    return;
+  }
+
+  const target = price; // per-share fair value we want to match
+  const pxAt = g1 => { const m=dcfModel(fcf,g1,yr1,g2,yr2,tg,wacc,shares,debt,cash); return m?m.perShare:NaN; };
+
+  // perShare is monotonically increasing in g1 → binary search
+  let lo=-50, hi=200; // % growth bounds
+  const pLo=pxAt(lo), pHi=pxAt(hi);
+  let solved=null;
+  if(Number.isFinite(pLo)&&Number.isFinite(pHi)&&((pLo-target)*(pHi-target)<=0)){
+    for(let i=0;i<60;i++){
+      const mid=(lo+hi)/2, pm=pxAt(mid);
+      if(!Number.isFinite(pm)) break;
+      if(Math.abs(pm-target)<0.001){ solved=mid; break; }
+      if((pm-target)>0) hi=mid; else lo=mid;
+      solved=mid;
+    }
+  }
+
+  res.style.display='block'; hint.style.display='none';
+  if(solved===null){
+    gEl.textContent='n/a';
+    yEl.textContent='';
+    vEl.innerHTML='<span style="color:var(--amber)">Couldn\'t converge within ±50–200% growth. The terminal/WACC settings may already over- or under-shoot the price on their own.</span>';
+    return;
+  }
+
+  gEl.textContent=(solved>0?'+':'')+solved.toFixed(1)+'%';
+  yEl.textContent=`per year for ${yr1} yrs, then ${g2}% for ${yr2} yrs`;
+
+  // Reasonableness commentary
+  let note, col;
+  if(solved>25){ note='That is a very aggressive growth rate — few companies sustain >25% FCF growth for years. The price looks demanding unless you expect exceptional execution.'; col='var(--red)'; }
+  else if(solved>15){ note='A high bar — sustainable only for genuine fast-growers. Worth checking against the company\'s actual history.'; col='var(--amber)'; }
+  else if(solved>=5){ note='A moderate, often achievable rate. The price isn\'t pricing in heroics.'; col='var(--green)'; }
+  else if(solved>=0){ note='A low bar — the market expects little growth. Could be cheap if the business does better than that.'; col='var(--green)'; }
+  else { note='The price implies shrinking cash flow. The market is pricing in decline — contrarian upside if you disagree.'; col='var(--blue)'; }
+  vEl.innerHTML=`<span style="color:${col};font-weight:600">${note}</span>`;
+}
+
+function dcfResetInputs(){
+  DCF_FIELDS.forEach(f=>{
+    const el=document.getElementById('dcf-'+f); if(!el) return;
+    el.classList.remove('autofilled','edited');
+    const t=document.getElementById('src-'+f); if(t){t.textContent='—';t.className='dcf-src-tag dcf-src-auto';}
+  });
+  ['fcf','shares','g1','beta','debt','cashbs','price'].forEach(f=>{ const e=document.getElementById('dcf-'+f); if(e)e.value=''; });
+  document.getElementById('dcf-yr1').value=5; document.getElementById('dcf-yr2').value=5;
+  document.getElementById('dcf-g2').value=5; document.getElementById('dcf-tg').value=2.5;
+  document.getElementById('dcf-wacc').value=9; document.getElementById('dcf-debt').value=0;
+  document.getElementById('dcf-cashbs').value=0;
+  dcfEdited={}; dcfLastFcfHist=[];
+  document.getElementById('dcfTicker').value='';
+  document.getElementById('dcfInputsTitle').textContent='Model Inputs';
+  document.getElementById('dcfFcfSrc').textContent='';
+  document.getElementById('dcfFcfSpark').innerHTML='';
+  dcfSetStatus('', '');
+  dcfCompute();
+}
+
 function showSaveFlash(){
   const el=document.getElementById('saveNotice');if(!el)return;
   el.style.display='block';setTimeout(()=>el.style.display='none',2500);
@@ -3499,13 +4674,179 @@ function switchChartType(id, newType, btn) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  SHEET SETUP MODAL  +  DATA HEALTH PANEL
+// ═══════════════════════════════════════════════════════════════
+
+function showSetupModal() {
+  const cur = getSheetUrl();
+  const isDefault = cur && window.DEFAULT_SHEET_URL && cur === window.DEFAULT_SHEET_URL;
+  document.getElementById('sheetSetupOverlay')?.remove();
+  const wrap = document.createElement('div');
+  wrap.className = 'modal-overlay';
+  wrap.id = 'sheetSetupOverlay';
+  wrap.onclick = e => { if (e.target === wrap) wrap.remove(); };
+  wrap.innerHTML = `
+    <div class="modal-box" style="max-width:560px">
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:6px">📊 Portfolio Data Source</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px">
+        The dashboard pulls every position and price from a <strong>published Google Sheet</strong> (CSV).
+        Paste your own sheet's published-CSV link below to attach it.
+      </div>
+      <div style="font-size:12px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:11px 13px;line-height:1.6;margin-bottom:14px">
+        <strong>How to get the link:</strong>
+        <ol style="margin:6px 0 0 18px;padding:0">
+          <li>In Google Sheets: <strong>File → Share → Publish to web</strong></li>
+          <li>Choose the sheet/tab, set format to <strong>Comma-separated values (.csv)</strong></li>
+          <li>Click <strong>Publish</strong>, copy the link (it ends in <code style="font-family:'DM Mono',monospace">output=csv</code>)</li>
+        </ol>
+        <div style="margin-top:8px;color:var(--text3)">Your columns must match the dashboard's layout (Portfolio, Sector, Type, Company, Curr, … Ticker, Investment, … Price, Shares, Current Value).</div>
+      </div>
+      <label style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Published CSV URL</label>
+      <textarea id="sheetUrlInput" rows="3" placeholder="https://docs.google.com/spreadsheets/d/e/…/pub?gid=…&single=true&output=csv"
+        style="width:100%;margin-top:5px;padding:10px 12px;border:1px solid var(--border2);border-radius:9px;font-size:12px;font-family:'DM Mono',monospace;outline:none;resize:vertical;line-height:1.5;color:var(--text);background:var(--bg2)">${(cur||'').replace(/</g,'&lt;')}</textarea>
+      <div id="sheetUrlMsg" style="font-size:11.5px;margin-top:8px;min-height:16px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap">
+        ${!isDefault && window.DEFAULT_SHEET_URL ? `<button class="btn btn-secondary" style="margin-right:auto" onclick="resetSheetToDefault()">Reset to sample</button>` : ''}
+        <button class="btn btn-secondary" onclick="document.getElementById('sheetSetupOverlay').remove()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSheetUrl()">Attach &amp; Sync</button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+  setTimeout(() => document.getElementById('sheetUrlInput')?.focus(), 50);
+}
+
+function saveSheetUrl() {
+  const input = document.getElementById('sheetUrlInput');
+  const msg = document.getElementById('sheetUrlMsg');
+  const url = (input.value || '').trim();
+  if (!url) {
+    msg.style.color = 'var(--red)';
+    msg.textContent = 'Please paste a URL, or click Reset to sample.';
+    return;
+  }
+  // light validation — must look like a URL; warn (don't block) if not a published CSV
+  if (!/^https?:\/\//i.test(url)) {
+    msg.style.color = 'var(--red)';
+    msg.textContent = 'That doesn\'t look like a URL (must start with http).';
+    return;
+  }
+  localStorage.setItem('gsheetUrl', url);
+  updatePriceSourceBadge();
+  msg.style.color = 'var(--green)';
+  if (!/output=csv/i.test(url)) {
+    msg.textContent = '⚠ Saved, but the link doesn\'t end in output=csv — if sync fails, re-copy the Publish-to-web CSV link.';
+  } else {
+    msg.textContent = '✓ Saved. Syncing…';
+  }
+  // Re-fetch from the new sheet, then close + refresh health
+  fetchLivePrices().then(() => {
+    updateHealthBtn();
+    const ok = dataHealth.sheetOk;
+    if (ok) {
+      document.getElementById('sheetSetupOverlay')?.remove();
+    } else {
+      msg.style.color = 'var(--red)';
+      msg.textContent = '✗ Couldn\'t read that sheet: ' + (dataHealth.sheetError || 'check it is published to the web as CSV') + '. The URL is saved — fix sharing and click Attach again.';
+    }
+  });
+}
+
+function resetSheetToDefault() {
+  if (!window.DEFAULT_SHEET_URL) return;
+  const input = document.getElementById('sheetUrlInput');
+  if (input) input.value = window.DEFAULT_SHEET_URL;
+  localStorage.setItem('gsheetUrl', window.DEFAULT_SHEET_URL);
+  updatePriceSourceBadge();
+  const msg = document.getElementById('sheetUrlMsg');
+  if (msg) { msg.style.color = 'var(--text2)'; msg.textContent = 'Reset to the sample sheet. Syncing…'; }
+  fetchLivePrices().then(() => { updateHealthBtn(); document.getElementById('sheetSetupOverlay')?.remove(); });
+}
+
+// ── Data Health panel ───────────────────────────────────────────
+function openHealthPanel() {
+  const ov = document.getElementById('healthPanelOverlay');
+  const body = document.getElementById('healthPanelBody');
+  if (!ov || !body) return;
+  const dh = dataHealth;
+  const url = getSheetUrl();
+  const isDefault = url && window.DEFAULT_SHEET_URL && url === window.DEFAULT_SHEET_URL;
+  const statusPill = dh.sheetOk === true
+    ? `<span style="background:var(--green-bg);color:var(--green);font-weight:700;padding:3px 10px;border-radius:6px;font-size:12px">● Connected</span>`
+    : dh.sheetOk === false
+      ? `<span style="background:var(--red-bg);color:var(--red);font-weight:700;padding:3px 10px;border-radius:6px;font-size:12px">● Error</span>`
+      : `<span style="background:var(--bg4);color:var(--text2);font-weight:700;padding:3px 10px;border-radius:6px;font-size:12px">● Not synced yet</span>`;
+  const last = dh.lastFetch ? dh.lastFetch.toLocaleString([], {hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'}) : '—';
+  const urlShort = url ? (url.length > 64 ? url.slice(0, 61) + '…' : url) : '(none)';
+
+  const row = (label, val) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">${label}</span><span style="font-weight:600;font-family:'DM Mono',monospace;text-align:right">${val}</span></div>`;
+
+  let issues = '';
+  if (dh.sheetError) issues += `<div class="insight-card danger"><span class="insight-icon">⚠️</span><div class="insight-text"><strong>Sheet error:</strong> ${dh.sheetError}</div></div>`;
+  if (dh.zeroValue && dh.zeroValue.length) issues += `<div class="insight-card warn"><span class="insight-icon">⚠️</span><div class="insight-text"><strong>${dh.zeroValue.length}</strong> position(s) with zero value: ${dh.zeroValue.join(', ')}</div></div>`;
+  if (dh.duplicates && dh.duplicates.length) issues += `<div class="insight-card warn"><span class="insight-icon">⚠️</span><div class="insight-text"><strong>Duplicate tickers:</strong> ${dh.duplicates.join(', ')}</div></div>`;
+  if (!issues && dh.sheetOk) issues = `<div class="insight-card good"><span class="insight-icon">✓</span><div class="insight-text">No data issues detected.</div></div>`;
+
+  body.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-size:14px;font-weight:700">Connection</div>
+      ${statusPill}
+    </div>
+    ${row('Positions loaded', dh.posCount || liveData.length || 0)}
+    ${row('CSV rows parsed', dh.csvRowCount || '—')}
+    ${row('Last sync', last)}
+    ${row('Source', isDefault ? 'Sample sheet' : 'Your sheet')}
+    <div style="padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="color:var(--text2);margin-bottom:4px">Sheet URL</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text);word-break:break-all;background:var(--bg3);padding:8px 10px;border-radius:7px">${urlShort}</div>
+    </div>
+    <div style="display:flex;gap:8px;margin:16px 0 18px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="closeHealthPanel();showSetupModal()" style="flex:1">🔗 Change / Attach Sheet</button>
+      <button class="btn btn-secondary" onclick="fetchLivePrices().then(()=>{updateHealthBtn();openHealthPanel()})">↻ Re-sync now</button>
+    </div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:6px">Data checks</div>
+    ${issues}
+  `;
+  ov.style.display = 'flex';
+}
+
+function closeHealthPanel() {
+  const ov = document.getElementById('healthPanelOverlay');
+  if (ov) ov.style.display = 'none';
+}
+
+// ── Sidebar Data-Health button state (dot + optional badge) ──────
+function updateHealthBtn() {
+  const dot = document.getElementById('healthBtnDot');
+  const badge = document.getElementById('healthBtnBadge');
+  if (!dot) return;
+  const dh = dataHealth;
+  // count issues
+  const issueCount = (dh.sheetError ? 1 : 0)
+    + ((dh.zeroValue && dh.zeroValue.length) ? 1 : 0)
+    + ((dh.duplicates && dh.duplicates.length) ? 1 : 0);
+  let color = '#0a8a5c'; // green
+  if (dh.sheetOk === false) color = 'var(--red)';
+  else if (issueCount > 0) color = '#e8a22a'; // amber
+  else if (dh.sheetOk === null) color = '#7888ab'; // grey, not synced
+  dot.style.background = color;
+  if (badge) {
+    if (issueCount > 0) { badge.style.display = ''; badge.textContent = issueCount; }
+    else badge.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════════════════
 
-// ── PRE-LOAD GOOGLE SHEET URL ───────────────────────────────────
+// ── PRE-LOAD GOOGLE SHEET URL (default only; never overwrite a user's own) ──
 (function() {
-  const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsSFvbe1a0iVIJ6wdDoKQylXzuUvjkKf67jn_6yKKDlRLgGlTXwASCrReeSkU5Pe52m79oAafWi_bC/pub?gid=600914265&single=true&output=csv';
-  localStorage.setItem('gsheetUrl', SHEET_URL);
+  const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsSFvbe1a0iVIJ6wdDoKQylXzuUvjkKf67jn_6yKKDlRLgGlTXwASCrReeSkU5Pe52m79oAafWi_bC/pub?gid=600914265&single=true&output=csv';
+  // Seed the default ONLY when the user hasn't attached their own sheet yet.
+  if (!localStorage.getItem('gsheetUrl')) {
+    localStorage.setItem('gsheetUrl', DEFAULT_SHEET_URL);
+  }
+  window.DEFAULT_SHEET_URL = DEFAULT_SHEET_URL; // used by the "reset to default" option
 })();
 
 function updatePriceSourceBadge() {
@@ -3519,6 +4860,7 @@ function updatePriceSourceBadge() {
 
 renderHoldingsFilters();
 updatePriceSourceBadge();
+updateDcfKeyBadge();
 // Show loading state — don't render stale DEFAULT_PORTFOLIO
 const _kpiInv = document.getElementById('kpi-invested');
 if (_kpiInv) _kpiInv.textContent = 'Syncing from sheet…';
