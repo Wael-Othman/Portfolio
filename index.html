@@ -3382,15 +3382,34 @@ function dcfSaveKey(){
 async function avFetchFcf(symbol){
   const key = getAvKey();
   if(!key) return null;                       // no AV key → caller falls back to manual
-  const url = `https://www.alphavantage.co/query?function=CASH_FLOW&symbol=${encodeURIComponent(symbol)}&apikey=${key}`;
-  let data;
-  try { const res = await fetchWithTimeout(url, 12000); data = await res.json(); }
-  catch(e){ throw new Error('Alpha Vantage unreachable ('+(e.name==='AbortError'?'timed out':e.message)+')'); }
+  const base = `https://www.alphavantage.co/query?function=CASH_FLOW&symbol=${encodeURIComponent(symbol)}&apikey=${key}`;
+  // direct first, then proxies; retry the whole set once — AV free tier is slow/throttly,
+  // and a single timeout shouldn't mean failure.
+  const builders = [
+    (x)=>x,
+    (x)=>'https://corsproxy.io/?url=' + encodeURIComponent(x),
+    (x)=>'https://api.allorigins.win/raw?url=' + encodeURIComponent(x),
+  ];
+  let data=null, lastErr=null;
+  outer:
+  for(let pass=0; pass<2; pass++){
+    for(const make of builders){
+      try{
+        const res = await fetchWithTimeout(make(base), 15000);
+        const txt = await res.text();
+        let d=null; try { d=JSON.parse(txt); } catch(_){}
+        if(d){ data=d; break outer; }
+        lastErr = new Error('non-JSON response');
+      }catch(e){ lastErr = new Error(e.name==='AbortError'?'timed out':e.message); }
+    }
+    if(pass===0) await new Promise(r=>setTimeout(r, 500));
+  }
+  if(!data) throw new Error('Alpha Vantage unreachable ('+(lastErr?lastErr.message:'all attempts failed')+')');
   // AV signals problems via Note / Information / Error Message keys
-  if(data && data['Note']) throw new Error('Alpha Vantage rate limit hit (25/day or 5/min) — try later');
-  if(data && data['Information']) throw new Error('Alpha Vantage: '+String(data['Information']).slice(0,80));
-  if(data && data['Error Message']) throw new Error('Alpha Vantage didn\'t recognise "'+symbol+'"');
-  const rows = data && data.annualReports;
+  if(data['Note']) throw new Error('Alpha Vantage rate limit hit (25/day or 5/min) — try later');
+  if(data['Information']) throw new Error('Alpha Vantage: '+String(data['Information']).slice(0,80));
+  if(data['Error Message']) throw new Error('Alpha Vantage didn\'t recognise "'+symbol+'"');
+  const rows = data.annualReports;
   if(!Array.isArray(rows) || !rows.length) return [];
   const M = 1e6;
   return rows.map(r=>{
