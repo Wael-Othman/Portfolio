@@ -3725,11 +3725,15 @@ async function dcfFetch(){
     let msg = `✓ ${symbol}: pulled ${got.join(', ')||'nothing'}.`;
     if(miss.length) msg += ` Couldn't get ${miss.join(', ')} — fill those manually (amber).`;
     if(miss.includes('FCF') && dcfFcfMissReason) msg += ` [FCF: ${dcfFcfMissReason}]`;
-    // Warn when the auto growth rate hit the 25% cap — common for hot growth stocks,
-    // and it usually makes the model read "overvalued" unless you adjust by hand.
+    // Warn when the auto growth rate hit a cap — but distinguish the two very different cases:
+    // capped DOWN from explosive growth (fast grower) vs floored UP from declining FCF.
     let kind = miss.length ? 'warn' : 'ok';
     if(got.includes('FCF') && dcfLastCagrCapped && dcfLastCagrRaw!=null){
-      msg += ` ⚠ Recent FCF growth (~${dcfLastCagrRaw.toFixed(0)}%/yr) was capped at 25% for Stage 1 — for a fast grower like this the result may look "overvalued". Adjust Stage-1 growth to your own view, or use Reverse DCF to see what the price implies.`;
+      if(dcfLastCagrRaw > 25){
+        msg += ` ⚠ Recent FCF growth (~${dcfLastCagrRaw.toFixed(0)}%/yr) was capped at 25% for Stage 1 — for a fast grower the result may read "overvalued". Adjust Stage-1 growth to your own view, or use Reverse DCF to see what the price implies.`;
+      } else {
+        msg += ` ⚠ Recent free cash flow has been declining (~${dcfLastCagrRaw.toFixed(0)}%/yr), so the auto Stage-1 growth was floored at −5% rather than projecting the full drop. A DCF on a company with falling FCF is unreliable — set Stage-1 growth to your own view of the turnaround (or decline), and treat the output with caution.`;
+      }
       kind = 'warn';
     }
     dcfSetStatus(kind, msg);
