@@ -3310,13 +3310,16 @@ async function dcfFetch(){
   document.getElementById('dcfInputsTitle').textContent = `Model Inputs — ${symbol}`;
 
   try{
+    let dcfFcfMissReason = null;
     // Capture the real error from each call instead of swallowing it, so we can
     // tell "API failed" (bad key / limit / CORS) apart from "ticker truly unknown".
     let fetchErr = null;
+    let cfErr = null;
     const safe = (p) => p.catch(e => { fetchErr = fetchErr || e; return null; });
+    const safeCf = (p) => p.catch(e => { fetchErr = fetchErr || e; cfErr = e; return null; });
     const [profileArr, cfArr, bsArr] = await Promise.all([
       safe(dcfFetchJson(`${FMP_BASE}/profile?symbol=${encodeURIComponent(symbol)}&apikey=${key}`)),
-      safe(dcfFetchJson(`${FMP_BASE}/cash-flow-statement?symbol=${encodeURIComponent(symbol)}&period=annual&limit=6&apikey=${key}`)),
+      safeCf(dcfFetchJson(`${FMP_BASE}/cash-flow-statement?symbol=${encodeURIComponent(symbol)}&period=annual&limit=6&apikey=${key}`)),
       safe(dcfFetchJson(`${FMP_BASE}/balance-sheet-statement?symbol=${encodeURIComponent(symbol)}&period=annual&limit=1&apikey=${key}`)),
     ]);
 
@@ -3338,12 +3341,34 @@ async function dcfFetch(){
     const M = 1e6;
     let got = [], miss = [];
 
-    // FCF history (newest first). FMP gives freeCashFlow directly.
-    dcfLastFcfHist = cf.map(r=>{
-      const v = (r.freeCashFlow!=null) ? r.freeCashFlow
-              : ((r.operatingCashFlow||0) + (r.capitalExpenditure||0)); // capex is negative
-      return v/M;
-    }).filter(v=>Number.isFinite(v));
+    // FCF history (newest first). Stable normally gives freeCashFlow directly,
+    // but be tolerant of naming/shape variants across plans.
+    const fcfOf = (r) => {
+      if(!r || typeof r!=='object') return null;
+      // direct field (most common)
+      if(r.freeCashFlow!=null && r.freeCashFlow!=='') return +r.freeCashFlow;
+      // some payloads use operating + capex (capex is negative)
+      const ocf = (r.operatingCashFlow!=null) ? +r.operatingCashFlow
+                : (r.netCashProvidedByOperatingActivities!=null) ? +r.netCashProvidedByOperatingActivities
+                : null;
+      const capex = (r.capitalExpenditure!=null) ? +r.capitalExpenditure
+                  : (r.investmentsInPropertyPlantAndEquipment!=null) ? +r.investmentsInPropertyPlantAndEquipment
+                  : null;
+      if(ocf!=null && capex!=null) return ocf + capex;
+      if(ocf!=null) return ocf; // last resort: operating cash flow alone
+      return null;
+    };
+    dcfLastFcfHist = cf.map(fcfOf).filter(v => v!=null && Number.isFinite(v)).map(v => v/M);
+
+    // Fallback: if the annual statement gave nothing usable, try the TTM cash flow
+    if(!dcfLastFcfHist.length){
+      try{
+        const ttm = await dcfFetchJson(`${FMP_BASE}/cash-flow-statement-ttm?symbol=${encodeURIComponent(symbol)}&apikey=${key}`);
+        const row = Array.isArray(ttm) ? ttm[0] : ttm;
+        const v = fcfOf(row);
+        if(v!=null && Number.isFinite(v)){ dcfLastFcfHist = [v/M]; }
+      }catch(_){}
+    }
 
     if(dcfLastFcfHist.length){
       dcfSetAuto('fcf', +dcfLastFcfHist[0].toFixed(1)); got.push('FCF');
@@ -3352,7 +3377,13 @@ async function dcfFetch(){
       if(g!=null){ dcfSetDerived('g1', +g.toFixed(1)); }
       else { dcfSetDerived('g1', 8); }
       document.getElementById('dcfFcfSrc').textContent = `${dcfLastFcfHist.length}y FCF history`;
-    } else { miss.push('FCF'); dcfSetDerived('g1', 8); }
+    } else {
+      miss.push('FCF'); dcfSetDerived('g1', 8);
+      // record why, to show the user
+      if(cfErr) dcfFcfMissReason = cfErr.message;
+      else if(!cf.length) dcfFcfMissReason = 'cash-flow statement endpoint returned no rows (the free plan may not include statements for this symbol)';
+      else dcfFcfMissReason = 'cash-flow rows had no usable free-cash-flow field';
+    }
 
     if(profile){
       if(profile.price!=null){ dcfSetAuto('price', +profile.price); got.push('price'); } else miss.push('price');
@@ -3380,6 +3411,7 @@ async function dcfFetch(){
 
     let msg = `✓ ${symbol}: pulled ${got.join(', ')||'nothing'}.`;
     if(miss.length) msg += ` Couldn't get ${miss.join(', ')} — fill those manually (amber).`;
+    if(miss.includes('FCF') && dcfFcfMissReason) msg += ` [FCF: ${dcfFcfMissReason}]`;
     dcfSetStatus(miss.length?'warn':'ok', msg);
   }catch(e){
     dcfSetStatus('err', 'Fetch failed: ' + e.message + '. You can still enter all values manually below.');
