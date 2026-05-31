@@ -2526,14 +2526,16 @@ async function fetchDayChange(){
   try{
     // Batch in chunks of 40 symbols/call (URL length safety) → typically 1-2 calls
     const groups = chunk(syms, 40);
-    let any=false;
+    let any=false, firstErr=null;
     for(const g of groups){
-      const url = `https://financialmodelingprep.com/api/v3/quote/${encodeURIComponent(g.join(','))}?apikey=${key}`;
-      const res = await dcfFetchJson(url).catch(()=>null);
+      const url = `${FMP_BASE}/quote?symbol=${encodeURIComponent(g.join(','))}&apikey=${key}`;
+      const res = await dcfFetchJson(url).catch(e=>{ firstErr=firstErr||e; return null; });
       if(Array.isArray(res)){
         res.forEach(q=>{
-          if(q && q.symbol && q.changesPercentage!=null){
-            dayChangeCache[q.symbol.toUpperCase()] = +parseFloat(q.changesPercentage);
+          // stable uses changePercentage; legacy used changesPercentage — accept either
+          const cp = (q && q.changePercentage!=null) ? q.changePercentage : (q ? q.changesPercentage : null);
+          if(q && q.symbol && cp!=null){
+            dayChangeCache[q.symbol.toUpperCase()] = +parseFloat(cp);
             any=true;
           }
         });
@@ -2546,10 +2548,10 @@ async function fetchDayChange(){
     const got = syms.filter(s=>dayChangeCache[s]!=null).length;
     stamp.textContent = any
       ? `${got}/${syms.length} @ ${dayChangeFetchedAt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`
-      : 'no data returned';
+      : (firstErr ? firstErr.message.slice(0,60) : 'no data returned');
     renderHoldingsTable();
   }catch(e){
-    stamp.textContent = 'fetch failed';
+    stamp.textContent = 'fetch failed: '+e.message.slice(0,40);
   }finally{
     btn.disabled=false; icon.textContent='↻'; icon.className='';
   }
@@ -2799,9 +2801,10 @@ async function buildCorrelation(){
   for(const s of syms){
     if(!corrPriceCache[s]){
       try{
-        const url=`https://financialmodelingprep.com/api/v3/historical-price-full/${encodeURIComponent(s)}?from=${from}&apikey=${key}`;
+        const url=`${FMP_BASE}/historical-price-eod/full?symbol=${encodeURIComponent(s)}&from=${from}&apikey=${key}`;
         const res=await dcfFetchJson(url);
-        const hist=(res&&res.historical)||[];
+        // stable returns a flat array; legacy returned {symbol, historical:[...]}
+        const hist = Array.isArray(res) ? res : ((res&&res.historical)||[]);
         corrPriceCache[s]= hist.map(r=>r.close).filter(Number.isFinite); // newest→oldest
       }catch(e){ corrPriceCache[s]=[]; }
     }
@@ -3060,7 +3063,7 @@ async function buildFairValues(){
   let done=0;
   for(const s of syms){
     try{
-      const url=`https://financialmodelingprep.com/api/v3/discounted-cash-flow/${encodeURIComponent(s)}?apikey=${key}`;
+      const url=`${FMP_BASE}/discounted-cash-flow?symbol=${encodeURIComponent(s)}&apikey=${key}`;
       const res=await dcfFetchJson(url);
       const row=Array.isArray(res)?res[0]:res;
       if(row && (row.dcf!=null)){
@@ -3183,7 +3186,7 @@ function dcfOnTickerInput(val){
     const key = getFmpKey();
     if(!key){ dcfRenderSuggest(held, null); return; }
     try{
-      const url = `https://financialmodelingprep.com/api/v3/search?query=${encodeURIComponent(q)}&limit=8&apikey=${key}`;
+      const url = `${FMP_BASE}/search-symbol?query=${encodeURIComponent(q)}&limit=8&apikey=${key}`;
       const res = await dcfFetchJson(url);
       const remote = Array.isArray(res) ? res
         .filter(r=>r.symbol)
@@ -3252,8 +3255,11 @@ function dcfSuggestKey(e){
 }
 
 // ── Fetch helper with CORS-proxy fallback ───────────────────────
+// FMP stable API base (v3/api legacy routes were retired Aug 2025 for new keys)
+const FMP_BASE = 'https://financialmodelingprep.com/stable';
+
 async function dcfFetchJson(url){
-  // Try direct first (FMP usually allows CORS); fall back to public proxies.
+  // Try direct first (FMP allows CORS); fall back to public proxies if the browser blocks it.
   const attempts = [
     url,
     'https://corsproxy.io/?url=' + encodeURIComponent(url),
@@ -3263,16 +3269,27 @@ async function dcfFetchJson(url){
   for(const u of attempts){
     try{
       const res = await fetch(u, {headers:{'Accept':'application/json'}});
-      if(!res.ok){ lastErr = new Error('HTTP '+res.status); 
-        if(res.status===401||res.status===403) throw new Error('Invalid or missing API key (HTTP '+res.status+')');
-        continue; }
       const txt = await res.text();
-      const data = JSON.parse(txt);
+      // Try to parse JSON regardless of status — FMP returns JSON error bodies
+      let data = null;
+      try { data = JSON.parse(txt); } catch(_) {}
+      if(res.status===401||res.status===403){
+        const m = (data && (data['Error Message']||data.message)) || '';
+        if(/legacy/i.test(m)) throw new Error('FMP legacy endpoint blocked — app needs the stable API (this build uses it).');
+        throw new Error('Invalid or unauthorized API key (HTTP '+res.status+'). Re-check your FMP key.');
+      }
+      if(res.status===429) throw new Error('Daily FMP request limit reached (HTTP 429). Try again tomorrow or upgrade the plan.');
+      if(!res.ok){ lastErr = new Error('HTTP '+res.status); continue; }
       if(data && data['Error Message']) throw new Error(data['Error Message']);
+      if(data===null) { lastErr = new Error('Unparseable response'); continue; }
       return data;
-    }catch(e){ lastErr = e; if(/API key/i.test(e.message)) throw e; }
+    }catch(e){
+      lastErr = e;
+      // Auth / limit / legacy errors are definitive — don't waste proxy attempts
+      if(/API key|limit|legacy|unauthorized/i.test(e.message)) throw e;
+    }
   }
-  throw lastErr || new Error('Network error');
+  throw lastErr || new Error('Network error (all fetch attempts failed)');
 }
 
 // ── Main fetch + build ──────────────────────────────────────────
@@ -3293,11 +3310,14 @@ async function dcfFetch(){
   document.getElementById('dcfInputsTitle').textContent = `Model Inputs — ${symbol}`;
 
   try{
-    const base = 'https://financialmodelingprep.com/api/v3';
+    // Capture the real error from each call instead of swallowing it, so we can
+    // tell "API failed" (bad key / limit / CORS) apart from "ticker truly unknown".
+    let fetchErr = null;
+    const safe = (p) => p.catch(e => { fetchErr = fetchErr || e; return null; });
     const [profileArr, cfArr, bsArr] = await Promise.all([
-      dcfFetchJson(`${base}/profile/${encodeURIComponent(symbol)}?apikey=${key}`).catch(()=>null),
-      dcfFetchJson(`${base}/cash-flow-statement/${encodeURIComponent(symbol)}?limit=6&apikey=${key}`).catch(()=>null),
-      dcfFetchJson(`${base}/balance-sheet-statement/${encodeURIComponent(symbol)}?limit=1&apikey=${key}`).catch(()=>null),
+      safe(dcfFetchJson(`${FMP_BASE}/profile?symbol=${encodeURIComponent(symbol)}&apikey=${key}`)),
+      safe(dcfFetchJson(`${FMP_BASE}/cash-flow-statement?symbol=${encodeURIComponent(symbol)}&period=annual&limit=6&apikey=${key}`)),
+      safe(dcfFetchJson(`${FMP_BASE}/balance-sheet-statement?symbol=${encodeURIComponent(symbol)}&period=annual&limit=1&apikey=${key}`)),
     ]);
 
     const profile = Array.isArray(profileArr)&&profileArr[0] ? profileArr[0] : null;
@@ -3305,7 +3325,13 @@ async function dcfFetch(){
     const bs = Array.isArray(bsArr)&&bsArr[0] ? bsArr[0] : null;
 
     if(!profile && !cf.length && !bs){
-      dcfSetStatus('err', `No data returned for "${symbol}". Check the ticker (try the exchange-suffixed form, e.g. VOW3.DE) or enter values manually below.`);
+      if(fetchErr){
+        // A genuine API/network failure — surface the real reason, don't blame the ticker.
+        dcfSetStatus('err', `Couldn't reach FMP: ${fetchErr.message} You can still enter values manually below.`);
+      } else {
+        // Calls succeeded but returned empty — the ticker really isn't found.
+        dcfSetStatus('err', `"${symbol}" returned no data — FMP may not cover it (common for some non-US listings). Try the exchange-suffixed form (e.g. VOW3.DE), or enter values manually below.`);
+      }
       return;
     }
 
@@ -3330,12 +3356,14 @@ async function dcfFetch(){
 
     if(profile){
       if(profile.price!=null){ dcfSetAuto('price', +profile.price); got.push('price'); } else miss.push('price');
-      // shares outstanding: profile.mktCap / price, or use volAvg fallback not reliable → use mktCap/price
-      if(profile.mktCap && profile.price){ dcfSetAuto('shares', +(profile.mktCap/profile.price/M).toFixed(2)); got.push('shares'); }
+      // stable API uses marketCap; legacy used mktCap — accept either
+      const mcap = (profile.marketCap!=null) ? profile.marketCap : profile.mktCap;
+      if(mcap && profile.price){ dcfSetAuto('shares', +(mcap/profile.price/M).toFixed(2)); got.push('shares'); }
       else miss.push('shares');
       if(profile.beta!=null && profile.beta!==0){ dcfSetAuto('beta', +profile.beta); got.push('beta'); }
       else dcfSetAuto('beta', 1.0);
-      if(profile.companyName){ document.getElementById('dcfInputsTitle').textContent = `Model Inputs — ${symbol} · ${profile.companyName}`; }
+      const cname = profile.companyName || profile.name;
+      if(cname){ document.getElementById('dcfInputsTitle').textContent = `Model Inputs — ${symbol} · ${cname}`; }
     } else { miss.push('price','shares'); }
 
     if(bs){
