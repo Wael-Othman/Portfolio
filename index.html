@@ -3258,49 +3258,59 @@ function dcfSuggestKey(e){
 // FMP stable API base (v3/api legacy routes were retired Aug 2025 for new keys)
 const FMP_BASE = 'https://financialmodelingprep.com/stable';
 
+// fetch with a hard timeout so a hung/slow request fails fast and we can retry/fall back
+async function fetchWithTimeout(u, ms){
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), ms);
+  try { return await fetch(u, {headers:{'Accept':'application/json'}, signal:ctrl.signal}); }
+  finally { clearTimeout(t); }
+}
+
 async function dcfFetchJson(url){
-  // Try direct first (FMP allows CORS); fall back to public proxies if the browser blocks it.
-  const attempts = [
-    url,
-    'https://corsproxy.io/?url=' + encodeURIComponent(url),
-    'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+  // direct first, then several CORS proxies (each individually flaky, so we try a few).
+  const builders = [
+    (x)=>x,
+    (x)=>'https://corsproxy.io/?url=' + encodeURIComponent(x),
+    (x)=>'https://api.allorigins.win/raw?url=' + encodeURIComponent(x),
+    (x)=>'https://api.allorigins.win/get?url=' + encodeURIComponent(x), // JSON-wrapped {contents}
+    (x)=>'https://thingproxy.freeboard.io/fetch/' + x,
   ];
   let lastErr;
-  for(const u of attempts){
-    try{
-      const res = await fetch(u, {headers:{'Accept':'application/json'}});
-      const txt = await res.text();
-      // Try to parse JSON regardless of status — FMP returns JSON error bodies
-      let data = null;
-      try { data = JSON.parse(txt); } catch(_) {}
-      if(res.status===401||res.status===403){
-        const m = (data && (data['Error Message']||data.message)) || '';
-        if(/legacy/i.test(m)) throw new Error('FMP legacy endpoint blocked — app needs the stable API (this build uses it).');
-        throw new Error('Invalid or unauthorized API key (HTTP '+res.status+'). Re-check your FMP key.');
+  // Two passes — these failures are usually intermittent, so a quick retry often succeeds.
+  for(let pass=0; pass<2; pass++){
+    for(const make of builders){
+      const u = make(url);
+      const wrapped = u.includes('allorigins.win/get');
+      try{
+        const res = await fetchWithTimeout(u, 12000);
+        let txt = await res.text();
+        if(wrapped){ try { const env = JSON.parse(txt); if(env.contents!=null) txt = env.contents; } catch(_) {} }
+        let data = null;
+        try { data = JSON.parse(txt); } catch(_) {}
+        if(res.status===401||res.status===403){
+          const m = (data && (data['Error Message']||data.message)) || '';
+          if(/legacy/i.test(m)) throw new Error('FMP legacy endpoint blocked — app needs the stable API (this build uses it).');
+          throw new Error('Invalid or unauthorized API key (HTTP '+res.status+'). Re-check your FMP key.');
+        }
+        if(res.status===429) throw new Error('Daily FMP request limit reached (HTTP 429). Try again tomorrow or upgrade the plan.');
+        if(data && data['Error Message']) throw new Error(data['Error Message']);
+        if(data !== null) return data;                 // valid JSON → success
+        const snippet = (txt||'').replace(/\s+/g,' ').trim();
+        if(/premium|upgrade your plan|subscription required|exclusive endpoint|paid plan/i.test(snippet)){
+          throw new Error('this data needs a paid FMP plan (endpoint returned an upgrade notice)');
+        }
+        if(/^<|<!doctype|<html/i.test(snippet)){ lastErr = new Error('proxy returned an HTML page, not data'); continue; }
+        if(!res.ok){ lastErr = new Error('HTTP '+res.status+(snippet?' — "'+snippet.slice(0,60)+'"':'')); continue; }
+        lastErr = new Error('non-JSON response'+(snippet?' — "'+snippet.slice(0,60)+'"':'')); continue;
+      }catch(e){
+        if(e.name==='AbortError'){ lastErr = new Error('request timed out'); continue; }
+        lastErr = e;
+        if(/API key|limit|legacy|unauthorized|paid FMP plan/i.test(e.message)) throw e;
       }
-      if(res.status===429) throw new Error('Daily FMP request limit reached (HTTP 429). Try again tomorrow or upgrade the plan.');
-      if(data && data['Error Message']) throw new Error(data['Error Message']);
-      if(data !== null) return data;            // valid JSON (object or array) → success
-      // Body was NOT valid JSON. Inspect it to give a real reason.
-      const snippet = (txt||'').replace(/\s+/g,' ').trim();
-      if(/premium|upgrade|subscription|not available|exclusive|paid plan/i.test(snippet)){
-        throw new Error('this data needs a paid FMP plan (endpoint returned an upgrade notice, not data)');
-      }
-      if(/^<|<!doctype|<html/i.test(snippet)){
-        // HTML — usually a proxy error page or a block page; let other attempts try
-        lastErr = new Error('got an HTML page instead of JSON (likely a CORS proxy error) — "' + snippet.slice(0,80) + '…"');
-        continue;
-      }
-      if(!res.ok){ lastErr = new Error('HTTP '+res.status+' — "'+snippet.slice(0,80)+'"'); continue; }
-      lastErr = new Error('non-JSON response — "' + (snippet.slice(0,80)||'empty body') + '"');
-      continue;
-    }catch(e){
-      lastErr = e;
-      // Auth / limit / legacy / paywall errors are definitive — don't waste proxy attempts
-      if(/API key|limit|legacy|unauthorized|paid FMP plan/i.test(e.message)) throw e;
     }
+    if(pass===0) await new Promise(r=>setTimeout(r, 400));
   }
-  throw lastErr || new Error('Network error (all fetch attempts failed)');
+  throw lastErr || new Error('all fetch attempts failed (network/CORS)');
 }
 
 // ── Main fetch + build ──────────────────────────────────────────
