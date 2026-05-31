@@ -3279,14 +3279,25 @@ async function dcfFetchJson(url){
         throw new Error('Invalid or unauthorized API key (HTTP '+res.status+'). Re-check your FMP key.');
       }
       if(res.status===429) throw new Error('Daily FMP request limit reached (HTTP 429). Try again tomorrow or upgrade the plan.');
-      if(!res.ok){ lastErr = new Error('HTTP '+res.status); continue; }
       if(data && data['Error Message']) throw new Error(data['Error Message']);
-      if(data===null) { lastErr = new Error('Unparseable response'); continue; }
-      return data;
+      if(data !== null) return data;            // valid JSON (object or array) → success
+      // Body was NOT valid JSON. Inspect it to give a real reason.
+      const snippet = (txt||'').replace(/\s+/g,' ').trim();
+      if(/premium|upgrade|subscription|not available|exclusive|paid plan/i.test(snippet)){
+        throw new Error('this data needs a paid FMP plan (endpoint returned an upgrade notice, not data)');
+      }
+      if(/^<|<!doctype|<html/i.test(snippet)){
+        // HTML — usually a proxy error page or a block page; let other attempts try
+        lastErr = new Error('got an HTML page instead of JSON (likely a CORS proxy error) — "' + snippet.slice(0,80) + '…"');
+        continue;
+      }
+      if(!res.ok){ lastErr = new Error('HTTP '+res.status+' — "'+snippet.slice(0,80)+'"'); continue; }
+      lastErr = new Error('non-JSON response — "' + (snippet.slice(0,80)||'empty body') + '"');
+      continue;
     }catch(e){
       lastErr = e;
-      // Auth / limit / legacy errors are definitive — don't waste proxy attempts
-      if(/API key|limit|legacy|unauthorized/i.test(e.message)) throw e;
+      // Auth / limit / legacy / paywall errors are definitive — don't waste proxy attempts
+      if(/API key|limit|legacy|unauthorized|paid FMP plan/i.test(e.message)) throw e;
     }
   }
   throw lastErr || new Error('Network error (all fetch attempts failed)');
@@ -3315,13 +3326,16 @@ async function dcfFetch(){
     // tell "API failed" (bad key / limit / CORS) apart from "ticker truly unknown".
     let fetchErr = null;
     let cfErr = null;
-    const safe = (p) => p.catch(e => { fetchErr = fetchErr || e; return null; });
-    const safeCf = (p) => p.catch(e => { fetchErr = fetchErr || e; cfErr = e; return null; });
-    const [profileArr, cfArr, bsArr] = await Promise.all([
-      safe(dcfFetchJson(`${FMP_BASE}/profile?symbol=${encodeURIComponent(symbol)}&apikey=${key}`)),
-      safeCf(dcfFetchJson(`${FMP_BASE}/cash-flow-statement?symbol=${encodeURIComponent(symbol)}&period=annual&limit=6&apikey=${key}`)),
-      safe(dcfFetchJson(`${FMP_BASE}/balance-sheet-statement?symbol=${encodeURIComponent(symbol)}&period=annual&limit=1&apikey=${key}`)),
-    ]);
+    const safe = async (p) => { try { return await p; } catch(e){ fetchErr = fetchErr || e; return null; } };
+    const safeCf = async (p) => { try { return await p; } catch(e){ fetchErr = fetchErr || e; cfErr = e; return null; } };
+    const gap = () => new Promise(r => setTimeout(r, 220));
+    // Sequential (not parallel): the FMP free tier can throttle bursts, which
+    // returned a non-JSON notice for whichever call landed last. Spacing them fixes that.
+    const profileArr = await safe(dcfFetchJson(`${FMP_BASE}/profile?symbol=${encodeURIComponent(symbol)}&apikey=${key}`));
+    await gap();
+    const cfArr = await safeCf(dcfFetchJson(`${FMP_BASE}/cash-flow-statement?symbol=${encodeURIComponent(symbol)}&period=annual&limit=6&apikey=${key}`));
+    await gap();
+    const bsArr = await safe(dcfFetchJson(`${FMP_BASE}/balance-sheet-statement?symbol=${encodeURIComponent(symbol)}&period=annual&limit=1&apikey=${key}`));
 
     const profile = Array.isArray(profileArr)&&profileArr[0] ? profileArr[0] : null;
     const cf = Array.isArray(cfArr) ? cfArr : [];
@@ -3363,6 +3377,7 @@ async function dcfFetch(){
     // Fallback: if the annual statement gave nothing usable, try the TTM cash flow
     if(!dcfLastFcfHist.length){
       try{
+        await new Promise(r => setTimeout(r, 220));
         const ttm = await dcfFetchJson(`${FMP_BASE}/cash-flow-statement-ttm?symbol=${encodeURIComponent(symbol)}&apikey=${key}`);
         const row = Array.isArray(ttm) ? ttm[0] : ttm;
         const v = fcfOf(row);
