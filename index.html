@@ -1974,6 +1974,16 @@ let chartsInited={};
 
 // ── Utility ──────────────────────────────────────────────────
 const fmtUSD=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:0,maximumFractionDigits:0}).format(n);
+// Compact USD for very large figures: $1.95T, $96.7B, $540M, etc.
+const fmtUSDcompact=n=>{
+  if(n==null||!Number.isFinite(n)) return '$—';
+  const a=Math.abs(n), s=n<0?'-':'';
+  if(a>=1e12) return s+'$'+(a/1e12).toFixed(2)+'T';
+  if(a>=1e9)  return s+'$'+(a/1e9).toFixed(2)+'B';
+  if(a>=1e6)  return s+'$'+(a/1e6).toFixed(1)+'M';
+  if(a>=1e3)  return s+'$'+(a/1e3).toFixed(1)+'K';
+  return s+'$'+a.toFixed(0);
+};
 const fmtP=n=>(n>0?'+':'')+n.toFixed(2)+'%';
 const pc=n=>n>0?'pos':n<0?'neg':'neu';
 function toUSD(v,cur){return v*(FX[cur]??1);}
@@ -3490,7 +3500,14 @@ async function dcfFetch(){
     let msg = `✓ ${symbol}: pulled ${got.join(', ')||'nothing'}.`;
     if(miss.length) msg += ` Couldn't get ${miss.join(', ')} — fill those manually (amber).`;
     if(miss.includes('FCF') && dcfFcfMissReason) msg += ` [FCF: ${dcfFcfMissReason}]`;
-    dcfSetStatus(miss.length?'warn':'ok', msg);
+    // Warn when the auto growth rate hit the 25% cap — common for hot growth stocks,
+    // and it usually makes the model read "overvalued" unless you adjust by hand.
+    let kind = miss.length ? 'warn' : 'ok';
+    if(got.includes('FCF') && dcfLastCagrCapped && dcfLastCagrRaw!=null){
+      msg += ` ⚠ Recent FCF growth (~${dcfLastCagrRaw.toFixed(0)}%/yr) was capped at 25% for Stage 1 — for a fast grower like this the result may look "overvalued". Adjust Stage-1 growth to your own view, or use Reverse DCF to see what the price implies.`;
+      kind = 'warn';
+    }
+    dcfSetStatus(kind, msg);
   }catch(e){
     dcfSetStatus('err', 'Fetch failed: ' + e.message + '. You can still enter all values manually below.');
   }finally{
@@ -3500,15 +3517,23 @@ async function dcfFetch(){
 
 // implied FCF CAGR from history (newest→oldest), clamp to [-5,25]
 function dcfImpliedFcfCagr(hist){
-  const pts = hist.filter(v=>v>0);
+  // hist is newest→oldest. Use a RECENT window (up to ~5y) rather than the full
+  // history: a 20-year-ago starting point badly distorts a forward 5y growth estimate.
+  const recent = hist.slice(0, 6);              // newest 6 points → up to 5 annual periods
+  const pts = recent.filter(v=>v>0);
   if(pts.length<2) return null;
-  const newest = hist[0], oldest = hist[hist.length-1];
+  const newest = recent[0], oldest = recent[recent.length-1];
   if(newest<=0 || oldest<=0) return null;
-  const yrs = hist.length-1;
+  const yrs = recent.length-1;
   let cagr = (Math.pow(newest/oldest, 1/yrs) - 1) * 100;
   if(!Number.isFinite(cagr)) return null;
-  return Math.max(-5, Math.min(25, cagr));
+  const capped = Math.max(-5, Math.min(25, cagr));
+  // expose whether the cap bound, and the raw value, for a user-facing note
+  dcfLastCagrRaw = cagr;
+  dcfLastCagrCapped = (cagr > 25 || cagr < -5);
+  return capped;
 }
+let dcfLastCagrRaw = null, dcfLastCagrCapped = false;
 
 // CAPM-ish WACC derivation from beta (rf 4.3%, erp 5%), only if user hasn't edited WACC
 function dcfDeriveWacc(){
@@ -3609,7 +3634,7 @@ function dcfCompute(){
   }
 
   fairEl.textContent = '$'+m.perShare.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  evEl.textContent = fmtUSD(m.enterprise*1e6);
+  evEl.textContent = fmtUSDcompact(m.enterprise*1e6);
 
   if(Number.isFinite(price) && price>0){
     const upside = (m.perShare/price - 1)*100;
