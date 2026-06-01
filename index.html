@@ -1182,6 +1182,8 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
               <th onclick="sortBy('type')">Type</th>
               <th onclick="sortBy('portfolio')">Portfolio</th>
               <th onclick="sortBy('investment')" style="text-align:right">Invested</th>
+              <th onclick="sortBy('costBasis')" style="text-align:right">Start Price ↕</th>
+              <th onclick="sortBy('shares')" style="text-align:right">Shares ↕</th>
               <th onclick="sortBy('currentPrice')" style="text-align:right">Price (local)</th>
               <th onclick="sortBy('currentValue')" style="text-align:right">Value (USD)</th>
               <th onclick="sortBy('gainLoss')" style="text-align:right">Gain/Loss $</th>
@@ -2556,8 +2558,17 @@ function renderPage(page){
     case 'dividends': renderDividends(); break;
     case 'valuation': renderValuationTable(); break;
     case 'insights': renderInsights(); break;
-    case 'montecarlo': if(!chartsInited.mc){chartsInited.mc=true;setTimeout(runMonteCarlo,100);}break;
-    case 'scenario': updateScenario(); break;
+    case 'montecarlo': runMonteCarlo(); break;
+    case 'scenario': {
+      // Sync BTC slider to live price on first open
+      initScenarioBase();
+      const btcSlider = document.getElementById('scBtc');
+      if (btcSlider && SCENARIO_BASE.BTC > 0) {
+        btcSlider.value = Math.round(SCENARIO_BASE.BTC / 1000) * 1000;
+      }
+      updateScenario();
+      break;
+    }
     case 'target': renderTargetBuilder(); break;
     case 'notes': renderNotes(); break;
     case 'calendar': renderCalendar(); break;
@@ -2701,20 +2712,26 @@ function renderHoldingsTable(){
     const cls=v>0?'pos':v<0?'neg':'neu';
     return `<span class="cbadge ${cls}">${v>=0?'▲':'▼'}${Math.abs(v).toFixed(2)}%</span>`;
   };
-  document.getElementById('holdingsTbody').innerHTML=rows.map(d=>`
+  document.getElementById('holdingsTbody').innerHTML=rows.map(d=>{
+    const startPriceStr = d.costBasis > 0 ? localPriceStr({...d, localPrice: d.costBasis, currentPrice: d.costBasis}) : '—';
+    const sharesStr = d.shares > 0 ? d.shares.toLocaleString('en-US', {maximumFractionDigits: 4}) : '—';
+    return `
     <tr>
       <td style="font-weight:700;font-family:'DM Mono',monospace;font-size:12px">${d.ticker}</td>
       <td style="color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis">${d.company}</td>
       <td><span class="type-badge type-${d.type}">${d.type}</span></td>
       <td style="font-size:11.5px">${pd(d.portfolio)}</td>
       <td style="text-align:right;color:var(--text2);font-family:'DM Mono',monospace">${fmtUSD(d.investment)}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text2)">${startPriceStr}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text2)">${sharesStr}</td>
       <td style="text-align:right;font-weight:600;font-size:11.5px;font-family:'DM Mono',monospace">${localPriceStr(d)}</td>
       <td style="text-align:right;font-weight:700;font-family:'DM Mono',monospace">${fmtUSD(d.currentValue)}</td>
       <td style="text-align:right;font-family:'DM Mono',monospace" class="${pc(d.gainLoss)}">${d.gainLoss>=0?'+':''}${fmtUSD(d.gainLoss)}</td>
       <td style="text-align:right">${gb(d.gainLoss,d.gainLossPct)}</td>
       <td style="text-align:right">${dayCell(d)}</td>
       <td style="text-align:right;color:var(--text2);font-family:'DM Mono',monospace">${d.allocationPct.toFixed(1)}%</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
   document.getElementById('holdingsSubtitle').textContent=`${rows.length} positions${activePF!=='All'?' in '+activePF+' Portfolio':''}`;
 }
 
@@ -2946,10 +2963,11 @@ function renderRisk(){
 
   // Concentration warnings
   const sT={};d.forEach(p=>{sT[p.sector]=(sT[p.sector]||0)+p.currentValue;});
+  const cashVal=d.filter(x=>x.type==='Cash').reduce((a,b)=>a+b.currentValue,0);
   const warnings=[];
   Object.entries(sT).forEach(([s,v])=>{const pct=v/totV*100;if(pct>25)warnings.push({text:`<strong>${s}</strong> sector is ${pct.toFixed(1)}% of portfolio (threshold: 25%)`,cls:'danger'});else if(pct>18)warnings.push({text:`<strong>${s}</strong> sector is ${pct.toFixed(1)}% — approaching concentration limit`,cls:'warn'});});
   if(cryptoPct>0.15)warnings.push({text:`Crypto exposure at <strong>${(cryptoPct*100).toFixed(1)}%</strong> — adds significant volatility`,cls:'danger'});
-  if(cash/totV<0.05)warnings.push({text:'Cash buffer below 5% — limited dry powder for opportunities',cls:'warn'});
+  if(cashVal/totV<0.05)warnings.push({text:'Cash buffer below 5% — limited dry powder for opportunities',cls:'warn'});
   if(warnings.length===0)warnings.push({text:'No major concentration warnings detected.',cls:'good'});
   document.getElementById('riskWarnings').innerHTML=warnings.map(w=>`<div class="insight-card ${w.cls}"><div class="insight-icon">${w.cls==='danger'?'⚠️':w.cls==='warn'?'⚡':w.cls==='good'?'✅':'ℹ️'}</div><div class="insight-text">${w.text}</div></div>`).join('');
 
@@ -4516,8 +4534,17 @@ function runMonteCarlo(){
 }
 
 // ── SCENARIO PLANNER ────────────────────────────────────────────
-const BASE_BTC=80838.85, BASE_SPX=5500, BASE_OIL=75;
+// Base values are derived from live data at render time so "current levels" = zero impact
+let SCENARIO_BASE = { BTC: 80838.85, SPX: 5500, OIL: 75 };
+
+function initScenarioBase() {
+  // Derive current BTC price from live data if available
+  const btcPos = liveData.find(p => p.ticker === 'BTC');
+  if (btcPos && btcPos.currentPrice > 0) SCENARIO_BASE.BTC = btcPos.currentPrice;
+}
+
 function updateScenario(){
+  initScenarioBase();
   const btcVal=parseFloat(document.getElementById('scBtc').value);
   const spxVal=parseFloat(document.getElementById('scSpx').value);
   const usdChg=parseFloat(document.getElementById('scUsd').value)/100;
@@ -4529,24 +4556,24 @@ function updateScenario(){
 
   const d=getFilteredData();
   const baseTot=d.reduce((a,b)=>a+b.currentValue,0);
-  // Compute scenario impact
+  // Compute scenario impact relative to current live prices
   let scenarioVal=0;
   d.forEach(p=>{
     let val=p.currentValue;
     if(p.type==='Crypto'){
-      // Scale by BTC price ratio (rough proxy)
-      const btcRatio=btcVal/BASE_BTC;
-      val*=btcRatio;
+      // Scale by BTC price ratio relative to live BTC price
+      const btcRatio = SCENARIO_BASE.BTC > 0 ? btcVal / SCENARIO_BASE.BTC : 1;
+      val *= btcRatio;
     } else if(p.type==='Stock'||p.type==='ETF'){
-      // SPX sensitivity
-      const spxChg=(spxVal-BASE_SPX)/BASE_SPX;
+      // SPX sensitivity relative to BASE_SPX (user-controlled reference)
+      const spxChg=(spxVal-SCENARIO_BASE.SPX)/SCENARIO_BASE.SPX;
       const beta={'Stock':1.1,'ETF':0.9}[p.type]||1;
       val*=(1+spxChg*beta);
       // USD strengthening hurts foreign holdings
-      if(p.currency!=='USD'){val*=(1-usdChg);}
+      if((p.localCurrency||p.currency)!=='USD'){val*=(1-usdChg);}
       // Energy sensitivity to oil
       if(p.sector==='Energy'){
-        const oilChg=(oilVal-BASE_OIL)/BASE_OIL;
+        const oilChg=(oilVal-SCENARIO_BASE.OIL)/SCENARIO_BASE.OIL;
         val*=(1+oilChg*0.5);
       }
     }
@@ -4562,10 +4589,11 @@ function updateScenario(){
       <div><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Total Return vs Cost</div><div style="font-size:24px;font-weight:700;font-family:'DM Mono',monospace;color:${(scenarioVal-totI)>=0?'var(--green)':'var(--red)'}">${fmtP((scenarioVal-totI)/totI*100)}</div></div>
     </div>
     <div style="font-size:12px;color:var(--text2);line-height:1.7">
-      <strong>Assumptions:</strong> Crypto scales proportionally with BTC price.
-      Equities adjust by beta × S&P 500 % change. Foreign assets impacted by USD strength.
+      <strong>How this works:</strong> Sliders adjust relative to your <em>current live prices</em> (BTC base: $${SCENARIO_BASE.BTC.toLocaleString('en-US',{maximumFractionDigits:0})}, S&amp;P ref: ${SCENARIO_BASE.SPX.toLocaleString('en-US')}).
+      Setting sliders to these values = zero change. Crypto scales proportionally with BTC.
+      Equities adjust by beta × S&amp;P 500 % change vs the S&amp;P reference. Foreign assets impacted by USD strength.
       Energy positions get 50% sensitivity to oil price change.
-      This is a simplified approximation — not a precise model.
+      <em>Simplified approximation — not a precise model.</em>
     </div>
   `;
 }
