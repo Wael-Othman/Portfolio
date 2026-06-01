@@ -2560,12 +2560,11 @@ function renderPage(page){
     case 'insights': renderInsights(); break;
     case 'montecarlo': runMonteCarlo(); break;
     case 'scenario': {
-      // Sync BTC slider to live price on first open
       initScenarioBase();
       const btcSlider = document.getElementById('scBtc');
-      if (btcSlider && SCENARIO_BASE.BTC > 0) {
-        btcSlider.value = Math.round(SCENARIO_BASE.BTC / 1000) * 1000;
-      }
+      if (btcSlider && SCENARIO_BASE.BTC > 0) btcSlider.value = Math.round(SCENARIO_BASE.BTC / 1000) * 1000;
+      const spxSlider = document.getElementById('scSpx');
+      if (spxSlider && SCENARIO_BASE.SPX > 0) spxSlider.value = SCENARIO_BASE.SPX;
       updateScenario();
       break;
     }
@@ -4538,9 +4537,12 @@ function runMonteCarlo(){
 let SCENARIO_BASE = { BTC: 80838.85, SPX: 5500, OIL: 75 };
 
 function initScenarioBase() {
-  // Derive current BTC price from live data if available
+  // Derive current BTC price from live data
   const btcPos = liveData.find(p => p.ticker === 'BTC');
   if (btcPos && btcPos.currentPrice > 0) SCENARIO_BASE.BTC = btcPos.currentPrice;
+  // Derive S&P 500 level from live VOO price (VOO ≈ SPX / 10)
+  const vooPos = liveData.find(p => p.ticker === 'VOO');
+  if (vooPos && vooPos.currentPrice > 0) SCENARIO_BASE.SPX = Math.round(vooPos.currentPrice * 10 / 50) * 50;
 }
 
 function updateScenario(){
