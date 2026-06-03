@@ -1193,6 +1193,7 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
               <th onclick="sortBy('allocationPct')" style="text-align:right">Alloc %</th>
             </tr></thead>
             <tbody id="holdingsTbody"></tbody>
+            <tfoot id="holdingsTfoot"></tfoot>
           </table>
         </div>
       </div>
@@ -2347,17 +2348,19 @@ async function fetchFromGoogleSheet() {
       return -1;
     };
     const COL = {
-      portfolio:  fi('portfolio')       >= 0 ? fi('portfolio')       : 0,
-      sector:     fi('sector')          >= 0 ? fi('sector')          : 1,
-      type:       fi('type')            >= 0 ? fi('type')            : 2,
-      company:    fi('company')         >= 0 ? fi('company')         : 3,
-      currency:   fi('curr')            >= 0 ? fi('curr')            : 4,
-      exchCur:    fi('current exch','exch.') >= 0 ? fi('current exch','exch.') : 6,
-      ticker:     fi('ticker')          >= 0 ? fi('ticker')          : 7,
-      investment: fi('investment')      >= 0 ? fi('investment')      : 8,
-      curPrice:   fi('current price')   >= 0 ? fi('current price')   : 11,
-      shares:     fi('shares')          >= 0 ? fi('shares')          : 12,
-      curValue:   fi('current value')   >= 0 ? fi('current value')   : 13,
+      portfolio:        fi('portfolio')             >= 0 ? fi('portfolio')             : 0,
+      sector:           fi('sector')                >= 0 ? fi('sector')                : 1,
+      type:             fi('type')                  >= 0 ? fi('type')                  : 2,
+      company:          fi('company')               >= 0 ? fi('company')               : 3,
+      currency:         fi('curr')                  >= 0 ? fi('curr')                  : 4,
+      exchCostAtBuy:    fi('exch cost')             >= 0 ? fi('exch cost')             : 5,
+      exchCur:          fi('current exch','exch.')  >= 0 ? fi('current exch','exch.')  : 6,
+      ticker:           fi('ticker')                >= 0 ? fi('ticker')                : 7,
+      investment:       fi('investment')            >= 0 ? fi('investment')            : 8,
+      startPrice:       fi('start price')           >= 0 ? fi('start price')           : 10,
+      curPrice:         fi('current price')         >= 0 ? fi('current price')         : 11,
+      shares:           fi('shares')                >= 0 ? fi('shares')                : 12,
+      curValue:         fi('current value')         >= 0 ? fi('current value')         : 13,
     };
 
     const newPositions = [];
@@ -2365,21 +2368,23 @@ async function fetchFromGoogleSheet() {
       if (!row.trim()) return;
       const cols = parseRow(row);
       const c = i => (i >= 0 && i < cols.length) ? cols[i] : '';
-      const portfolio   = c(COL.portfolio);
-      const sector      = c(COL.sector);
-      const type        = c(COL.type);
-      const company     = c(COL.company);
-      const localCcy    = (c(COL.currency) || 'USD').toUpperCase();
-      const exchCurrent = cleanNum(c(COL.exchCur));
-      const rawTicker   = c(COL.ticker);
-      const investment  = cleanNum(c(COL.investment));
-      const localPrice  = cleanNum(c(COL.curPrice));
-      const shares      = cleanNum(c(COL.shares));
-      const curValUSD   = cleanNum(c(COL.curValue));
+      const portfolio      = c(COL.portfolio);
+      const sector         = c(COL.sector);
+      const type           = c(COL.type);
+      const company        = c(COL.company);
+      const localCcy       = (c(COL.currency) || 'USD').toUpperCase();
+      const exchCostAtBuy  = cleanNum(c(COL.exchCostAtBuy));
+      const exchCurrent    = cleanNum(c(COL.exchCur));
+      const rawTicker      = c(COL.ticker);
+      const rawInvestment  = cleanNum(c(COL.investment));
+      const startPriceLocal= cleanNum(c(COL.startPrice));
+      const localPrice     = cleanNum(c(COL.curPrice));
+      const shares         = cleanNum(c(COL.shares));
+      const curValUSD      = cleanNum(c(COL.curValue));
 
       if (!rawTicker || rawTicker.toUpperCase() === 'TOTAL') return;
       if (!portfolio) return;
-      if (shares === 0 && investment === 0 && curValUSD === 0) return;
+      if (shares === 0 && rawInvestment === 0 && curValUSD === 0) return;
 
       if (exchCurrent > 0) {
         if      (localCcy==='EUR') { FX.EUR=exchCurrent;       fxLive.EUR=true; }
@@ -2393,12 +2398,19 @@ async function fetchFromGoogleSheet() {
       const effectiveShares = shares > 0 ? shares : 1;
       const usdPricePerShare = curValUSD > 0 ? curValUSD / effectiveShares : 0;
 
+      // Compute pure share cost: StartPrice × Shares × FX-at-purchase
+      // GBX col F stores GBP rate — divide by 100 to get per-pence rate
+      const exchAtBuy = localCcy === 'GBX' ? exchCostAtBuy / 100 : exchCostAtBuy;
+      const pureCost = (startPriceLocal > 0 && shares > 0 && exchAtBuy > 0)
+        ? startPriceLocal * shares * exchAtBuy
+        : rawInvestment;
+
       newPositions.push({
         ticker, company, type, sector, portfolio,
         currency: 'USD', localCurrency: localCcy, localPrice,
         shares: effectiveShares,
-        costBasis: investment / effectiveShares,
-        investment,
+        costBasis: startPriceLocal > 0 ? startPriceLocal : rawInvestment / effectiveShares,
+        investment: pureCost,
         currentValueUSD: curValUSD,
         snapshotPrice: usdPricePerShare,
         manualPrice: null,
@@ -2732,6 +2744,27 @@ function renderHoldingsTable(){
       <td style="text-align:right;color:var(--text2);font-family:'DM Mono',monospace">${d.allocationPct.toFixed(1)}%</td>
     </tr>`;
   }).join('');
+
+  // Dynamic totals row
+  const totInv  = rows.reduce((s,d)=>s+d.investment,0);
+  const totVal  = rows.reduce((s,d)=>s+d.currentValue,0);
+  const totGL   = rows.reduce((s,d)=>s+d.gainLoss,0);
+  const totRet  = totInv > 0 ? totGL/totInv*100 : 0;
+  const glCls   = totGL >= 0 ? 'pos' : 'neg';
+  const glSign  = totGL >= 0 ? '+' : '';
+  document.getElementById('holdingsTfoot').innerHTML=`<tr style="background:var(--bg2);font-weight:700;border-top:2px solid var(--border)">
+    <td colspan="2" style="font-size:12px;padding:9px 10px">
+      <span style="font-family:'DM Mono',monospace;color:var(--text2)">${rows.length} position${rows.length!==1?'s':''}</span>
+    </td>
+    <td colspan="2"></td>
+    <td style="text-align:right;font-family:'DM Mono',monospace;padding:9px 8px">${fmtUSD(totInv)}</td>
+    <td colspan="3"></td>
+    <td style="text-align:right;font-family:'DM Mono',monospace;padding:9px 8px">${fmtUSD(totVal)}</td>
+    <td style="text-align:right;font-family:'DM Mono',monospace;padding:9px 8px" class="${glCls}">${glSign}${fmtUSD(totGL)}</td>
+    <td style="text-align:right;padding:9px 8px"><span class="cbadge ${glCls}">${totGL>=0?'▲':'▼'}${Math.abs(totRet).toFixed(2)}%</span></td>
+    <td></td>
+    <td style="text-align:right;font-family:'DM Mono',monospace;padding:9px 8px;color:var(--text2)">100%</td>
+  </tr>`;
   document.getElementById('holdingsSubtitle').textContent=`${rows.length} positions${activePF!=='All'?' in '+activePF+' Portfolio':''}`;
 }
 
