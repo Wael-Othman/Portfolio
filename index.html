@@ -2706,6 +2706,9 @@ function renderHoldingsTable(){
     if(q&&!d.ticker.toLowerCase().includes(q)&&!d.company.toLowerCase().includes(q))return false;
     return true;
   }).sort((a,b)=>{
+    // Cash always pinned to bottom regardless of sort column
+    const aCash = a.type==='Cash'?1:0, bCash = b.type==='Cash'?1:0;
+    if(aCash!==bCash) return aCash-bCash;
     if(sortKey==='dayChangePct'){
       const av=dayChangeCache[fmpSymbol(a).toUpperCase()],
             bv=dayChangeCache[fmpSymbol(b).toUpperCase()];
