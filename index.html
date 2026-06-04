@@ -2401,8 +2401,10 @@ async function fetchFromGoogleSheet() {
 
       // Compute pure share cost: StartPrice × Shares × FX-at-purchase
       // GBX col F stores GBP rate — divide by 100 to get per-pence rate
+      // If currency≠USD but col F=1, position was USD-denominated (eToro) — trust col I
       const exchAtBuy = localCcy === 'GBX' ? exchCostAtBuy / 100 : exchCostAtBuy;
-      const pureCost = (startPriceLocal > 0 && shares > 0 && exchAtBuy > 0)
+      const isUSDDenominated = localCcy === 'USD' || (localCcy !== 'USD' && exchCostAtBuy === 1);
+      const pureCost = (startPriceLocal > 0 && shares > 0 && exchAtBuy > 0 && !isUSDDenominated)
         ? startPriceLocal * shares * exchAtBuy
         : rawInvestment;
 
@@ -2743,7 +2745,7 @@ function renderHoldingsTable(){
       <td style="text-align:right;font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text2)">${sharesStr}</td>
       <td style="text-align:right;font-weight:600;font-size:11.5px;font-family:'DM Mono',monospace">${localPriceStr(d)}</td>
       <td style="text-align:right;font-weight:700;font-family:'DM Mono',monospace">${fmtUSD(d.currentValue)}</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace" class="${pc(d.gainLoss)}">${d.gainLoss>=0?'+':''}${fmtUSD(d.gainLoss)}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;color:${d.gainLoss<0?'var(--red)':'inherit'}" class="${pc(d.gainLoss)}">${d.gainLoss>=0?'+':''}${fmtUSD(d.gainLoss)}</td>
       <td style="text-align:right">${gb(d.gainLoss,d.gainLossPct)}</td>
       <td style="text-align:right">${dayCell(d)}</td>
       <td style="text-align:right;color:var(--text2);font-family:'DM Mono',monospace">${d.allocationPct.toFixed(1)}%</td>
@@ -2767,7 +2769,7 @@ function renderHoldingsTable(){
     <td style="text-align:right;font-family:'DM Mono',monospace;padding:9px 8px;color:var(--text2)">${totComm>0.01?fmtUSD(totComm):'—'}</td>
     <td colspan="3"></td>
     <td style="text-align:right;font-family:'DM Mono',monospace;padding:9px 8px">${fmtUSD(totVal)}</td>
-    <td style="text-align:right;font-family:'DM Mono',monospace;padding:9px 8px" class="${glCls}">${glSign}${fmtUSD(totGL)}</td>
+    <td style="text-align:right;font-family:'DM Mono',monospace;padding:9px 8px;color:${totGL<0?'var(--red)':totGL>0?'var(--green)':'inherit'}">${glSign}${fmtUSD(totGL)}</td>
     <td style="text-align:right;padding:9px 8px"><span class="cbadge ${glCls}">${totGL>=0?'▲':'▼'}${Math.abs(totRet).toFixed(2)}%</span></td>
     <td></td>
     <td style="text-align:right;font-family:'DM Mono',monospace;padding:9px 8px;color:var(--text2)">100%</td>
