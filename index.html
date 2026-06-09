@@ -1126,18 +1126,22 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
         <div class="metric-grid" id="dashMetrics"></div>
         <div class="grid-2" style="margin-bottom:16px">
           <div class="card">
-            <div class="card-header">
-              <span class="card-title">Allocation by Type</span>
-              <div class="chart-type-bar"><button class="chart-type-btn active" onclick="switchChartType('dashTypeChart','doughnut',this)">DONUT</button><button class="chart-type-btn" onclick="switchChartType('dashTypeChart','pie',this)">PIE</button><button class="chart-type-btn" onclick="switchChartType('dashTypeChart','bar',this)">BAR</button><button class="chart-type-btn" onclick="switchChartType('dashTypeChart','polarArea',this)">POLAR</button></div>
-            </div>
-            <div class="card-body" style="position:relative;height:240px"><canvas id="dashTypeChart"></canvas></div>
+            <div class="card-header"><span class="card-title">🌍 Geographic Exposure</span></div>
+            <div class="card-body" id="dashGeo"></div>
           </div>
           <div class="card">
-            <div class="card-header">
-              <span class="card-title">Sector Exposure</span>
-              <div class="chart-type-bar"><button class="chart-type-btn active" onclick="switchChartType('dashSectorChart','doughnut',this)">DONUT</button><button class="chart-type-btn" onclick="switchChartType('dashSectorChart','pie',this)">PIE</button><button class="chart-type-btn" onclick="switchChartType('dashSectorChart','bar',this)">BAR</button><button class="chart-type-btn" onclick="switchChartType('dashSectorChart','polarArea',this)">POLAR</button></div>
-            </div>
-            <div class="card-body" style="position:relative;height:240px"><canvas id="dashSectorChart"></canvas></div>
+            <div class="card-header"><span class="card-title">💱 Currency Risk</span></div>
+            <div class="card-body" id="dashCcy"></div>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-header"><span class="card-title">🎯 Win Rate</span></div>
+            <div class="card-body" id="dashWinRate"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">⚡ Crypto vs Traditional</span></div>
+            <div class="card-body" id="dashCryptoSplit"></div>
           </div>
         </div>
         <div class="grid-2" style="margin-bottom:16px">
@@ -1367,9 +1371,15 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
     <div class="page" id="page-dividends">
       <div style="padding:24px">
         <div class="page-header">
-          <div class="page-title">Dividend & Income Dashboard</div>
-          <div class="page-sub">Estimated income based on manual dividend data per holding</div>
+          <div>
+            <div class="page-title">Dividend & Income Dashboard</div>
+            <div class="page-sub">Estimated income based on dividend yield data per holding</div>
+          </div>
+          <button class="btn btn-primary" id="divRefreshBtn" onclick="refreshDividendData()" style="font-size:11px;padding:5px 14px;display:flex;align-items:center;gap:5px;white-space:nowrap">
+            <span id="divRefreshIcon">✦</span> Refresh Dividend Data
+          </button>
         </div>
+        <div id="divMissingWarning" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--amber-bg,#fffbeb);border:1px solid var(--amber,#f59e0b);border-radius:8px;font-size:12px;color:var(--text2);line-height:1.6"></div>
         <div class="metric-grid" id="divMetrics"></div>
         <div class="grid-2" style="margin-bottom:16px">
           <div class="card">
@@ -2643,19 +2653,13 @@ function renderDashboard(){
   const totI=d.reduce((a,b)=>a+b.investment,0);
   const totV=d.reduce((a,b)=>a+b.currentValue,0);
   const totGL=totV-totI;
-  const win=d.filter(x=>x.gainLoss>0),los=d.filter(x=>x.gainLoss<0);
+  const win=d.filter(x=>x.gainLoss>0), los=d.filter(x=>x.gainLoss<0), flat=d.filter(x=>x.gainLoss===0&&x.type!=='Cash');
   const cash=d.filter(x=>x.type==='Cash').reduce((a,b)=>a+b.currentValue,0);
   const crypto=d.filter(x=>x.type==='Crypto').reduce((a,b)=>a+b.currentValue,0);
   const health=computeHealthScore(d);
   const best=[...d].sort((a,b)=>b.gainLossPct-a.gainLossPct)[0];
   const worst=[...d].filter(x=>x.type!=='Cash').sort((a,b)=>a.gainLossPct-b.gainLossPct)[0];
-
-  // Compute estimated annual dividend (use valuations override, fallback to DIV_DATA)
-  const annualDiv=d.reduce((sum,p)=>{
-    const v=valuations[p.ticker];
-    const yld=v?.divYield||DIV_DATA[p.ticker]?.yield||0;
-    return sum+(p.currentValue*(yld/100));
-  },0);
+  const annualDiv=d.reduce((sum,p)=>{const v=valuations[p.ticker];const yld=v?.divYield||DIV_DATA[p.ticker]?.yield||0;return sum+(p.currentValue*(yld/100));},0);
 
   document.getElementById('dashMetrics').innerHTML=`
     <div class="metric-card"><div class="metric-label">💼 Total Value</div><div class="metric-value">${fmtUSD(totV)}</div><div class="metric-sub neu">Invested: ${fmtUSD(totI)}</div></div>
@@ -2668,18 +2672,166 @@ function renderDashboard(){
     <div class="metric-card"><div class="metric-label">💵 Est. Annual Income</div><div class="metric-value">${fmtUSD(annualDiv)}</div><div class="metric-sub neu">${(annualDiv/totV*100).toFixed(2)}% yield</div></div>
   `;
 
-  // Mini charts
-  const tT={};d.forEach(p=>{tT[p.type]=(tT[p.type]||0)+p.currentValue;});
-  const tE=Object.entries(tT).sort((a,b)=>b[1]-a[1]);
-  buildChart('dashTypeChart','doughnut',tE.map(e=>e[0]),tE.map(e=>e[1]),tE.map(([t])=>TYPE_COLORS[t]||'#888'),
-    {tooltip:{label:c=>`${c.label}: ${fmtUSD(c.raw)} (${(c.raw/totV*100).toFixed(1)}%)`},
-    drillConfig:{field:'type',colorMap:TYPE_COLORS,breadcrumb:'Dashboard › Asset Type'}});
+  // ── A: GEOGRAPHIC EXPOSURE ──────────────────────────────────
+  const GEO_MAP={
+    'NVDA':'North America','META':'North America','MU':'North America','MSFT':'North America',
+    'GOOG':'North America','AMZN':'North America','CRM':'North America','HPQ':'North America',
+    'AAPL':'North America','C':'North America','TGT':'North America','ADM':'North America',
+    'BRK.B':'North America','UNH':'North America','JNJ':'North America','TSLA':'North America',
+    'CVS':'North America','CRSR':'North America','UPWK':'North America','BBBY':'North America',
+    'BNGO':'North America','NIO':'China','BILI':'China','APPS':'North America',
+    'MELI':'Latin America','TSM':'Asia Pacific','BABA':'China','NKE':'North America',
+    'DUOL':'North America','FMC':'North America','VOO':'North America','XLU':'North America',
+    'INDA':'Asia Pacific','SCHD':'North America','XLE':'North America','SPXS':'North America',
+    'UVXY':'North America','BTC':'Global','ETH':'Global','XRP':'Global','SOL':'Global',
+    'ADA':'Global','XTZ':'Global','MIOTA':'Global','MANA':'Global','IBIT':'North America',
+    'DTE':'Europe','VOW3':'Europe','RUI':'Europe','O':'North America','PFE':'North America',
+    'DOW':'North America','DOM':'Europe','ACOMO':'Europe','AKRBF':'Europe','DNQ':'Europe',
+    '0823':'Asia Pacific','KLSE:1163':'Asia Pacific','1883':'Asia Pacific',
+    '9618':'China','0001':'Asia Pacific',
+  };
+  const geoTot={};
+  d.forEach(p=>{
+    if(p.type==='Cash') return;
+    const region=GEO_MAP[p.ticker]||GEO_MAP[p.ticker.replace(':','')]||(
+      p.localCurrency==='NOK'||p.localCurrency==='EUR'?'Europe':
+      p.localCurrency==='HKD'||p.localCurrency==='MYR'?'Asia Pacific':'North America');
+    geoTot[region]=(geoTot[region]||0)+p.currentValue;
+  });
+  const GEO_COLORS={'North America':'#1e45b8','Europe':'#7c3aed','Asia Pacific':'#0891b2','China':'#dc2626','Latin America':'#d97706','Global':'#6b7280'};
+  const geoEntries=Object.entries(geoTot).sort((a,b)=>b[1]-a[1]);
+  const geoNonCash=geoEntries.reduce((s,[,v])=>s+v,0);
+  document.getElementById('dashGeo').innerHTML=geoEntries.map(([region, val])=>{
+    const pct=(val/geoNonCash*100).toFixed(1);
+    const col=GEO_COLORS[region]||'#888';
+    return `<div class="progress-wrap">
+      <div class="progress-header">
+        <span class="progress-label" style="display:flex;align-items:center;gap:6px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>
+          <span>${region}</span>
+        </span>
+        <span class="progress-val">${fmtUSD(val)} <span style="color:var(--text3);font-size:11px">${pct}%</span></span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${col}"></div></div>
+    </div>`;
+  }).join('');
 
-  const sT={};d.forEach(p=>{sT[p.sector]=(sT[p.sector]||0)+p.currentValue;});
-  const sE=Object.entries(sT).sort((a,b)=>b[1]-a[1]).slice(0,9);
-  buildChart('dashSectorChart','doughnut',sE.map(e=>e[0]),sE.map(e=>e[1]),sE.map(([s])=>SECTOR_COLORS[s]||'#888'),
-    {tooltip:{label:c=>`${c.label}: ${fmtUSD(c.raw)} (${(c.raw/totV*100).toFixed(1)}%)`},
-    drillConfig:{field:'sector',colorMap:SECTOR_COLORS,breadcrumb:'Dashboard › Sector'}});
+  // ── B: CURRENCY RISK ────────────────────────────────────────
+  const ccyTot={};
+  d.forEach(p=>{
+    const ccy=p.type==='Cash'?'USD':(p.localCurrency||'USD');
+    const normCcy=ccy==='GBX'?'GBp':ccy;
+    ccyTot[normCcy]=(ccyTot[normCcy]||0)+p.currentValue;
+  });
+  const CCY_COLORS={'USD':'#1e45b8','EUR':'#7c3aed','HKD':'#0891b2','NOK':'#059669','MYR':'#d97706','GBp':'#dc2626'};
+  const CCY_FLAGS={'USD':'🇺🇸','EUR':'🇪🇺','HKD':'🇭🇰','NOK':'🇳🇴','MYR':'🇲🇾','GBp':'🇬🇧'};
+  const ccyEntries=Object.entries(ccyTot).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('dashCcy').innerHTML=ccyEntries.map(([ccy,val])=>{
+    const pct=(val/totV*100).toFixed(1);
+    const col=CCY_COLORS[ccy]||'#888';
+    const flag=CCY_FLAGS[ccy]||'🌐';
+    return `<div class="progress-wrap">
+      <div class="progress-header">
+        <span class="progress-label">${flag} <strong>${ccy}</strong></span>
+        <span class="progress-val">${fmtUSD(val)} <span style="color:var(--text3);font-size:11px">${pct}%</span></span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${col}"></div></div>
+    </div>`;
+  }).join('');
+
+  // ── C: WIN RATE ─────────────────────────────────────────────
+  const investable=d.filter(x=>x.type!=='Cash'&&x.type!=='People');
+  const wCount=win.filter(x=>x.type!=='Cash'&&x.type!=='People').length;
+  const lCount=los.filter(x=>x.type!=='Cash'&&x.type!=='People').length;
+  const fCount=investable.length-wCount-lCount;
+  const winRate=investable.length>0?(wCount/investable.length*100):0;
+  const totalGross=win.filter(x=>x.type!=='Cash').reduce((s,p)=>s+p.gainLoss,0);
+  const totalLoss=Math.abs(los.filter(x=>x.type!=='Cash').reduce((s,p)=>s+p.gainLoss,0));
+  const profitFactor=totalLoss>0?(totalGross/totalLoss):null;
+  // By type breakdown
+  const types=['Stock','ETF','Crypto'];
+  const typeRows=types.map(t=>{
+    const sub=investable.filter(p=>p.type===t);
+    if(!sub.length) return '';
+    const tw=sub.filter(p=>p.gainLoss>0).length;
+    const pct=sub.length>0?(tw/sub.length*100).toFixed(0):0;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:0.5px solid var(--border)">
+      <span style="font-size:12px;color:var(--text2)">${t}</span>
+      <span style="font-size:12px;font-family:'DM Mono',monospace">${tw}/${sub.length} <span style="color:var(--text3)">(${pct}%)</span></span>
+    </div>`;
+  }).join('');
+  document.getElementById('dashWinRate').innerHTML=`
+    <div style="display:flex;align-items:center;gap:20px;margin-bottom:14px">
+      <div style="text-align:center">
+        <div style="font-size:36px;font-weight:700;font-family:'DM Mono',monospace;color:${winRate>=50?'var(--green)':'var(--red)'}">${winRate.toFixed(0)}%</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">Win Rate</div>
+      </div>
+      <div style="flex:1">
+        <div style="display:flex;height:10px;border-radius:6px;overflow:hidden;margin-bottom:8px">
+          <div style="width:${winRate}%;background:var(--green)"></div>
+          <div style="width:${(lCount/investable.length*100).toFixed(1)}%;background:var(--red)"></div>
+          <div style="flex:1;background:var(--border)"></div>
+        </div>
+        <div style="display:flex;gap:12px;font-size:11px">
+          <span style="color:var(--green)">▲ ${wCount} winners</span>
+          <span style="color:var(--red)">▼ ${lCount} losers</span>
+          ${fCount>0?`<span style="color:var(--text3)">— ${fCount} flat</span>`:''}
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:10px">
+      <div style="flex:1;background:var(--bg2);border-radius:6px;padding:8px 10px">
+        <div style="font-size:10.5px;color:var(--text3);margin-bottom:3px">Total Gains</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--green)">+${fmtUSD(totalGross)}</div>
+      </div>
+      <div style="flex:1;background:var(--bg2);border-radius:6px;padding:8px 10px">
+        <div style="font-size:10.5px;color:var(--text3);margin-bottom:3px">Total Losses</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--red)">-${fmtUSD(totalLoss)}</div>
+      </div>
+      ${profitFactor?`<div style="flex:1;background:var(--bg2);border-radius:6px;padding:8px 10px">
+        <div style="font-size:10.5px;color:var(--text3);margin-bottom:3px">Profit Factor</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;color:${profitFactor>=1?'var(--green)':'var(--red)'}">${profitFactor.toFixed(2)}x</div>
+      </div>`:''}
+    </div>
+    ${typeRows}`;
+
+  // ── F: CRYPTO vs TRADITIONAL ────────────────────────────────
+  const buckets={Crypto:0,Equities:0,ETFs:0,Cash:0};
+  d.forEach(p=>{
+    if(p.type==='Crypto') buckets.Crypto+=p.currentValue;
+    else if(p.type==='Stock') buckets.Equities+=p.currentValue;
+    else if(p.type==='ETF') buckets.ETFs+=p.currentValue;
+    else if(p.type==='Cash') buckets.Cash+=p.currentValue;
+  });
+  const cryptoGL=d.filter(p=>p.type==='Crypto').reduce((s,p)=>s+p.gainLoss,0);
+  const cryptoI=d.filter(p=>p.type==='Crypto').reduce((s,p)=>s+p.investment,0);
+  const equityGL=d.filter(p=>p.type==='Stock').reduce((s,p)=>s+p.gainLoss,0);
+  const equityI=d.filter(p=>p.type==='Stock').reduce((s,p)=>s+p.investment,0);
+  const etfGL=d.filter(p=>p.type==='ETF').reduce((s,p)=>s+p.gainLoss,0);
+  const etfI=d.filter(p=>p.type==='ETF').reduce((s,p)=>s+p.investment,0);
+  const BCOLORS={Crypto:'#f59e0b',Equities:'#1e45b8',ETFs:'#7c3aed',Cash:'#6b7280'};
+  document.getElementById('dashCryptoSplit').innerHTML=Object.entries(buckets).map(([label,val])=>{
+    if(val===0) return '';
+    const pct=(val/totV*100).toFixed(1);
+    const gl=label==='Crypto'?cryptoGL:label==='Equities'?equityGL:label==='ETFs'?etfGL:0;
+    const inv=label==='Crypto'?cryptoI:label==='Equities'?equityI:label==='ETFs'?etfI:0;
+    const ret=inv>0?(gl/inv*100):null;
+    const col=BCOLORS[label];
+    return `<div class="progress-wrap">
+      <div class="progress-header">
+        <span class="progress-label" style="display:flex;align-items:center;gap:6px">
+          <span style="width:8px;height:8px;border-radius:2px;background:${col};display:inline-block;flex-shrink:0"></span>
+          <strong>${label}</strong>
+        </span>
+        <span class="progress-val">
+          ${fmtUSD(val)}
+          <span style="font-size:11px;color:var(--text3)">${pct}%</span>
+          ${ret!==null?`<span style="font-size:11px;margin-left:4px;color:${ret>=0?'var(--green)':'var(--red)'}">${ret>=0?'▲':'▼'}${Math.abs(ret).toFixed(1)}%</span>`:''}
+        </span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${col}"></div></div>
+    </div>`;
+  }).join('');
 
   // Gainers & losers
   renderPerfBars('dashGainers','dashLosers',d);
@@ -3252,15 +3404,36 @@ function renderDividends(){
 
   // By position
   const sr=(label,val,extra='')=>`<div class="stat-row"><span class="stat-label">${label}</span><span class="stat-val">${val}${extra}</span></div>`;
-  document.getElementById('divByPosition').innerHTML=divPositions.map(p=>sr(`${p.ticker} <span style="color:var(--text3);font-size:11px">(${p.freq})</span>`,fmtUSD(p.annualIncome),` <span style="color:var(--text3);font-size:11px">${p.divYield.toFixed(1)}%</span>`)).join('');
+  // Missing dividend data warning
+  const missing = d.filter(p => p.type!=='Cash' && p.type!=='People' && p.type!=='Crypto')
+    .filter(p => !valuations[p.ticker]?.divYield && !(DIV_DATA[p.ticker]?.yield > 0));
+  const warnEl = document.getElementById('divMissingWarning');
+  if (missing.length > 0) {
+    warnEl.style.display = 'block';
+    warnEl.innerHTML = `⚠️ <strong>${missing.length} position${missing.length>1?'s have':' has'} no dividend data:</strong> ${missing.map(p=>`<span style="font-family:'DM Mono',monospace">${p.ticker}</span>`).join(', ')} — click <strong>Refresh Dividend Data</strong> to fetch via AI.`;
+  } else {
+    warnEl.style.display = 'none';
+  }
 
-  // YOC
-  document.getElementById('divYOC').innerHTML=`
-    ${divPositions.map(p=>`<div class="progress-wrap">
-      <div class="progress-header"><span class="progress-label" style="font-family:'DM Mono',monospace;font-size:11px">${p.ticker}</span><span class="progress-val ${p.yoc>6?'pos':''}">${p.yoc.toFixed(1)}% YOC</span></div>
+  // By position — ticker + company name
+  document.getElementById('divByPosition').innerHTML = divPositions.map(p =>
+    sr(`<span style="font-family:'DM Mono',monospace;font-size:12px">${p.ticker}</span><span style="color:var(--text3);font-size:11px;font-weight:400;margin-left:6px">${p.company}</span> <span style="color:var(--text3);font-size:11px">(${p.freq})</span>`,
+      fmtUSD(p.annualIncome),
+      ` <span style="color:var(--text3);font-size:11px">${p.divYield.toFixed(1)}%</span>`)
+  ).join('');
+
+  // YOC — ticker + company name
+  document.getElementById('divYOC').innerHTML =
+    divPositions.map(p=>`<div class="progress-wrap">
+      <div class="progress-header">
+        <span class="progress-label">
+          <span style="font-family:'DM Mono',monospace;font-size:11px">${p.ticker}</span>
+          <span style="color:var(--text3);font-size:10.5px;font-weight:400;margin-left:5px">${p.company}</span>
+        </span>
+        <span class="progress-val ${p.yoc>6?'pos':''}">${p.yoc.toFixed(1)}% YOC</span>
+      </div>
       <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,(p.yoc/15)*100).toFixed(0)}%;background:${p.yoc>8?'var(--green)':p.yoc>4?'var(--blue)':'var(--amber)'}"></div></div>
-    </div>`).join('')}
-  `;
+    </div>`).join('');
 
   // Upcoming dividend calendar
   const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -4327,6 +4500,75 @@ const BUILTIN_VALUATIONS = {
   SPXS:     {pe:null, pb:null,divYield:0,    payout:null,target:null},
   UVXY:     {pe:null, pb:null,divYield:0,    payout:null,target:null},
 };
+
+async function refreshDividendData() {
+  const btn = document.getElementById('divRefreshBtn');
+  const icon = document.getElementById('divRefreshIcon');
+  const key = getApiKey();
+  btn.disabled = true;
+  icon.style.cssText = 'display:inline-block;animation:spin 1s linear infinite';
+  icon.textContent = '↻';
+
+  if (!key) {
+    btn.disabled = false;
+    icon.style.cssText = '';
+    icon.textContent = '✦';
+    alert('No Anthropic API key found. Please add your key in the Settings (⚙) panel first.');
+    return;
+  }
+
+  // Build ticker list from current live data
+  const tickers = liveData
+    .filter(p => p.type === 'Stock' || p.type === 'ETF')
+    .map(p => ({ ticker: p.ticker, company: p.company, currency: p.localCurrency || p.currency }));
+
+  const batches = [];
+  for (let i = 0; i < tickers.length; i += 15) batches.push(tickers.slice(i, i + 15));
+
+  for (let bi = 0; bi < batches.length; bi++) {
+    const batch = batches[bi];
+    const prompt = `For each ticker return ONLY a valid JSON object (no markdown, no explanation):
+{"TICKER":{"divYield":number|null,"freq":"Quarterly"|"Semi-annual"|"Annual"|"Monthly"|"None","notes":"brief note"},...}
+divYield = annual dividend yield as a percentage (e.g. 3.5 for 3.5%). null if unknown or no dividend. freq = payment frequency. Use "None" if no dividend paid.
+Tickers: ${batch.map(t=>`${t.ticker}(${t.company},${t.currency})`).join(', ')}`;
+
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }] })
+      });
+      if (!resp.ok) continue;
+      const data = await resp.json();
+      const text = (data.content||[]).map(c=>c.text||'').join('');
+      const clean = text.replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(clean);
+      Object.entries(parsed).forEach(([ticker, info]) => {
+        if (!valuations[ticker]) valuations[ticker] = {};
+        if (info.divYield != null) valuations[ticker].divYield = info.divYield;
+        // Also update DIV_DATA for the session so freq and notes are reflected
+        DIV_DATA[ticker] = {
+          freq: info.freq || 'Unknown',
+          yield: info.divYield || 0,
+          notes: info.notes || ''
+        };
+      });
+    } catch(e) { console.warn('Dividend refresh batch error:', e); }
+  }
+
+  saveValuations();
+  renderDividends();
+  btn.disabled = false;
+  icon.style.cssText = '';
+  icon.textContent = '✓';
+  setTimeout(() => { icon.textContent = '✦'; }, 3000);
+}
 
 async function autoFillValuations(){
   const btn = document.getElementById('autoFillBtn');
