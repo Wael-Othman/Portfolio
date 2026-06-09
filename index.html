@@ -2986,14 +2986,20 @@ async function fetchDayChange(){
 
 // ── PERFORMANCE ────────────────────────────────────────────────
 function renderPerfBars(gainEl, loseEl, d){
-  const clean=d.filter(p=>p.type!=='Cash');
-  const s=[...clean].sort((a,b)=>b.gainLossPct-a.gainLossPct);
-  const g=s.slice(0,8),l=s.slice(-8).reverse();
-  const mG=g[0]?.gainLossPct||1,mL=Math.abs(l[0]?.gainLossPct||1);
+  const clean=d.filter(p=>p.type!=='Cash'&&p.type!=='People');
+  const sorted=[...clean].sort((a,b)=>b.gainLossPct-a.gainLossPct);
+  const gainers=sorted.filter(p=>p.gainLossPct>0).slice(0,8);
+  const losers=sorted.filter(p=>p.gainLossPct<0).sort((a,b)=>a.gainLossPct-b.gainLossPct).slice(0,8);
+  const mG=gainers[0]?.gainLossPct||1;
+  const mL=Math.abs(losers[0]?.gainLossPct||1);
   const gainWrap=document.getElementById(gainEl);
   const loseWrap=document.getElementById(loseEl);
-  if(gainWrap)gainWrap.innerHTML=g.map(p=>`<div class="perf-row"><div class="perf-ticker">${p.ticker}</div><div class="perf-bar-outer"><div class="perf-bar-inner" style="width:${(p.gainLossPct/mG*100).toFixed(1)}%;background:var(--green)"></div></div><div class="perf-val pos">${fmtP(p.gainLossPct)}</div></div>`).join('');
-  if(loseWrap)loseWrap.innerHTML=l.map(p=>`<div class="perf-row"><div class="perf-ticker">${p.ticker}</div><div class="perf-bar-outer"><div class="perf-bar-inner" style="width:${(Math.abs(p.gainLossPct)/mL*100).toFixed(1)}%;background:var(--red)"></div></div><div class="perf-val neg">${fmtP(p.gainLossPct)}</div></div>`).join('');
+  if(gainWrap) gainWrap.innerHTML=gainers.length
+    ? gainers.map(p=>`<div class="perf-row"><div class="perf-ticker">${p.ticker}</div><div class="perf-bar-outer"><div class="perf-bar-inner" style="width:${Math.min(100,(p.gainLossPct/mG*100)).toFixed(1)}%;background:var(--green)"></div></div><div class="perf-val pos">${fmtP(p.gainLossPct)}</div></div>`).join('')
+    : '<div style="font-size:12px;color:var(--text3);padding:8px 0">No gainers in current filter.</div>';
+  if(loseWrap) loseWrap.innerHTML=losers.length
+    ? losers.map(p=>`<div class="perf-row"><div class="perf-ticker">${p.ticker}</div><div class="perf-bar-outer"><div class="perf-bar-inner" style="width:${Math.min(100,(Math.abs(p.gainLossPct)/mL*100)).toFixed(1)}%;background:var(--red)"></div></div><div class="perf-val neg">${fmtP(p.gainLossPct)}</div></div>`).join('')
+    : '<div style="font-size:12px;color:var(--text3);padding:8px 0">No losers in current filter.</div>';
 }
 
 function renderPerformance(){
