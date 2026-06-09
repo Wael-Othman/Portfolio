@@ -1375,9 +1375,6 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
             <div class="page-title">Dividend & Income Dashboard</div>
             <div class="page-sub">Estimated income based on dividend yield data per holding</div>
           </div>
-          <button class="btn btn-primary" id="divRefreshBtn" onclick="refreshDividendData()" style="font-size:11px;padding:5px 14px;display:flex;align-items:center;gap:5px;white-space:nowrap">
-            <span id="divRefreshIcon">✦</span> Refresh Dividend Data
-          </button>
         </div>
         <div id="divMissingWarning" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--amber-bg,#fffbeb);border:1px solid var(--amber,#f59e0b);border-radius:8px;font-size:12px;color:var(--text2);line-height:1.6"></div>
         <div class="metric-grid" id="divMetrics"></div>
@@ -1440,9 +1437,6 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
           <div class="card-header">
             <span class="card-title">Valuation Metrics per Position</span>
             <div style="display:flex;gap:8px;align-items:center">
-              <button class="btn btn-secondary" onclick="showDcfKeyModal()" style="font-size:11px;padding:5px 12px" title="Set your Anthropic API key for AI features">
-                <span id="antKeyBadge" style="font-size:9px;padding:1px 5px;border-radius:3px;margin-right:3px"></span>⚙ AI Key
-              </button>
               <button class="btn btn-secondary" id="fvBtn" onclick="buildFairValues()" style="font-size:11px;padding:5px 12px" title="Fetch FMP's prebuilt DCF fair value for each stock holding">
                 <span id="fvIcon">⚖︎</span> Fair Values
               </button>
@@ -3359,7 +3353,9 @@ const DIV_DATA={
   'AKRBP.OL':{freq:'Quarterly',  yield:8.1,  notes:'Norwegian oil'},
   'DNQ':     {freq:'Quarterly',  yield:7.5,  notes:'Equinor ASA'},
   // ── MYR stocks ────────────────────────────────────────────────
-  'KLSE1163':{freq:'Semi-annual',yield:4.5,  notes:'Allianz Malaysia'},
+  '2588':    {freq:'Semi-annual',yield:4.8,  notes:'BOC Aviation Ltd HK'},
+  'AKRBF':   {freq:'Quarterly',  yield:8.1,  notes:'Aker BP (OTC)'},
+  'KLSE:1163':{freq:'Semi-annual',yield:4.5, notes:'Allianz Malaysia'},
   // ── GBX stocks ────────────────────────────────────────────────
   'DOM':     {freq:'Annual',     yield:4.1,  notes:"Domino's UK"},
   // ── ETFs ──────────────────────────────────────────────────────
@@ -3385,16 +3381,21 @@ function renderDividends(){
   const d=getFilteredData();
   const totV=d.reduce((a,b)=>a+b.currentValue,0);
 
-  // Merge DIV_DATA with valuations
-  const divPositions=d.filter(p=>p.type!=='Cash'&&p.type!=='People').map(p=>{
-    const div=DIV_DATA[p.ticker]||{freq:'Unknown',yield:0,notes:''};
-    const valDiv=valuations[p.ticker]?.divYield||div.yield;
-    const annualIncome=p.currentValue*(valDiv/100);
-    const yoc=p.investment>0?(annualIncome/p.investment)*100:0;
-    return{...p,divYield:valDiv,annualIncome,yoc,freq:div.freq,notes:div.notes};
-  }).filter(p=>p.divYield>0).sort((a,b)=>b.annualIncome-a.annualIncome);
+  // Build dividend positions from ALL live positions — no hardcoded filter
+  // Source priority: 1) Valuation tab manual entry  2) DIV_DATA  3) default 0
+  const divPositions=d
+    .filter(p=>p.type!=='Cash'&&p.type!=='People'&&p.type!=='Crypto')
+    .map(p=>{
+      const divEntry=DIV_DATA[p.ticker]||DIV_DATA[p.ticker?.replace(':','')]||{freq:'Unknown',yield:0,notes:''};
+      const valDiv=valuations[p.ticker]?.divYield!=null?valuations[p.ticker].divYield:divEntry.yield;
+      const annualIncome=p.currentValue*(valDiv/100);
+      const yoc=p.investment>0?(annualIncome/p.investment)*100:0;
+      return{...p,divYield:valDiv,annualIncome,yoc,freq:divEntry.freq,notes:divEntry.notes};
+    }).sort((a,b)=>b.annualIncome-a.annualIncome);
 
-  const totalAnnual=divPositions.reduce((s,p)=>s+p.annualIncome,0);
+  const divPayers=divPositions.filter(p=>p.divYield>0);
+  const divUnknown=divPositions.filter(p=>p.divYield===0);
+  const totalAnnual=divPayers.reduce((s,p)=>s+p.annualIncome,0);
   const totalInv=d.reduce((a,b)=>a+b.investment,0);
   const weightedYOC=totalInv>0?(totalAnnual/totalInv)*100:0;
 
@@ -3405,43 +3406,44 @@ function renderDividends(){
     <div class="metric-card"><div class="metric-label">📊 Current Yield</div><div class="metric-value">${(totalAnnual/totV*100).toFixed(2)}%</div><div class="metric-sub neu">On current value</div></div>
   `;
 
-  // By position
   const sr=(label,val,extra='')=>`<div class="stat-row"><span class="stat-label">${label}</span><span class="stat-val">${val}${extra}</span></div>`;
-  // Missing dividend data warning
-  const missing = d.filter(p => p.type!=='Cash' && p.type!=='People' && p.type!=='Crypto')
-    .filter(p => !valuations[p.ticker]?.divYield && !(DIV_DATA[p.ticker]?.yield > 0));
-  const warnEl = document.getElementById('divMissingWarning');
-  if (missing.length > 0) {
-    warnEl.style.display = 'block';
-    warnEl.innerHTML = `⚠️ <strong>${missing.length} position${missing.length>1?'s have':' has'} no dividend data:</strong> ${missing.map(p=>`<span style="font-family:'DM Mono',monospace">${p.ticker}</span>`).join(', ')} — click <strong>Refresh Dividend Data</strong> to fetch via AI.`;
+
+  // Missing data notice (no longer a warning — just informational)
+  const warnEl=document.getElementById('divMissingWarning');
+  if(divUnknown.length>0){
+    warnEl.style.display='block';
+    warnEl.innerHTML=`ℹ️ <strong>${divUnknown.length} position${divUnknown.length>1?'s have':' has'} no dividend yield data:</strong> ${divUnknown.map(p=>`<span style="font-family:'DM Mono',monospace">${p.ticker}</span>`).join(', ')} — enter yield manually in the <strong>Valuation</strong> tab to include them.`;
   } else {
-    warnEl.style.display = 'none';
+    warnEl.style.display='none';
   }
 
-  // By position — ticker + company name
-  document.getElementById('divByPosition').innerHTML = divPositions.map(p =>
-    sr(`<span style="font-family:'DM Mono',monospace;font-size:12px">${p.ticker}</span><span style="color:var(--text3);font-size:11px;font-weight:400;margin-left:6px">${p.company}</span> <span style="color:var(--text3);font-size:11px">(${p.freq})</span>`,
-      fmtUSD(p.annualIncome),
-      ` <span style="color:var(--text3);font-size:11px">${p.divYield.toFixed(1)}%</span>`)
-  ).join('');
+  // Annual Dividend by Position — payers only
+  document.getElementById('divByPosition').innerHTML = divPayers.length
+    ? divPayers.map(p=>sr(
+        `<span style="font-family:'DM Mono',monospace;font-size:12px">${p.ticker}</span><span style="color:var(--text3);font-size:11px;font-weight:400;margin-left:6px">${p.company}</span> <span style="color:var(--text3);font-size:11px">(${p.freq})</span>`,
+        fmtUSD(p.annualIncome),
+        ` <span style="color:var(--text3);font-size:11px">${p.divYield.toFixed(1)}%</span>`
+      )).join('')
+    : '<div style="color:var(--text3);font-size:12px;padding:8px 0">No dividend payers in current filter.</div>';
 
-  // YOC — ticker + company name
-  document.getElementById('divYOC').innerHTML =
-    divPositions.map(p=>`<div class="progress-wrap">
-      <div class="progress-header">
-        <span class="progress-label">
-          <span style="font-family:'DM Mono',monospace;font-size:11px">${p.ticker}</span>
-          <span style="color:var(--text3);font-size:10.5px;font-weight:400;margin-left:5px">${p.company}</span>
-        </span>
-        <span class="progress-val ${p.yoc>6?'pos':''}">${p.yoc.toFixed(1)}% YOC</span>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,(p.yoc/15)*100).toFixed(0)}%;background:${p.yoc>8?'var(--green)':p.yoc>4?'var(--blue)':'var(--amber)'}"></div></div>
-    </div>`).join('');
+  // YOC by Position
+  document.getElementById('divYOC').innerHTML = divPayers.length
+    ? divPayers.map(p=>`<div class="progress-wrap">
+        <div class="progress-header">
+          <span class="progress-label">
+            <span style="font-family:'DM Mono',monospace;font-size:11px">${p.ticker}</span>
+            <span style="color:var(--text3);font-size:10.5px;font-weight:400;margin-left:5px">${p.company}</span>
+          </span>
+          <span class="progress-val ${p.yoc>6?'pos':''}">${p.yoc.toFixed(1)}% YOC</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,(p.yoc/15)*100).toFixed(0)}%;background:${p.yoc>8?'var(--green)':p.yoc>4?'var(--blue)':'var(--amber)'}"></div></div>
+      </div>`).join('')
+    : '<div style="color:var(--text3);font-size:12px;padding:8px 0">No yield data available.</div>';
 
   // Upcoming dividend calendar
   const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const now=new Date();
-  const upcoming=divPositions.filter(p=>p.freq!=='None'&&p.freq!=='Unknown').slice(0,6);
+  const upcoming=divPayers.filter(p=>p.freq!=='None'&&p.freq!=='Unknown').slice(0,6);
   document.getElementById('divCalendar').innerHTML=upcoming.length?
     `<div style="font-size:12px;color:var(--text2);margin-bottom:10px">Estimated next dividend dates based on frequency</div>`+
     upcoming.map(p=>{
@@ -3563,18 +3565,11 @@ function updateDcfKeyBadge(){
   el.textContent = has ? 'KEY ✓' : 'NO KEY';
   el.style.background = has ? 'var(--green-bg)' : 'var(--red-bg)';
   el.style.color      = has ? 'var(--green)'   : 'var(--red)';
-  // AI Key badge
-  const antEl = document.getElementById('antKeyBadge'); if(!antEl) return;
-  const hasAnt = !!getApiKey();
-  antEl.textContent = hasAnt ? 'KEY ✓' : 'NO KEY';
-  antEl.style.background = hasAnt ? 'var(--green-bg)' : 'var(--red-bg)';
-  antEl.style.color      = hasAnt ? 'var(--green)'   : 'var(--red)';
 }
 
 function showDcfKeyModal(){
   const cur = getFmpKey();
   const av  = getAvKey();
-  const ant = localStorage.getItem('anthropicKey') || '';
   const wrap = document.createElement('div');
   wrap.className = 'modal-overlay';
   wrap.id = 'dcfKeyOverlay';
@@ -3604,19 +3599,8 @@ function showDcfKeyModal(){
       <input id="avKeyInput" type="text" value="${av.replace(/"/g,'&quot;')}" placeholder="Paste Alpha Vantage key (for FCF)"
         style="width:100%;margin-top:4px;padding:10px 12px;border:1px solid var(--border2);border-radius:9px;font-size:13px;font-family:'DM Mono',monospace;outline:none;margin-bottom:16px">
 
-      <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:8px;padding-top:12px;border-top:1px dashed var(--border2)">
-        <strong>Anthropic</strong> — powers <em>AI Insights</em>, <em>Valuation Auto-Fill</em> and <em>Dividend Refresh</em>.
-        <ol style="margin:8px 0 0 18px;padding:0;line-height:1.7">
-          <li>Go to <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" style="color:var(--blue)">console.anthropic.com</a> → API Keys → Create key</li>
-          <li>Paste below — key starts with <code style="font-size:11px">sk-ant-</code></li>
-        </ol>
-      </div>
-      <label style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Anthropic Key</label>
-      <input id="antKeyInput" type="password" value="${ant.replace(/"/g,'&quot;')}" placeholder="sk-ant-..."
-        style="width:100%;margin-top:4px;padding:10px 12px;border:1px solid var(--border2);border-radius:9px;font-size:13px;font-family:'DM Mono',monospace;outline:none;margin-bottom:14px">
-
       <div style="display:flex;gap:8px;justify-content:flex-end">
-        ${(cur||av||ant)?`<button class="btn btn-danger" style="margin-right:auto;padding:8px 14px" onclick="localStorage.removeItem('fmpKey');localStorage.removeItem('avKey');localStorage.removeItem('anthropicKey');updateDcfKeyBadge();document.getElementById('dcfKeyOverlay').remove()">Remove all</button>`:''}
+        ${(cur||av)?`<button class="btn btn-danger" style="margin-right:auto;padding:8px 14px" onclick="localStorage.removeItem('fmpKey');localStorage.removeItem('avKey');updateDcfKeyBadge();document.getElementById('dcfKeyOverlay').remove()">Remove all</button>`:''}
         <button class="btn btn-secondary" onclick="document.getElementById('dcfKeyOverlay').remove()">Cancel</button>
         <button class="btn btn-primary" onclick="dcfSaveKey()">Save Keys</button>
       </div>
@@ -3629,8 +3613,6 @@ function dcfSaveKey(){
   if(v) localStorage.setItem('fmpKey', v); else localStorage.removeItem('fmpKey');
   const a = document.getElementById('avKeyInput').value.trim();
   if(a) localStorage.setItem('avKey', a); else localStorage.removeItem('avKey');
-  const ant = document.getElementById('antKeyInput').value.trim();
-  if(ant) localStorage.setItem('anthropicKey', ant); else localStorage.removeItem('anthropicKey');
   updateDcfKeyBadge();
   document.getElementById('dcfKeyOverlay')?.remove();
   dcfSetStatus('ok', 'Keys saved.' + (a?' FCF will fill from Alpha Vantage.':''));
@@ -4524,74 +4506,6 @@ const BUILTIN_VALUATIONS = {
   UVXY:     {pe:null, pb:null,divYield:0,    payout:null,target:null},
 };
 
-async function refreshDividendData() {
-  const btn = document.getElementById('divRefreshBtn');
-  const icon = document.getElementById('divRefreshIcon');
-  const key = getApiKey();
-  btn.disabled = true;
-  icon.style.cssText = 'display:inline-block;animation:spin 1s linear infinite';
-  icon.textContent = '↻';
-
-  if (!key) {
-    btn.disabled = false;
-    icon.style.cssText = '';
-    icon.textContent = '✦';
-    alert('No Anthropic API key found. Please add your key in the Settings (⚙) panel first.');
-    return;
-  }
-
-  // Build ticker list from current live data
-  const tickers = liveData
-    .filter(p => p.type === 'Stock' || p.type === 'ETF')
-    .map(p => ({ ticker: p.ticker, company: p.company, currency: p.localCurrency || p.currency }));
-
-  const batches = [];
-  for (let i = 0; i < tickers.length; i += 15) batches.push(tickers.slice(i, i + 15));
-
-  for (let bi = 0; bi < batches.length; bi++) {
-    const batch = batches[bi];
-    const prompt = `For each ticker return ONLY a valid JSON object (no markdown, no explanation):
-{"TICKER":{"divYield":number|null,"freq":"Quarterly"|"Semi-annual"|"Annual"|"Monthly"|"None","notes":"brief note"},...}
-divYield = annual dividend yield as a percentage (e.g. 3.5 for 3.5%). null if unknown or no dividend. freq = payment frequency. Use "None" if no dividend paid.
-Tickers: ${batch.map(t=>`${t.ticker}(${t.company},${t.currency})`).join(', ')}`;
-
-    try {
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': key,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1000,
-          messages: [{ role: 'user', content: prompt }] })
-      });
-      if (!resp.ok) continue;
-      const data = await resp.json();
-      const text = (data.content||[]).map(c=>c.text||'').join('');
-      const clean = text.replace(/```json|```/g,'').trim();
-      const parsed = JSON.parse(clean);
-      Object.entries(parsed).forEach(([ticker, info]) => {
-        if (!valuations[ticker]) valuations[ticker] = {};
-        if (info.divYield != null) valuations[ticker].divYield = info.divYield;
-        // Also update DIV_DATA for the session so freq and notes are reflected
-        DIV_DATA[ticker] = {
-          freq: info.freq || 'Unknown',
-          yield: info.divYield || 0,
-          notes: info.notes || ''
-        };
-      });
-    } catch(e) { console.warn('Dividend refresh batch error:', e); }
-  }
-
-  saveValuations();
-  renderDividends();
-  btn.disabled = false;
-  icon.style.cssText = '';
-  icon.textContent = '✓';
-  setTimeout(() => { icon.textContent = '✦'; }, 3000);
-}
 
 async function autoFillValuations(){
   const btn = document.getElementById('autoFillBtn');
