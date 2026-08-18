@@ -559,6 +559,44 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
 .skel{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:skel .8s infinite;border-radius:4px;}
 @keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
+/* ── IVC — Intrinsic Value Calculator ── */
+.ivc-tag-auto{font-size:8.5px;padding:1px 5px;border-radius:3px;background:var(--green-bg);color:var(--green);font-weight:700;}
+.ivc-tag-manual{font-size:8.5px;padding:1px 5px;border-radius:3px;background:var(--amber-bg);color:var(--amber);font-weight:700;}
+.ivc-help{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--border2);color:var(--text3);font-size:8.5px;font-weight:700;cursor:help;border:none;font-family:'DM Sans',sans-serif;flex-shrink:0;vertical-align:middle;}
+#ivcGlobalTip{display:none;position:fixed;background:#0f1525;color:#c8d0e8;font-size:12px;padding:11px 14px;border-radius:10px;white-space:normal;width:260px;z-index:99999;line-height:1.6;font-weight:400;box-shadow:0 8px 28px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,0.08);pointer-events:none;}
+.ivc-sc-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;}
+.ivc-sc-head{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--bg3);}
+.ivc-sc-bar{width:4px;height:30px;border-radius:2px;flex-shrink:0;}
+.ivc-sc-body{display:grid;grid-template-columns:1fr 196px;}
+.ivc-table-wrap{overflow-x:auto;padding:12px 14px;border-right:1px solid var(--border);}
+.ivc-controls{padding:12px 14px;display:flex;flex-direction:column;gap:10px;}
+.ivc-proj{border-collapse:collapse;font-size:11px;white-space:nowrap;}
+.ivc-proj th{padding:5px 8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-align:right;border-bottom:2px solid var(--border2);}
+.ivc-proj th.lbl{text-align:left;width:130px;color:var(--text3);}
+.ivc-proj th.base{background:var(--bg3);color:var(--text3);}
+.ivc-proj th.y15{background:rgba(10,138,92,0.06);color:var(--green);}
+.ivc-proj th.y610{background:rgba(30,69,184,0.06);color:var(--blue);}
+.ivc-proj th.term{background:rgba(109,40,217,0.06);color:#6d28d9;}
+.ivc-proj td{padding:6px 8px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;border-bottom:1px solid var(--border);}
+.ivc-proj td.lbl{text-align:left;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--text2);border-right:1px solid var(--border2);}
+.ivc-proj td.base{background:var(--bg3);color:var(--text2);}
+.ivc-proj td.y15{background:rgba(10,138,92,0.04);}
+.ivc-proj td.y610{background:rgba(30,69,184,0.04);}
+.ivc-proj td.term{background:rgba(109,40,217,0.05);font-weight:600;}
+.ivc-proj tr.ivrow td{background:var(--bg3);border-top:2px solid var(--border2);font-weight:700;}
+.ivc-ctrl-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;display:flex;align-items:center;gap:4px;}
+.ivc-ctrl-wrap{position:relative;}
+.ivc-ctrl-input{width:100%;padding:7px 28px 7px 9px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:12px;font-family:'DM Mono',monospace;color:var(--text);background:var(--bg2);outline:none;transition:border-color .15s;}
+.ivc-ctrl-input:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(30,69,184,0.07);}
+.ivc-ctrl-suffix{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:10.5px;color:var(--text3);pointer-events:none;}
+.ivc-divider{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);padding-top:8px;margin-top:2px;border-top:1px dashed var(--border2);}
+.ivc-prob-input{width:58px;padding:4px 7px;border:1px solid var(--border2);border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;text-align:right;background:var(--bg2);color:var(--text);outline:none;transition:border-color .15s;}
+.ivc-prob-input:focus{border-color:var(--blue);}
+.ivc-verdict{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:9px;font-size:13.5px;font-weight:700;}
+.ivc-mos-outer{height:7px;background:var(--bg4);border-radius:4px;overflow:hidden;margin-top:7px;}
+.ivc-mos-inner{height:100%;border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1);}
+@media(max-width:900px){.ivc-sc-body{grid-template-columns:1fr;}.ivc-controls{border-top:1px solid var(--border);border-right:none;display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}.ivc-divider{grid-column:1/-1;}}
+
 /* ── TOOLTIP ── */
 [data-tip]{position:relative;cursor:help;}
 [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:125%;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:11px;padding:5px 9px;border-radius:5px;white-space:nowrap;z-index:999;font-family:'DM Sans',sans-serif;font-weight:400;pointer-events:none;}
@@ -1801,6 +1839,126 @@ table.data-table{width:100%;border-collapse:collapse;font-size:12.5px;}
             </div>
           </div>
         </div>
+
+        <!-- ── INTRINSIC VALUE CALCULATOR ───────────────────────── -->
+        <div class="card" style="margin-bottom:16px" id="ivc-card">
+          <div class="card-header">
+            <span class="card-title">📐 Intrinsic Value Calculator — 3-Scenario EPS DCF</span>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <div style="position:relative">
+                <input id="ivcTicker" type="text" placeholder="BABA" maxlength="12"
+                  style="padding:6px 12px;border:1px solid var(--border2);border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;font-weight:700;width:90px;outline:none;text-transform:uppercase;background:var(--bg2);color:var(--text);"
+                  oninput="this.value=this.value.toUpperCase()"
+                  onkeydown="if(event.key==='Enter')ivcLoadData()">
+              </div>
+              <button class="btn btn-primary" id="ivcLoadBtn" onclick="ivcLoadData()" style="font-size:11px;padding:5px 14px">
+                <span id="ivcLoadIcon">⤓</span> Load Data
+              </button>
+              <span style="font-size:11px;color:var(--text3)">
+                <span style="color:var(--green);font-weight:700">■</span> Auto &nbsp;
+                <span style="color:var(--amber);font-weight:700">■</span> Manual
+              </span>
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div id="ivcStatus" style="display:none;padding:8px 18px;font-size:12px;border-bottom:1px solid var(--border)"></div>
+
+          <div class="card-body">
+            <!-- Company info row -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">
+
+              <div style="grid-column:span 2">
+                <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Company Name</div>
+                <input id="ivcCompany" class="dcf-in" placeholder="e.g. Alibaba Group Holding Ltd"
+                  style="width:100%;font-family:'DM Sans',sans-serif;font-size:13px;">
+              </div>
+
+              <div>
+                <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;display:flex;align-items:center;gap:4px">
+                  Stock Price
+                  <span class="ivc-tag-auto">AUTO</span>
+                  <button class="ivc-help" data-tip="Current market price. Auto-loaded from FMP. Used to compute Margin of Safety vs your weighted intrinsic value.">?</button>
+                </div>
+                <div style="position:relative">
+                  <input id="ivcPrice" class="dcf-in" type="number" step="0.01" placeholder="85.00" oninput="ivcUpdateSummary()" style="width:100%;padding-right:24px">
+                  <span style="position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text3);pointer-events:none">$</span>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;display:flex;align-items:center;gap:4px">
+                  Base EPS (TTM)
+                  <span class="ivc-tag-auto">AUTO</span>
+                  <button class="ivc-help" data-tip="Trailing Twelve Month EPS — the starting point all 3 scenarios grow from. Auto-loaded from FMP. Override with a forward estimate if you prefer. Must be positive.">?</button>
+                </div>
+                <div style="position:relative">
+                  <input id="ivcBaseEPS" class="dcf-in" type="number" step="0.01" placeholder="8.00" oninput="ivcUpdateComputed()" style="width:100%;padding-right:24px">
+                  <span style="position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text3);pointer-events:none">$</span>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;display:flex;align-items:center;gap:4px">
+                  Payout Ratio
+                  <span class="ivc-tag-auto">AUTO</span>
+                  <button class="ivc-help" data-tip="% of EPS paid as dividends. Auto-loaded from FMP. Shown for context only — this model values total EPS growth.">?</button>
+                </div>
+                <div style="position:relative">
+                  <input id="ivcPayout" class="dcf-in" type="number" step="0.1" placeholder="14.0" style="width:100%;padding-right:24px">
+                  <span style="position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text3);pointer-events:none">%</span>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;display:flex;align-items:center;gap:4px">
+                  Research Link
+                  <span class="ivc-tag-manual">MANUAL</span>
+                </div>
+                <div style="position:relative;display:flex;gap:6px">
+                  <input id="ivcLink" class="dcf-in" type="url" placeholder="https://…" style="width:100%;font-size:12px">
+                  <button onclick="const u=document.getElementById('ivcLink').value.trim();if(u)window.open(u,'_blank')"
+                    style="padding:0 10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:13px;flex-shrink:0">→</button>
+                </div>
+              </div>
+
+            </div>
+
+            <div style="padding:9px 13px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:16px;border-left:3px solid var(--border2)">
+              <strong>How this works:</strong> Base EPS grows over 10 years using two growth stages per scenario. A terminal value is calculated using your exit P/E, then all cash flows are discounted back at your required return rate. Intrinsic value = Σ(discounted annual EPS) + discounted terminal value.
+            </div>
+
+            <!-- Scenarios -->
+            <div id="ivcScenariosContainer"></div>
+
+            <!-- Probability-Weighted Summary -->
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:4px">
+              <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:space-between">
+                <span style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">📊 Probability-Weighted Intrinsic Value</span>
+                <span style="font-size:11px;color:var(--text3)">Probabilities must sum to 100%</span>
+              </div>
+              <div style="padding:14px 16px">
+                <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+                  <thead>
+                    <tr>
+                      <th style="text-align:left;padding:6px 10px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1.5px solid var(--border2)">Scenario</th>
+                      <th style="text-align:right;padding:6px 10px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1.5px solid var(--border2)">
+                        Probability
+                        <button class="ivc-help" style="margin-left:4px" data-tip="Subjective probability per scenario — must sum to 100%. Default: 60% normal, 20% best, 20% worst.">?</button>
+                      </th>
+                      <th style="text-align:right;padding:6px 10px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1.5px solid var(--border2)">Intrinsic Value</th>
+                      <th style="text-align:right;padding:6px 10px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1.5px solid var(--border2)">Weighted Value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ivcSummaryBody"></tbody>
+                </table>
+                <div id="ivcVerdictArea" style="margin-top:14px"></div>
+              </div>
+            </div>
+
+          </div><!-- /card-body -->
+        </div><!-- /ivc-card -->
+
       </div>
     </div>
 
@@ -5821,6 +5979,366 @@ document.addEventListener('touchend', e => {
   const dx = e.changedTouches[0].clientX - touchStartX;
   if (dx < -60 && document.getElementById('sidebar').classList.contains('open')) closeSidebar();
 }, { passive: true });
+
+// ═══════════════════════════════════════════════════════════════
+//  INTRINSIC VALUE CALCULATOR (IVC)
+//  Additive — touches no existing functions or state
+// ═══════════════════════════════════════════════════════════════
+
+const IVC_YEARS = Array.from({length:10}, (_,i) => 2026 + i);
+
+const IVC_HELP = {
+  g1:   'Your estimate of EPS growth for years 1–5. Conservative: 3–6%, Moderate: 8–12%, Aggressive: 15–25%+. Compare to historical EPS CAGR, analyst consensus, and the reinvestment rate.',
+  g2:   'EPS growth rate for years 6–10. Usually lower than stage 1 as competitive advantages fade. A durable compounder might get 8–12%; a maturing business, 3–6%.',
+  disc: 'Your required annual return — the rate you discount future cash flows at. 10% is a common equity hurdle. Higher-risk businesses deserve more (12–15%). This single input most affects intrinsic value.',
+  pe:   'The P/E multiple you believe the stock deserves in year 10 (your exit multiple). Use: sector historical average, comparable peers, or a conservative estimate. Avoid using today\'s elevated multiple — mean reversion is real.',
+};
+
+let ivcScenarios = [
+  { name:'Normal Case', color:'#1e45b8', g1:10, g2:10, disc:10, pe:15, prob:60 },
+  { name:'Best Case',   color:'#0a8a5c', g1:15, g2:15, disc:10, pe:20, prob:20 },
+  { name:'Worst Case',  color:'#d63c2d', g1:5,  g2:5,  disc:10, pe:12, prob:20 },
+];
+
+// ── Math ──────────────────────────────────────────────────────
+function ivcCalc(baseEPS, g1, g2, disc, pe) {
+  if (!baseEPS || baseEPS <= 0) return null;
+  const r = disc / 100;
+  const eps = [baseEPS];
+  for (let i = 1; i <= 10; i++) {
+    eps.push(eps[eps.length-1] * (1 + (i <= 5 ? g1 : g2) / 100));
+  }
+  const pvArr = [];
+  let sumPV = 0;
+  for (let i = 1; i <= 10; i++) {
+    const pv = eps[i] / Math.pow(1 + r, i);
+    pvArr.push(pv);
+    sumPV += pv;
+  }
+  const terminalVal = eps[10] * pe;
+  const terminalPV  = terminalVal / Math.pow(1 + r, 10);
+  return { eps: eps.slice(1), pvArr, terminalVal, terminalPV, sumPV, iv: sumPV + terminalPV };
+}
+
+function ivcFmt(n, dec=2) {
+  if (!Number.isFinite(n)) return '—';
+  return '$' + n.toLocaleString('en-US', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+}
+
+// ── Render structure (once per valuation tab open) ────────────
+function ivcRenderStructure() {
+  const c = document.getElementById('ivcScenariosContainer');
+  if (!c) return;
+  c.innerHTML = '';
+  ivcScenarios.forEach((sc, si) => {
+    const yr15H  = IVC_YEARS.slice(0,5).map(y=>`<th class="y15">${y}</th>`).join('');
+    const yr610H = IVC_YEARS.slice(5).map(y=>`<th class="y610">${y}</th>`).join('');
+    const epsC   = IVC_YEARS.map((_,i)=>`<td class="${i<5?'y15':'y610'}" id="ivc-eps-${si}-${i}">—</td>`).join('');
+    const pvC    = IVC_YEARS.map((_,i)=>`<td class="${i<5?'y15':'y610'}" id="ivc-pv-${si}-${i}">—</td>`).join('');
+
+    const div = document.createElement('div');
+    div.className = 'ivc-sc-wrap';
+    div.id = `ivc-sc-${si}`;
+    div.innerHTML = `
+      <div class="ivc-sc-head">
+        <div class="ivc-sc-bar" style="background:${sc.color}"></div>
+        <div style="flex:1">
+          <div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:${sc.color}">Scenario ${si+1} — ${sc.name}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px" id="ivc-params-${si}"></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Intrinsic Value / Share</div>
+          <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:${sc.color}" id="ivc-iv-head-${si}">—</div>
+        </div>
+      </div>
+      <div class="ivc-sc-body">
+        <div class="ivc-table-wrap">
+          <table class="ivc-proj">
+            <thead><tr>
+              <th class="lbl"></th>
+              <th class="base">Base</th>
+              ${yr15H}${yr610H}
+              <th class="term">Terminal (${IVC_YEARS[9]})</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td class="lbl">EPS Estimated ($)</td>
+                <td class="base" id="ivc-eps-base-${si}">—</td>
+                ${epsC}
+                <td class="term" id="ivc-terminal-eps-${si}">—</td>
+              </tr>
+              <tr>
+                <td class="lbl">PV @ Discount Rate</td>
+                <td class="base" style="color:var(--text3)">—</td>
+                ${pvC}
+                <td class="term" id="ivc-terminal-pv-${si}">—</td>
+              </tr>
+              <tr class="ivrow">
+                <td class="lbl" colspan="13" id="ivc-iv-row-${si}" style="padding:8px 8px">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="ivc-controls">
+          <div>
+            <div class="ivc-ctrl-label">Growth Yrs 1–5 <button class="ivc-help" data-tip="${IVC_HELP.g1}">?</button></div>
+            <div class="ivc-ctrl-wrap">
+              <input class="ivc-ctrl-input" id="ivc-g1-${si}" type="number" step="0.5" value="${sc.g1}" min="-20" max="50"
+                oninput="ivcScenarios[${si}].g1=parseFloat(this.value)||0;ivcUpdateComputed()">
+              <span class="ivc-ctrl-suffix">%</span>
+            </div>
+          </div>
+          <div>
+            <div class="ivc-ctrl-label">Growth Yrs 6–10 <button class="ivc-help" data-tip="${IVC_HELP.g2}">?</button></div>
+            <div class="ivc-ctrl-wrap">
+              <input class="ivc-ctrl-input" id="ivc-g2-${si}" type="number" step="0.5" value="${sc.g2}" min="-20" max="50"
+                oninput="ivcScenarios[${si}].g2=parseFloat(this.value)||0;ivcUpdateComputed()">
+              <span class="ivc-ctrl-suffix">%</span>
+            </div>
+          </div>
+          <div class="ivc-divider">Discount &amp; Exit</div>
+          <div>
+            <div class="ivc-ctrl-label">Discount Rate <button class="ivc-help" data-tip="${IVC_HELP.disc}">?</button></div>
+            <div class="ivc-ctrl-wrap">
+              <input class="ivc-ctrl-input" id="ivc-disc-${si}" type="number" step="0.5" value="${sc.disc}" min="1" max="30"
+                oninput="ivcScenarios[${si}].disc=parseFloat(this.value)||0;ivcUpdateComputed()">
+              <span class="ivc-ctrl-suffix">%</span>
+            </div>
+          </div>
+          <div>
+            <div class="ivc-ctrl-label">Terminal P/E <button class="ivc-help" data-tip="${IVC_HELP.pe}">?</button></div>
+            <div class="ivc-ctrl-wrap">
+              <input class="ivc-ctrl-input" id="ivc-pe-${si}" type="number" step="0.5" value="${sc.pe}" min="1" max="100"
+                oninput="ivcScenarios[${si}].pe=parseFloat(this.value)||0;ivcUpdateComputed()">
+              <span class="ivc-ctrl-suffix">×</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    c.appendChild(div);
+  });
+  ivcUpdateComputed();
+}
+
+// ── Update computed cells only — no DOM re-creation ───────────
+function ivcSetCell(id, val) { const el=document.getElementById(id); if(el) el.textContent=val; }
+
+function ivcUpdateComputed() {
+  const baseEPS = parseFloat(document.getElementById('ivcBaseEPS')?.value);
+  ivcScenarios.forEach((sc, si) => {
+    const p = document.getElementById(`ivc-params-${si}`);
+    if (p) p.textContent = `Yrs 1–5: ${sc.g1}% · Yrs 6–10: ${sc.g2}% · Discount: ${sc.disc}% · Terminal P/E: ${sc.pe}×`;
+
+    const r = ivcCalc(baseEPS, sc.g1, sc.g2, sc.disc, sc.pe);
+    if (!r) {
+      ivcSetCell(`ivc-iv-head-${si}`, '—');
+      ivcSetCell(`ivc-eps-base-${si}`, baseEPS > 0 ? ivcFmt(baseEPS) : '—');
+      for (let i = 0; i < 10; i++) { ivcSetCell(`ivc-eps-${si}-${i}`, '—'); ivcSetCell(`ivc-pv-${si}-${i}`, '—'); }
+      ivcSetCell(`ivc-terminal-eps-${si}`, '—'); ivcSetCell(`ivc-terminal-pv-${si}`, '—');
+      const ivRow = document.getElementById(`ivc-iv-row-${si}`);
+      if (ivRow) ivRow.textContent = 'Enter Base EPS to compute';
+      return;
+    }
+    ivcSetCell(`ivc-eps-base-${si}`, ivcFmt(baseEPS));
+    r.eps.forEach((v,i) => ivcSetCell(`ivc-eps-${si}-${i}`, ivcFmt(v)));
+    r.pvArr.forEach((v,i) => ivcSetCell(`ivc-pv-${si}-${i}`, ivcFmt(v)));
+    ivcSetCell(`ivc-terminal-eps-${si}`, ivcFmt(r.terminalVal));
+    ivcSetCell(`ivc-terminal-pv-${si}`, ivcFmt(r.terminalPV));
+    ivcSetCell(`ivc-iv-head-${si}`, ivcFmt(r.iv));
+    const ivRow = document.getElementById(`ivc-iv-row-${si}`);
+    if (ivRow) ivRow.innerHTML =
+      `INTRINSIC VALUE / SHARE: <span style="font-family:'DM Mono',monospace;font-size:13px;margin-left:8px;color:${sc.color}">${ivcFmt(r.iv)}</span>
+       <span style="color:var(--text3);font-size:10.5px;margin-left:12px">(Σ Annual PV: ${ivcFmt(r.sumPV)} + Terminal PV: ${ivcFmt(r.terminalPV)})</span>`;
+  });
+  ivcUpdateSummary();
+}
+
+// ── Probability-weighted summary & verdict ────────────────────
+function ivcUpdateSummary() {
+  const baseEPS = parseFloat(document.getElementById('ivcBaseEPS')?.value);
+  const price   = parseFloat(document.getElementById('ivcPrice')?.value);
+  const tbody   = document.getElementById('ivcSummaryBody');
+  if (!tbody) return;
+
+  const ivs = ivcScenarios.map(sc => { const r=ivcCalc(baseEPS,sc.g1,sc.g2,sc.disc,sc.pe); return r?r.iv:0; });
+  const totalProb  = ivcScenarios.reduce((s,sc)=>s+sc.prob, 0);
+  const weightedIV = ivcScenarios.reduce((s,sc,i)=>s+ivs[i]*(sc.prob/100), 0);
+  const probOk = Math.abs(totalProb - 100) < 0.1;
+
+  tbody.innerHTML = [
+    ...ivcScenarios.map((sc,i) => {
+      const w = ivs[i] * (sc.prob/100);
+      return `<tr>
+        <td style="padding:9px 10px;border-bottom:1px solid var(--border)">
+          <span style="width:9px;height:9px;border-radius:50%;background:${sc.color};display:inline-block;margin-right:7px;vertical-align:middle"></span>
+          Scenario ${i+1} — ${sc.name}
+        </td>
+        <td style="padding:9px 10px;border-bottom:1px solid var(--border);text-align:right">
+          <input class="ivc-prob-input" type="number" step="1" min="0" max="100" value="${sc.prob}"
+            oninput="ivcScenarios[${i}].prob=parseFloat(this.value)||0;ivcUpdateSummary()">
+          <span style="font-size:11px;color:var(--text3);margin-left:3px">%</span>
+        </td>
+        <td style="padding:9px 10px;border-bottom:1px solid var(--border);text-align:right;font-family:'DM Mono',monospace;font-weight:600">${ivs[i]>0?ivcFmt(ivs[i]):'—'}</td>
+        <td style="padding:9px 10px;border-bottom:1px solid var(--border);text-align:right;font-family:'DM Mono',monospace;font-weight:600">${ivs[i]>0?ivcFmt(w):'—'}</td>
+      </tr>`;
+    }),
+    `<tr style="background:var(--bg3)">
+      <td style="padding:10px 10px;font-weight:700;border-top:2px solid var(--border2)">Weighted Intrinsic Value</td>
+      <td style="padding:10px 10px;text-align:right;font-weight:700;border-top:2px solid var(--border2);color:${probOk?'var(--green)':'var(--red)'}">
+        ${totalProb.toFixed(1)}%${!probOk?' ⚠':''}
+      </td>
+      <td style="padding:10px 10px;text-align:right;border-top:2px solid var(--border2)">—</td>
+      <td style="padding:10px 10px;text-align:right;font-weight:700;font-family:'DM Mono',monospace;font-size:15px;color:var(--blue);border-top:2px solid var(--border2)">${weightedIV>0?ivcFmt(weightedIV):'—'}</td>
+    </tr>`,
+    `<tr>
+      <td style="padding:9px 10px;color:var(--text2);border-bottom:1px solid var(--border)">Current Stock Price</td>
+      <td colspan="2" style="border-bottom:1px solid var(--border)"></td>
+      <td style="padding:9px 10px;text-align:right;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">${price>0?ivcFmt(price):'—'}</td>
+    </tr>`,
+    price>0 && weightedIV>0 ? `<tr>
+      <td style="padding:9px 10px;color:var(--text2)">Margin of Safety</td>
+      <td colspan="2"></td>
+      <td style="padding:9px 10px;text-align:right;font-family:'DM Mono',monospace;font-weight:700;color:${(weightedIV-price)/weightedIV>0?'var(--green)':'var(--red)'}">
+        ${((weightedIV-price)/weightedIV*100).toFixed(1)}%
+      </td>
+    </tr>` : '',
+  ].join('');
+
+  // Verdict
+  const vEl = document.getElementById('ivcVerdictArea');
+  if (!vEl) return;
+  if (!price || !weightedIV || weightedIV <= 0) {
+    vEl.innerHTML = `<div style="font-size:12px;color:var(--text3)">Enter Base EPS and Stock Price to see verdict.</div>`; return;
+  }
+  const mos = (weightedIV - price) / weightedIV;
+  let verdict, bg, fg, icon;
+  if      (mos>=.40){verdict='Undervalued — Strong Buy'; bg='var(--green-bg)';  fg='var(--green)'; icon='🔥';}
+  else if (mos>=.20){verdict='Undervalued — Buy';        bg='var(--green-bg)';  fg='var(--green)'; icon='✅';}
+  else if (mos>=0)  {verdict='Fairly Valued — Hold';     bg='var(--blue-bg)';   fg='var(--blue)';  icon='→'; }
+  else if (mos>=-.20){verdict='Slightly Overvalued';     bg='var(--amber-bg)';  fg='var(--amber)'; icon='⚠️';}
+  else              {verdict='Overvalued — Avoid';       bg='var(--red-bg)';    fg='var(--red)';   icon='🚫';}
+  vEl.innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:12px">
+      <div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">Verdict</div>
+        <div class="ivc-verdict" style="background:${bg};color:${fg}">${icon} ${verdict}</div>
+      </div>
+      <div style="flex:1;min-width:180px">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">Margin of Safety</div>
+        <div class="ivc-mos-outer">
+          <div class="ivc-mos-inner" style="width:${Math.min(100,Math.abs(mos)*100).toFixed(1)}%;background:${mos>=0?'var(--green)':'var(--red)'}"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:4px;font-family:'DM Mono',monospace">
+          <span>Price: ${ivcFmt(price)}</span>
+          <span>${mos>=0?'+':''}${(mos*100).toFixed(1)}%</span>
+          <span>IV: ${ivcFmt(weightedIV)}</span>
+        </div>
+      </div>
+    </div>
+    <div class="dcf-disclaimer">⚠ Results depend entirely on assumptions — a 2% shift in growth or discount rate can move intrinsic value 30%+. Read the latest filings and treat this as one input among many. Not investment advice.</div>`;
+}
+
+// ── FMP data load ─────────────────────────────────────────────
+async function ivcLoadData() {
+  const ticker = (document.getElementById('ivcTicker')?.value||'').trim().toUpperCase();
+  if (!ticker) { ivcSetStatus('warn','Enter a ticker first.'); return; }
+  const key = getFmpKey();
+  if (!key) { ivcSetStatus('warn','No FMP key — add one via the DCF card → "⚙ API Keys".'); return; }
+
+  const btn = document.getElementById('ivcLoadBtn');
+  const icon = document.getElementById('ivcLoadIcon');
+  btn.disabled = true; icon.style.cssText='display:inline-block;animation:spin 1s linear infinite'; icon.textContent='↻';
+  ivcSetStatus('info', `Loading data for ${ticker}…`);
+
+  // Check liveData first (zero API calls if held)
+  const held = liveData.find(p => (p.ticker||'').toUpperCase()===ticker || (p.sheetTicker||'').toUpperCase()===ticker);
+
+  try {
+    const apiSym = held ? fmpSymbol(held) : ticker;
+    const profRaw = await dcfFetchJson(`${FMP_BASE}/profile?symbol=${encodeURIComponent(apiSym)}&apikey=${key}`);
+    const prof = Array.isArray(profRaw) ? profRaw[0] : profRaw;
+
+    if (!prof || !prof.symbol) {
+      ivcSetStatus('err', `"${ticker}" not found on FMP. Check the ticker or enter values manually.`); return;
+    }
+
+    const got = [], missing = [];
+
+    const setAuto = (id, val) => {
+      const el = document.getElementById(id); if (!el) return;
+      el.value = val; el.classList.add('autofilled');
+      el.addEventListener('input', ()=>el.classList.remove('autofilled'), {once:true});
+    };
+
+    if (prof.companyName) { setAuto('ivcCompany', prof.companyName); }
+    if (prof.price  != null) { setAuto('ivcPrice',  prof.price.toFixed(2));  got.push('price'); } else missing.push('price');
+    if (prof.eps    != null && prof.eps > 0) { setAuto('ivcBaseEPS', prof.eps.toFixed(2)); got.push('EPS'); } else missing.push('EPS');
+
+    try {
+      await new Promise(r=>setTimeout(r,180));
+      const ratRaw = await dcfFetchJson(`${FMP_BASE}/ratios-ttm?symbol=${encodeURIComponent(apiSym)}&apikey=${key}`);
+      const rat = Array.isArray(ratRaw) ? ratRaw[0] : ratRaw;
+      const pr = rat?.payoutRatioTTM ?? rat?.dividendPayoutRatioTTM ?? null;
+      if (pr != null && Number.isFinite(+pr)) {
+        setAuto('ivcPayout', (Math.abs(+pr) * (Math.abs(+pr)>1?1:100)).toFixed(1));
+        got.push('payout ratio');
+      } else missing.push('payout ratio');
+    } catch(_) { missing.push('payout ratio'); }
+
+    let msg = `✓ ${prof.companyName||ticker}: loaded ${got.join(', ')}.`;
+    if (missing.length) msg += ` Enter manually: ${missing.join(', ')}.`;
+    ivcSetStatus('ok', msg);
+    ivcUpdateComputed();
+  } catch(e) {
+    ivcSetStatus('err', 'Load failed: ' + e.message + '. Enter values manually.');
+  } finally {
+    btn.disabled=false; icon.style.cssText=''; icon.textContent='⤓';
+  }
+}
+
+function ivcSetStatus(kind, msg) {
+  const el = document.getElementById('ivcStatus');
+  if (!el) return;
+  el.style.display = 'block';
+  const colors = {info:'var(--blue-bg)',ok:'var(--green-bg)',err:'var(--red-bg)',warn:'var(--amber-bg)'};
+  const textColors = {info:'var(--blue)',ok:'var(--green)',err:'var(--red)',warn:'var(--amber)'};
+  el.style.background = colors[kind]||colors.info;
+  el.style.color = textColors[kind]||textColors.info;
+  el.textContent = msg;
+}
+
+// ── Tooltip engine (scoped to .ivc-help buttons) ──────────────
+const ivcTip = document.getElementById('ivcGlobalTip');
+document.addEventListener('mouseover', e => {
+  const btn = e.target.closest('.ivc-help[data-tip]');
+  if (!btn || !ivcTip) return;
+  ivcTip.textContent = btn.dataset.tip;
+  ivcTip.style.display = 'block';
+  const rect = btn.getBoundingClientRect();
+  const TW = 260, GAP = 10;
+  let top = rect.top - ivcTip.offsetHeight - GAP;
+  if (top < 8) top = rect.bottom + GAP;
+  let left = rect.left + rect.width/2 - TW/2;
+  left = Math.max(10, Math.min(left, window.innerWidth - TW - 10));
+  ivcTip.style.top  = top  + 'px';
+  ivcTip.style.left = left + 'px';
+});
+document.addEventListener('mouseout', e => {
+  if (!e.target.closest('.ivc-help[data-tip]') && ivcTip) ivcTip.style.display='none';
+});
+document.addEventListener('scroll', ()=>{ if(ivcTip) ivcTip.style.display='none'; }, true);
+
+// ── Hook into renderPage so IVC renders when Valuation tab opens ─
+const _origRenderPage = window.renderPage || renderPage;
+window.renderPage = function(page) {
+  _origRenderPage(page);
+  if (page === 'valuation') {
+    // Only build structure if not already built
+    const c = document.getElementById('ivcScenariosContainer');
+    if (c && !c.querySelector('.ivc-sc-wrap')) ivcRenderStructure();
+    else ivcUpdateComputed();
+  }
+};
 </script>
 
 <div id="healthPanelOverlay" onclick="if(event.target===this)closeHealthPanel()" style="display:none;position:fixed;inset:0;background:rgba(8,12,30,.6);z-index:8500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(5px)">
@@ -5832,5 +6350,6 @@ document.addEventListener('touchend', e => {
     <div id="healthPanelBody" style="overflow-y:auto;flex:1;padding:18px 22px;font-size:13px"></div>
   </div>
 </div>
+<div id="ivcGlobalTip"></div>
 </body>
 </html>
