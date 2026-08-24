@@ -3466,27 +3466,27 @@ async function buildCorrelation(){
 
 // ── DIVIDENDS ────────────────────────────────────────────────
 const DIV_DATA={
-  // ── Stocks paying dividends ──────────────────────────────────
+  // ── US Stocks ─────────────────────────────────────────────────
   O:         {freq:'Monthly',    yield:5.7,  notes:'Monthly REIT payer'},
-  JNJ:       {freq:'Quarterly',  yield:3.2,  notes:'Dividend Aristocrat'},
-  MSFT:      {freq:'Quarterly',  yield:0.8,  notes:'Growing dividend'},
+  JNJ:       {freq:'Quarterly',  yield:3.4,  notes:'Dividend Aristocrat'},
+  MSFT:      {freq:'Quarterly',  yield:0.7,  notes:'Growing dividend'},
   AAPL:      {freq:'Quarterly',  yield:0.5,  notes:'Consistent payer'},
-  C:         {freq:'Quarterly',  yield:3.1,  notes:'Bank dividend'},
-  PFE:       {freq:'Quarterly',  yield:6.8,  notes:'Pharma high yield'},
+  C:         {freq:'Quarterly',  yield:2.8,  notes:'Bank dividend'},
+  PFE:       {freq:'Quarterly',  yield:7.5,  notes:'Pharma high yield'},
   ADM:       {freq:'Quarterly',  yield:4.2,  notes:'Agricultural giant'},
-  UNH:       {freq:'Quarterly',  yield:1.8,  notes:'Healthcare dividend'},
-  CVS:       {freq:'Quarterly',  yield:4.2,  notes:'Healthcare/pharmacy'},
+  UNH:       {freq:'Quarterly',  yield:1.9,  notes:'Healthcare dividend'},
+  CVS:       {freq:'Quarterly',  yield:5.2,  notes:'Healthcare/pharmacy'},
   TGT:       {freq:'Quarterly',  yield:4.5,  notes:'Retail dividend'},
-  HPQ:       {freq:'Quarterly',  yield:3.4,  notes:'Tech hardware'},
-  TSM:       {freq:'Quarterly',  yield:1.5,  notes:'Semiconductor'},
-  BABA:      {freq:'Annual',     yield:1.8,  notes:'Chinese tech'},
-  NKE:       {freq:'Quarterly',  yield:2.4,  notes:'Consumer brand'},
+  HPQ:       {freq:'Quarterly',  yield:3.6,  notes:'Tech hardware'},
+  TSM:       {freq:'Quarterly',  yield:1.3,  notes:'Semiconductor ADR'},
+  BABA:      {freq:'Annual',     yield:2.1,  notes:'Chinese tech'},
+  NKE:       {freq:'Quarterly',  yield:2.8,  notes:'Consumer brand'},
   MELI:      {freq:'None',       yield:0,    notes:'No dividend'},
-  GOOG:      {freq:'Quarterly',  yield:0.5,  notes:'Initiated 2024'},
+  GOOG:      {freq:'Quarterly',  yield:0.4,  notes:'Initiated 2024'},
   AMZN:      {freq:'None',       yield:0,    notes:'No dividend'},
   META:      {freq:'Quarterly',  yield:0.4,  notes:'Initiated 2024'},
   NVDA:      {freq:'Quarterly',  yield:0.03, notes:'Minimal dividend'},
-  MU:        {freq:'Quarterly',  yield:0.5,  notes:'Semiconductor'},
+  MU:        {freq:'Quarterly',  yield:0.4,  notes:'Semiconductor'},
   CRM:       {freq:'None',       yield:0,    notes:'No dividend'},
   DUOL:      {freq:'None',       yield:0,    notes:'No dividend'},
   TSLA:      {freq:'None',       yield:0,    notes:'No dividend'},
@@ -3497,35 +3497,38 @@ const DIV_DATA={
   BNGO:      {freq:'None',       yield:0,    notes:'No dividend'},
   BILI:      {freq:'None',       yield:0,    notes:'No dividend'},
   APPS:      {freq:'None',       yield:0,    notes:'No dividend'},
-  FMC:       {freq:'Quarterly',  yield:4.8,  notes:'Agricultural chemicals'},
+  FMC:       {freq:'Quarterly',  yield:6.2,  notes:'Agricultural chemicals'},
   'BRK-B':   {freq:'None',       yield:0,    notes:'No dividend'},
   // ── EUR stocks ────────────────────────────────────────────────
-  'DTE.DE':  {freq:'Annual',     yield:4.2,  notes:'Deutsche Telekom'},
-  'DTE':     {freq:'Annual',     yield:4.2,  notes:'Deutsche Telekom'},
-  'VOW3.DE': {freq:'Annual',     yield:6.8,  notes:'VW Group annual'},
-  'VOW3':    {freq:'Annual',     yield:6.8,  notes:'VW Group annual'},
+  'DTE.DE':  {freq:'Annual',     yield:3.8,  notes:'Deutsche Telekom'},
+  'DTE':     {freq:'Annual',     yield:3.8,  notes:'Deutsche Telekom'},
+  'VOW3.DE': {freq:'Annual',     yield:5.2,  notes:'VW Group — cut dividend 2025'},
+  'VOW3':    {freq:'Annual',     yield:5.2,  notes:'VW Group — cut dividend 2025'},
   'RUI.PA':  {freq:'Annual',     yield:7.2,  notes:'French energy co.'},
   'RUI':     {freq:'Annual',     yield:7.2,  notes:'French energy co.'},
-  'ACOMO.AS':{freq:'Semi-annual',yield:6.5,  notes:'Dutch dividend stock'},
-  'ACOMO':   {freq:'Semi-annual',yield:6.5,  notes:'Dutch dividend stock'},
+  'ACOMO.AS':{freq:'Semi-annual',yield:5.8,  notes:'Dutch dividend stock'},
+  'ACOMO':   {freq:'Semi-annual',yield:5.8,  notes:'Dutch dividend stock'},
   // ── HKD stocks ────────────────────────────────────────────────
-  '9618':    {freq:'Semi-annual',yield:1.8,  notes:'JD.com HK'},
+  '9618':    {freq:'Semi-annual',yield:2.4,  notes:'JD.com HK'},
   '0001':    {freq:'Semi-annual',yield:6.5,  notes:'CK Hutchison'},
-  '0823':    {freq:'Semi-annual',yield:6.2,  notes:'Link REIT HK'},
+  '0142':    {freq:'Semi-annual',yield:5.26, notes:'First Pacific Co. (SAXO rate)'},
+  'HKG:0142':{freq:'Semi-annual',yield:5.26, notes:'First Pacific Co. (SAXO rate)'},
+  '0823':    {freq:'Semi-annual',yield:6.8,  notes:'Link REIT HK'},
   '1883':    {freq:'Annual',     yield:8.5,  notes:'Citic Telecom HK'},
+  '2588':    {freq:'Semi-annual',yield:4.2,  notes:'BOC Aviation Ltd HK'},
   // ── NOK stocks ────────────────────────────────────────────────
   'AKRBP.OL':{freq:'Quarterly',  yield:8.1,  notes:'Norwegian oil'},
-  'DNQ':     {freq:'Quarterly',  yield:7.5,  notes:'Equinor ASA'},
-  // ── MYR stocks ────────────────────────────────────────────────
-  '2588':    {freq:'Semi-annual',yield:4.8,  notes:'BOC Aviation Ltd HK'},
   'AKRBF':   {freq:'Quarterly',  yield:8.1,  notes:'Aker BP (OTC)'},
+  'DNQ':     {freq:'Quarterly',  yield:6.5,  notes:'Equinor ASA (ordinary + special)'},
+  // ── MYR stocks ────────────────────────────────────────────────
   'KLSE:1163':{freq:'Semi-annual',yield:4.5, notes:'Allianz Malaysia'},
+  'KLSE1163': {freq:'Semi-annual',yield:4.5, notes:'Allianz Malaysia'},
   // ── GBX stocks ────────────────────────────────────────────────
-  'DOM':     {freq:'Annual',     yield:4.1,  notes:"Domino's UK"},
+  'DOM':     {freq:'Semi-annual',yield:4.5,  notes:"Domino's UK (interim + final)"},
   // ── ETFs ──────────────────────────────────────────────────────
-  VOO:       {freq:'Quarterly',  yield:1.4,  notes:'S&P 500 ETF'},
-  SCHD:      {freq:'Quarterly',  yield:3.8,  notes:'Dividend-focused ETF'},
-  XLU:       {freq:'Quarterly',  yield:3.5,  notes:'Utilities ETF'},
+  VOO:       {freq:'Quarterly',  yield:1.2,  notes:'S&P 500 ETF'},
+  SCHD:      {freq:'Quarterly',  yield:3.5,  notes:'Dividend-focused ETF'},
+  XLU:       {freq:'Quarterly',  yield:3.2,  notes:'Utilities ETF'},
   INDA:      {freq:'Annual',     yield:0.8,  notes:'India ETF'},
   IBIT:      {freq:'None',       yield:0,    notes:'Bitcoin ETF — no dividend'},
   SPXS:      {freq:'None',       yield:0,    notes:'Inverse ETF — no dividend'},
@@ -3545,20 +3548,33 @@ function renderDividends(){
   const d=getFilteredData();
   const totV=d.reduce((a,b)=>a+b.currentValue,0);
 
-  // Build dividend positions from ALL live positions — no hardcoded filter
+  // Lookup helper: strips exchange prefixes (HKG:, HKD:, KLSE:, etc.) for fallback matching
+  const divLookup = ticker => {
+    if(!ticker) return null;
+    if(DIV_DATA[ticker]) return DIV_DATA[ticker];
+    // strip exchange prefix  e.g. HKG:0142 → 0142
+    const stripped = ticker.replace(/^[A-Z]+:/i,'');
+    if(stripped !== ticker && DIV_DATA[stripped]) return DIV_DATA[stripped];
+    // strip colon only e.g. KLSE:1163 → KLSE1163
+    const noColon = ticker.replace(':','');
+    if(DIV_DATA[noColon]) return DIV_DATA[noColon];
+    return null;
+  };
+
+  // Build dividend positions from ALL live positions
   // Source priority: 1) Valuation tab manual entry  2) DIV_DATA  3) default 0
   const divPositions=d
     .filter(p=>p.type!=='Cash'&&p.type!=='People'&&p.type!=='Crypto')
     .map(p=>{
-      const divEntry=DIV_DATA[p.ticker]||DIV_DATA[p.ticker?.replace(':','')]||{freq:'Unknown',yield:0,notes:''};
+      const divEntry=divLookup(p.ticker)||{freq:'Unknown',yield:0,notes:''};
       const valDiv=valuations[p.ticker]?.divYield!=null?valuations[p.ticker].divYield:divEntry.yield;
       const annualIncome=p.currentValue*(valDiv/100);
+
       const yoc=p.investment>0?(annualIncome/p.investment)*100:0;
       return{...p,divYield:valDiv,annualIncome,yoc,freq:divEntry.freq,notes:divEntry.notes};
     }).sort((a,b)=>b.annualIncome-a.annualIncome);
 
   const divPayers=divPositions.filter(p=>p.divYield>0);
-  const divUnknown=divPositions.filter(p=>p.divYield===0);
   const totalAnnual=divPayers.reduce((s,p)=>s+p.annualIncome,0);
   const totalInv=d.reduce((a,b)=>a+b.investment,0);
   const weightedYOC=totalInv>0?(totalAnnual/totalInv)*100:0;
@@ -3572,11 +3588,20 @@ function renderDividends(){
 
   const sr=(label,val,extra='')=>`<div class="stat-row"><span class="stat-label">${label}</span><span class="stat-val">${val}${extra}</span></div>`;
 
-  // Missing data notice (no longer a warning — just informational)
+  // Missing data notice — only flag positions with NO entry at all (truly unknown)
+  // Confirmed non-payers (freq:'None') are excluded silently
   const warnEl=document.getElementById('divMissingWarning');
-  if(divUnknown.length>0){
+  const missing = d.filter(p => p.type!=='Cash' && p.type!=='People' && p.type!=='Crypto')
+    .filter(p => {
+      if(valuations[p.ticker]?.divYield!=null) return false;
+      const entry = divLookup(p.ticker);
+      if(!entry) return true;
+      if(entry.freq==='None') return false;
+      return false;
+    });
+  if(missing.length>0){
     warnEl.style.display='block';
-    warnEl.innerHTML=`ℹ️ <strong>${divUnknown.length} position${divUnknown.length>1?'s have':' has'} no dividend yield data:</strong> ${divUnknown.map(p=>`<span style="font-family:'DM Mono',monospace">${p.ticker}</span>`).join(', ')} — enter yield manually in the <strong>Valuation</strong> tab to include them.`;
+    warnEl.innerHTML=`ℹ️ <strong>${missing.length} position${missing.length>1?'s have':' has'} no dividend yield data:</strong> ${missing.map(p=>`<span style="font-family:'DM Mono',monospace">${p.ticker}</span>`).join(', ')} — enter yield manually in the <strong>Valuation</strong> tab to include them.`;
   } else {
     warnEl.style.display='none';
   }
